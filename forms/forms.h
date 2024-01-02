@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 /*
 
@@ -47,13 +48,19 @@ enum align {
     ALIGN_DOWN_OUTSIDE = ALIGN_RIGHT_OUTSIDE,
 };
 
+struct __attribute__((__packed__)) __align_cfg {
+    enum align mode : 3;
+    uint16_t offset : 13;
+};
+
 typedef union {
     struct {
-        enum align h;
-        enum align v;
+        struct __align_cfg h;
+        struct __align_cfg v;
     };
-    enum align ca[2];
+    struct __align_cfg ca[2];
 } align_mode_t;
 
-void form_align(form_t * pf, form_t * af, align_mode_t * mode, unsigned offset);
-void form_extend(form_t * of, form_t * af);
+void form_align(form_t * pf, form_t * af, align_mode_t * mode);
+void form_union_calc_size(form_t * f1, form_t * f2, align_mode_t * mode, form_t * rf);
+void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * mode);
