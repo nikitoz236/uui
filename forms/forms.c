@@ -92,6 +92,7 @@ void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * m
         case ALIGN_RIGHT_INSIDE:
             f1->p.ca[i] = of->p.ca[i];
             f2->p.ca[i] = of->p.ca[i] + of->s.ca[i] - f2->s.ca[i] - mode->ca[i].offset;
+            break;
 
         case ALIGN_RIGHT_OUTSIDE:
             // f1 слева, f2  справа
