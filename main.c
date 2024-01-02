@@ -5,8 +5,8 @@ uint8_t ui_stack[2048];
 
 typedef struct {
     form_t f;
-    uint16_t size;
-    uint16_t idx;
+    uint8_t size;
+    uint8_t idx;
     uint8_t ctx[];
 } ui_ctx_t;
 
