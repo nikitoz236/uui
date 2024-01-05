@@ -2,14 +2,16 @@
 #include <stdint.h>
 #include "gfx.h"
 #include "forms.h"
+#include "color_type.h"
 
-static inline void emu_set_color(unsigned color)
+static inline void emu_set_color(lcd_color_t color)
 {
     struct color {
         int b : 8;
         int g : 8;
         int r : 8;
-    } * cp = (struct color *)&color;
+    };
+    struct color * cp = (struct color *)&color;
     gfx_color(cp->r, cp->g, cp->b);
 }
 
