@@ -28,7 +28,7 @@ static unsigned calc(void * cfg, ui_ctx_t * node_ctx)
     return sizeof(ui_ctx_t);
 };
 
-static void draw(void * cfg, void * icfg, ui_ctx_t * node_ctx) {
+static void draw(void * cfg, ui_ctx_t * node_ctx) {
     emu_draw_rect(emu_lcd_form, emu_lcd_cfg->bg_color);
 };
 

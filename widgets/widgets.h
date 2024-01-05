@@ -46,7 +46,7 @@ typedef struct {            // структура виджета для испо
     // void * icfg          // указатель на параметры данного экземпляра виджета
                             // используется для построения массивов одного виджета, например клавиатур
     // ui_ctx_t * node_ctx  // указатель на контекст виджета
-    void (*draw)(void * cfg, void * icfg, ui_ctx_t * node_ctx);
+    void (*draw)(void * cfg, ui_ctx_t * node_ctx);
 } widget_t;
 
 typedef struct {            // элемент описания дерева виджетов
@@ -55,12 +55,12 @@ typedef struct {            // элемент описания дерева ви
 } ui_node_t;
 
 // считает размер прямоугольника виджета и размер контекста, заполняет индекс
-static inline void calc_node(ui_node_t * node, ui_ctx_t * node_ctx, unsigned idx) {
+static inline void calc_node(const ui_node_t * node, ui_ctx_t * node_ctx, unsigned idx) {
     node_ctx->size = node->widget->calc(node->widget_cfg, node_ctx);
     node_ctx->idx = idx;
 }
 
 // рисует виджет
-static inline void draw_node(ui_node_t * node, void * icfg, ui_ctx_t * node_ctx) {
-    node->widget->draw(node->widget_cfg, icfg, node_ctx);
+static inline void draw_node(const ui_node_t * node, ui_ctx_t * node_ctx) {
+    node->widget->draw(node->widget_cfg, node_ctx);
 }

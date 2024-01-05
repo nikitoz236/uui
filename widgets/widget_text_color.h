@@ -13,7 +13,7 @@ typedef struct text_color_scheme_t {
 typedef struct __attribute__((packed)) {
     color_scheme_t * cs;
     char * text;
-} widget_text_color_index_cfg_t;
+} widget_text_color_ctx_t;
 
 typedef struct __attribute__((packed)) {
     xy_t text_size;

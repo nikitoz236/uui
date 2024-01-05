@@ -30,8 +30,7 @@ static unsigned calc(void * cfg, ui_ctx_t * node_ctx) {
     return sizeof(ui_ctx_t) + result_size;
 };
 
-static void draw(void * cfg, void * icfg, ui_ctx_t * node_ctx) {
-    (void)icfg;
+static void draw(void * cfg, ui_ctx_t * node_ctx) {
     widget_union_cfg_t * union_cfg = (widget_union_cfg_t *)cfg;
 
     // получаем указатели на контексты дочерних форм
@@ -46,7 +45,7 @@ static void draw(void * cfg, void * icfg, ui_ctx_t * node_ctx) {
     form_union_calc_pos(&node_ctx->f, &child_ctx[0]->f, &child_ctx[1]->f, &union_cfg->align_mode);
     for (int i = 0; i < 2; i++) {
         unsigned child_idx = child_ctx[i]->idx;
-        draw_node(&union_cfg->nodes[child_idx], 0, child_ctx[i]);
+        draw_node(&union_cfg->nodes[child_idx], child_ctx[i]);
     }
 };
 

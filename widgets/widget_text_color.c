@@ -10,9 +10,12 @@ static unsigned calc(void * widget_cfg, ui_ctx_t * node_ctx)
             ((cfg-> text_size.ca[i] - 1) * cfg->gaps.ca[i])
         ;
     }
-    return sizeof(ui_ctx_t);
+    return sizeof(ui_ctx_t) + sizeof(widget_text_color_ctx_t);
 };
 
+// обработает нам одно знакоместо
+static inline void print_char(char c, unsigned x, unsigned y, const font_t * font, color_scheme_t * cs, unsigned scale)
+{
 /*
     планируется что интерфейс работы с экраном может быть асинхронным
     хотя бы на уровне того что вызов lcd_image инициализирует DMA и возвращает управление
@@ -20,23 +23,17 @@ static unsigned calc(void * widget_cfg, ui_ctx_t * node_ctx)
     для того чтобы можно было готовить следующий столбик символа пока передается предыдущий
     нам нужно два буфера чтобы их чередовать
 */
+    #if !defined MAX_FONT_HEIGHT
+        #define MAX_FONT_HEIGHT 40
+    #endif
+    static lcd_color_t char_col_buffer[2][MAX_FONT_HEIGHT];
 
-#if !defined MAX_FONT_HEIGHT
-    #define MAX_FONT_HEIGHT 40
-#endif
-
-static lcd_color_t char_col_buffer[2][MAX_FONT_HEIGHT];
-
-static inline void print_char(char c, unsigned x, unsigned y, font_t * font, color_scheme_t * cs, unsigned scale)
-{
-    // обработает нам одно знакоместо
     uint8_t col_step;
-    uint8_t * font_data = font_char_ptr(c, font, &col_step);
+    const uint8_t * font_data = font_char_ptr(c, font, &col_step);
     if (font_data != 0) {
         for (int rx = 0; rx < font->size.w; rx++) {
             lcd_color_t * col_buf = char_col_buffer[rx & 1];
             uint8_t mask = 1;
-            uint8_t * font_line = font_data;
             for (int ry = 0; ry < font->size.h; ry++) {
                 if (*font_data & mask) {
                     col_buf[ry] = cs->fg;
@@ -77,11 +74,11 @@ static inline void fill_rem_form_str(unsigned x, unsigned y, unsigned rem_chars,
     lcd_rect(x, y, rem_w, cfg->font->size.h * cfg->scale, color);
 }
 
-static void draw(void * widget_cfg, void * widget_icfg, ui_ctx_t * node_ctx) {
+static void draw(void * widget_cfg, ui_ctx_t * node_ctx) {
     widget_text_color_cfg_t * cfg = (widget_text_color_cfg_t *)widget_cfg;
-    widget_text_color_index_cfg_t * icfg = (widget_text_color_index_cfg_t *)widget_icfg;
+    widget_text_color_ctx_t * ctx = (widget_text_color_ctx_t *)node_ctx->ctx;
 
-    char * c = icfg->text;
+    char * c = ctx->text;
 
     unsigned y = node_ctx->f.p.y;
     for (int cy = 0; cy < cfg->text_size.h; cy++) {
@@ -101,7 +98,7 @@ static void draw(void * widget_cfg, void * widget_icfg, ui_ctx_t * node_ctx) {
                 c++;
             }
 
-            lcd_color_t bg = icfg->cs->bg;
+            lcd_color_t bg = ctx->cs->bg;
             if (*c == 0) {
                 // bg = 0xFF0000;
                 fill_rem_form_str(x, y, cfg->text_size.w - cx, cfg, bg);
@@ -117,8 +114,8 @@ static void draw(void * widget_cfg, void * widget_icfg, ui_ctx_t * node_ctx) {
                     lcd_rect(x, y, (cfg->font->size.w * cfg->scale) + cfg->gaps.w, (cfg->font->size.h * cfg->scale), bg);
                     x += cfg->font->size.w * cfg->scale + cfg->gaps.w;
                 } else {
-                    // lcd_rect(x, y, cfg->font->size.w * cfg->scale, cfg->font->size.h * cfg->scale, icfg->cs->fg);
-                    print_char(*c, x, y, cfg->font, icfg->cs, cfg->scale);
+                    // lcd_rect(x, y, cfg->font->size.w * cfg->scale, cfg->font->size.h * cfg->scale, ctx->cs->fg);
+                    print_char(*c, x, y, cfg->font, ctx->cs, cfg->scale);
                     x += cfg->font->size.w * cfg->scale;
                     if (cx != (cfg->text_size.w - 1)) {
                         // bg = 0xFF00FF;
@@ -132,7 +129,7 @@ static void draw(void * widget_cfg, void * widget_icfg, ui_ctx_t * node_ctx) {
         y += cfg->font->size.h * cfg->scale;
 
         if (cy != (cfg->text_size.h - 1)) {
-            lcd_rect(node_ctx->f.p.x, y, node_ctx->f.s.w, cfg->gaps.h, icfg->cs->bg);
+            lcd_rect(node_ctx->f.p.x, y, node_ctx->f.s.w, cfg->gaps.h, ctx->cs->bg);
         }
         y += cfg->gaps.h;
     }
