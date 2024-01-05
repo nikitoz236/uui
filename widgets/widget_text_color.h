@@ -19,4 +19,5 @@ typedef struct __attribute__((packed)) {
     xy_t text_size;
     font_t * font;
     xy_t gaps;
+    uint8_t scale;
 } widget_text_color_cfg_t;
