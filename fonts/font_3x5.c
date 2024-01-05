@@ -1,8 +1,10 @@
 #include "fonts.h"
 
 font_t font_3x5 = {
-    .w = 3,
-    .h = 5,
+    .size = {
+        .w = 3,
+        .h = 5,
+    },
     .start = '-',
     .end = ':',
     .n_replaces = 6,

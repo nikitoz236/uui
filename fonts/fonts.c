@@ -9,9 +9,9 @@
 
 const uint8_t * font_char_ptr(char c, font_t * f, uint8_t * col_step)
 {
-    uint8_t hbytes = DIV_ROUND_UP(f->h, 8);
+    uint8_t hbytes = DIV_ROUND_UP(f->size.h, 8);
     *col_step = hbytes;
-    uint8_t bytes_per_char = hbytes * f->w;
+    uint8_t bytes_per_char = hbytes * f->size.w;
     if ((c >= f->start) && (c <= f->end)) {
         uint8_t cidx = c - f->start;
         const uint8_t * solid_bitmaps = &f->font[f->n_replaces * (bytes_per_char + 1)];
