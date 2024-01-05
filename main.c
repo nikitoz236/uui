@@ -21,9 +21,8 @@ unsigned __rect_widget_calc(void * cfg, ui_ctx_t * node_ctx)
     return sizeof(ui_ctx_t);
 };
 
-void __rect_widget_draw(void * cfg, void * icfg, ui_ctx_t * node_ctx)
+void __rect_widget_draw(void * cfg, ui_ctx_t * node_ctx)
 {
-    (void)icfg;
     emu_draw_rect(&node_ctx->f, ((rect_widget_cfg_t *)cfg)->color);
 };
 
@@ -97,8 +96,6 @@ void print_ctx(unsigned level, void * ctx)
     }
 }
 
-extern font_t font_5x7;
-
 int main() {
     ui_ctx_t * ui_ctx = (ui_ctx_t *)ui_stack;
     ui_node_t * node = &ui_test;
@@ -107,7 +104,7 @@ int main() {
 
     print_ctx(0, ui_ctx);
 
-    draw_node(node, 0, ui_ctx);
+    draw_node(node, ui_ctx);
     printf("\n\nui ctx struct size: %ld\r\n", sizeof(ui_ctx_t));
     printf("ui ctx size: %d\r\n", ui_ctx->size);
     int size = ui_ctx->size;
@@ -123,7 +120,7 @@ int main() {
     // }
 
     lcd_rect(0, 0, 96, 68, 0x526137);
-    lcd_rect(10, 20, 30, 22, 0x0);
+    lcd_rect(10, 40, 30, 22, 0x0);
 
     lcd_color_t bitmap[] = {
         0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00,
@@ -133,22 +130,26 @@ int main() {
 
     print_ctx(0, ui_ctx);
 
+
+        extern font_t font_5x7;
+        extern font_t font_5x5;
+
+
     const ui_node_t app_ui_root = {
         .widget = &__widget_text_color,
         .widget_cfg = &(widget_text_color_cfg_t){
-            .text_size = { .w = 10, .h = 1 },
+            .text_size = { .w = 6, .h = 3 },
             .font = &font_5x7,
-            .gaps = { .w = 2, .h = 1 }
+            .gaps = { .w = 3, .h = 4 },
+            .scale = 1
         }
     };
 
-    widget_text_color_index_cfg_t twctx = {
-        .cs = &(color_scheme_t){ .fg = 0x0000FF, .bg = 0x000000 },
-        .text = "Hey bitch!"
-    };
-
-    calc_node(&app_ui_root, app_ui_stack, 0);
-    draw_node(&app_ui_root, &twctx, app_ui_stack);
+    calc_node(&app_ui_root, (ui_ctx_t*)app_ui_stack, 0);
+    widget_text_color_ctx_t * text_ctx = (widget_text_color_ctx_t *)((ui_ctx_t*)app_ui_stack)->ctx;
+    text_ctx->cs = &(color_scheme_t){ .fg = 0x0000FF, .bg = 0x000000 },
+    text_ctx->text = "Hey bitch!";
+    draw_node(&app_ui_root, (ui_ctx_t*)app_ui_stack);
 
     while (1) {
         char kbd_btn = gfx_routine();
