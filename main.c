@@ -1,41 +1,14 @@
 #include <stdio.h>
 #include "emu_common.h"
 
+#include "api_lcd_color.h"
+
+#include "widget_union.h"
+#include "widget_emu_lcd.h"
+#include "widget_text_color.h"
+
 uint8_t ui_stack[2048];
-
-typedef struct {
-    form_t f;
-    uint8_t size;
-    uint8_t idx;
-    uint8_t ctx[];
-} ui_ctx_t;
-
-typedef struct {
-    unsigned (*calc)(void * cfg, ui_ctx_t * node_ctx);
-    void (*draw)(void * cfg, ui_ctx_t * node_ctx);
-} widget_t;
-
-typedef struct {
-    widget_t * widget;
-    void * widget_cfg;
-} ui_node_t;
-
-// считает размер прямоугольника виджета и размер контекста, заполняет индекс
-void calc_node(ui_node_t * node, ui_ctx_t * node_ctx, unsigned idx) {
-    node_ctx->size = node->widget->calc(node->widget_cfg, node_ctx);
-    node_ctx->idx = idx;
-}
-
-void draw_node(ui_node_t * node, ui_ctx_t * node_ctx) {
-    node->widget->draw(node->widget_cfg, node_ctx);
-}
-
-
-
-
-
-
-
+uint8_t app_ui_stack[2048];
 
 typedef struct {
     xy_t size;
@@ -48,8 +21,9 @@ unsigned __rect_widget_calc(void * cfg, ui_ctx_t * node_ctx)
     return sizeof(ui_ctx_t);
 };
 
-void __rect_widget_draw(void * cfg, ui_ctx_t * node_ctx)
+void __rect_widget_draw(void * cfg, void * icfg, ui_ctx_t * node_ctx)
 {
+    (void)icfg;
     emu_draw_rect(&node_ctx->f, ((rect_widget_cfg_t *)cfg)->color);
 };
 
@@ -57,75 +31,6 @@ widget_t rect_widget = {
     .calc = __rect_widget_calc,
     .draw = __rect_widget_draw
 };
-
-
-
-
-
-
-typedef struct {
-    ui_node_t nodes[2];
-    align_mode_t align_mode;
-} union_widget_cfg_t;
-
-unsigned __union_widget_calc(void * cfg, ui_ctx_t * node_ctx) {
-    union_widget_cfg_t * union_cfg = (union_widget_cfg_t *)cfg;
-    ui_ctx_t * child_ctx[2];
-    void * ctx_ptr = node_ctx->ctx;
-    unsigned result_size = 0;
-
-    for (int i = 0; i < 2; i++) {
-        child_ctx[i] = ctx_ptr;
-        calc_node(&union_cfg->nodes[i], child_ctx[i], i);
-        unsigned child_node_size = child_ctx[i]->size;
-        result_size += child_node_size;
-        ctx_ptr += child_node_size;
-    }
-
-    form_union_calc_size(&child_ctx[0]->f, &child_ctx[1]->f, &union_cfg->align_mode, &node_ctx->f);
-    return sizeof(ui_ctx_t) + result_size;
-};
-
-void __union_widget_draw(void * cfg, ui_ctx_t * node_ctx) {
-    union_widget_cfg_t * union_cfg = (union_widget_cfg_t *)cfg;
-    ui_ctx_t * child_ctx[2];
-    void * ctx_ptr = node_ctx->ctx;
-    for (int i = 0; i < 2; i++) {
-        child_ctx[i] = ctx_ptr;
-        unsigned child_node_size = child_ctx[i]->size;
-        ctx_ptr += child_node_size;
-    }
-    form_union_calc_pos(&node_ctx->f, &child_ctx[0]->f, &child_ctx[1]->f, &union_cfg->align_mode);
-    for (int i = 0; i < 2; i++) {
-        unsigned child_idx = child_ctx[i]->idx;
-        draw_node(&union_cfg->nodes[child_idx], child_ctx[i]);
-    }
-};
-
-widget_t union_widget = {
-    .calc = __union_widget_calc,
-    .draw = __union_widget_draw
-};
-
-
-
-#define WIDGET_UNION(hm, ho, vm, vo, n1, n2)  \
-    { \
-        .widget = &union_widget, \
-        .widget_cfg = &(union_widget_cfg_t){ \
-            .nodes = { n1, n2 }, \
-            .align_mode = { \
-                .h = { \
-                    .mode = ALIGN_ ## hm, \
-                    .offset = ho \
-                }, \
-                .v = { \
-                    .mode = ALIGN_ ## vm, \
-                    .offset = vo \
-                } \
-            } \
-        } \
-    }
 
 #define WIDGET_RECT(sw, sh, c) \
     { \
@@ -139,93 +44,111 @@ widget_t union_widget = {
         } \
     }
 
-#define ALIGN_MODE() \
-
+#define WBUTTON(c)         WIDGET_RECT( 100, 100, c )
+#define WLCD \
+    { \
+        .widget = &__widget_emu_lcd, \
+        .widget_cfg = &(widget_emu_lcd_cfg_t){ \
+            .size = { \
+                .w = 96, \
+                .h = 68 \
+            }, \
+            .scale = 7, \
+            .px_gap = 1, \
+            .border = 20, \
+            .bg_color = 0x5f7537 \
+        } \
+    }
 
 ui_node_t ui_test =
-    WIDGET_UNION( CENTER, 0, UP_OUTSIDE, 0,
-        WIDGET_RECT( 200, 300, 0xff0000 ),
-        WIDGET_UNION( CENTER, 0, UP_OUTSIDE, 0,
-            WIDGET_RECT( 300, 50, 0x00ff00 ),
-            WIDGET_UNION( CENTER, 0, UP_OUTSIDE, 0,
-                WIDGET_RECT( 100, 100, 0x0000ff ),
-                WIDGET_RECT( 100, 100, 0x0ffff0 )
+    WIDGET_UNION( RO, 0, C, 0,
+        WIDGET_UNION( LO, 0, C, 0,
+            WLCD,
+            WIDGET_UNION( C, 0, DI, 30,
+                WBUTTON(0x00009F),
+                WBUTTON(0x0000FF)
             )
+        ),
+        WIDGET_UNION( C, 0, DI, 30,
+            WBUTTON(0x00002F),
+            WBUTTON(0x00002F)
         )
     )
 ;
 
-
-
-
-ui_node_t ui_root = {
-    .widget = &union_widget,
-    .widget_cfg = &(union_widget_cfg_t){
-        .nodes = {
-            {
-                .widget = &rect_widget,
-                .widget_cfg = &(rect_widget_cfg_t){
-                    .size = { 200, 300 },
-                    .color = 0xff0000
-                }
-            },
-            {
-                .widget = &union_widget,
-                .widget_cfg = &(union_widget_cfg_t){
-                    .nodes = {
-                        {
-                            .widget = &rect_widget,
-                            .widget_cfg = &(rect_widget_cfg_t){
-                                .size = { 300, 50 },
-                                .color = 0x00ff00
-                            }
-                        },
-                        {
-                            .widget = &rect_widget,
-                            .widget_cfg = &(rect_widget_cfg_t){
-                                .size = { 100, 100 },
-                                .color = 0x0000ff
-                            }
-                        }
-                    },
-                    .align_mode = {
-                        .h = {
-                            .mode = ALIGN_CENTER,
-                            .offset = 0
-                        },
-                        .v = {
-                            .mode = ALIGN_CENTER,
-                            .offset = 0
-                        }
-                    }
-                }
-            }
-        },
-        .align_mode = {
-            .h = {
-                .mode = ALIGN_CENTER,
-                .offset = 33
-            },
-            .v = {
-                .mode = ALIGN_UP_OUTSIDE,
-                .offset = 44
-            }
-        }
+void print_ctx(unsigned level, void * ctx)
+{
+    ui_ctx_t * ui_ctx_ptr = ctx;
+    for (unsigned i = 0; i < level; i++) {
+        printf("  ");
     }
-};
+    int len = ui_ctx_ptr->size;
+    printf("node: size: %d, idx: %d, ", len, ui_ctx_ptr->idx);
+    printf("pos: (%d, %d), size: (%d, %d)\r\n",ui_ctx_ptr->f.p.x, ui_ctx_ptr->f.p.y, ui_ctx_ptr->f.s.w, ui_ctx_ptr->f.s.h);
 
+    len -= sizeof(ui_ctx_t);
 
+    ctx = ui_ctx_ptr->ctx;
+    while (len > 0) {
+        ui_ctx_t * child = (ui_ctx_t *)ctx;
+        print_ctx(level + 1, ctx);
+        ctx += child->size;
+        len -= child->size;
+    }
+}
 
-
+extern font_t font_5x7;
 
 int main() {
     ui_ctx_t * ui_ctx = (ui_ctx_t *)ui_stack;
     ui_node_t * node = &ui_test;
     calc_node(node, ui_ctx, 0);
     gfx_open(ui_ctx->f.s.x, ui_ctx->f.s.y, "UC lib gfx emu device");
-    draw_node(node, ui_ctx);
-    printf("ui ctx struct size: %ld\r\n", sizeof(ui_ctx_t));
+
+    print_ctx(0, ui_ctx);
+
+    draw_node(node, 0, ui_ctx);
+    printf("\n\nui ctx struct size: %ld\r\n", sizeof(ui_ctx_t));
     printf("ui ctx size: %d\r\n", ui_ctx->size);
+    int size = ui_ctx->size;
+
+    // void * ctx = ui_ctx;
+    // while (size > 0) {
+    //     ui_ctx_t * ui_ctx_ptr = ctx;
+    //     int len = ui_ctx_ptr->size;
+    //     printf("node: size: %d, idx: %d, ", len, ui_ctx_ptr->idx);
+    //     printf("pos: (%d, %d), size: (%d, %d)\r\n",ui_ctx_ptr->f.p.x, ui_ctx_ptr->f.p.y, ui_ctx_ptr->f.s.w, ui_ctx_ptr->f.s.h);
+    //     ctx += sizeof(ui_ctx_t);
+    //     size -= sizeof(ui_ctx_t);
+    // }
+
+    lcd_rect(0, 0, 96, 68, 0x526137);
+    lcd_rect(10, 20, 30, 22, 0x0);
+
+    lcd_color_t bitmap[] = {
+        0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00,
+    };
+
+    lcd_image(50, 50, 2, 2, 4, bitmap);
+
+    print_ctx(0, ui_ctx);
+
+    const ui_node_t app_ui_root = {
+        .widget = &__widget_text_color,
+        .widget_cfg = &(widget_text_color_cfg_t){
+            .text_size = { .w = 10, .h = 1 },
+            .font = &font_5x7,
+            .gaps = { .w = 2, .h = 1 }
+        }
+    };
+
+    widget_text_color_index_cfg_t twctx = {
+        .cs = &(color_scheme_t){ .fg = 0x0000FF, .bg = 0x000000 },
+        .text = "Hey bitch!"
+    };
+
+    calc_node(&app_ui_root, app_ui_stack, 0);
+    draw_node(&app_ui_root, &twctx, app_ui_stack);
 
     while (1) {
         char kbd_btn = gfx_routine();
