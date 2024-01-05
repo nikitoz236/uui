@@ -1,7 +1,5 @@
 #include "widget_emu_lcd.h"
 #include "emu_common.h"
-#include "api_lcd.h"
-
 
 static form_t * emu_lcd_form;
 static widget_emu_lcd_cfg_t * emu_lcd_cfg;
