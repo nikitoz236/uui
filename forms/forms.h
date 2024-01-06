@@ -72,7 +72,7 @@ typedef union {
 } align_mode_t;
 
 #define ALIGN_MODE(hm, ho, vm, vo) \
-    { \
+    (align_mode_t){ \
         .h = { \
             .mode = ALIGN_ ## hm, \
             .offset = ho \
