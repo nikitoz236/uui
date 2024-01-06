@@ -1,17 +1,16 @@
 #include "widget_text_color.h"
 #include "api_lcd_color.h"
 
-static unsigned calc(void * widget_cfg, ui_ctx_t * node_ctx)
+static unsigned calc(ui_ctx_t * node_ctx)
 {
-    node_ctx->child_offset = sizeof(widget_text_color_ctx_t);
-    widget_text_color_cfg_t * cfg = (widget_text_color_cfg_t *)widget_cfg;
+    widget_text_color_cfg_t * cfg = (widget_text_color_cfg_t *)node_ctx->node->widget_cfg;
     for (int i = 0; i < 2; i++) {
         node_ctx->f.s.ca[i] =
             (cfg->font->size.ca[i] * cfg-> text_size.ca[i] * cfg->scale) +
             ((cfg-> text_size.ca[i] - 1) * cfg->gaps.ca[i])
         ;
     }
-    return sizeof(ui_ctx_t) + sizeof(widget_text_color_ctx_t);
+    return 0;
 };
 
 // обработает нам одно знакоместо
@@ -75,8 +74,8 @@ static inline void fill_rem_form_str(unsigned x, unsigned y, unsigned rem_chars,
     lcd_rect(x, y, rem_w, cfg->font->size.h * cfg->scale, color);
 }
 
-static void draw(void * widget_cfg, ui_ctx_t * node_ctx) {
-    widget_text_color_cfg_t * cfg = (widget_text_color_cfg_t *)widget_cfg;
+static void draw(ui_ctx_t * node_ctx) {
+    widget_text_color_cfg_t * cfg = (widget_text_color_cfg_t *)node_ctx->node->widget_cfg;
     widget_text_color_ctx_t * ctx = (widget_text_color_ctx_t *)node_ctx->ctx;
 
     char * c = ctx->text;
@@ -138,5 +137,6 @@ static void draw(void * widget_cfg, ui_ctx_t * node_ctx) {
 
 widget_t __widget_text_color = {
     .calc = calc,
-    .draw = draw
+    .draw = draw,
+    .ctx_len = sizeof(widget_text_color_ctx_t)
 };

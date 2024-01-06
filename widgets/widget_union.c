@@ -1,8 +1,9 @@
 #include "widget_union.h"
 
-static unsigned calc(void * cfg, ui_ctx_t * node_ctx) {
-    widget_union_cfg_t * union_cfg = (widget_union_cfg_t *)cfg;
+static unsigned calc(ui_ctx_t * node_ctx) {
+    widget_union_cfg_t * union_cfg = (widget_union_cfg_t *)node_ctx->node->widget_cfg;
     ui_ctx_t * child_ctx[2];
+    node_ctx->child_offset = 0;
     void * ctx_ptr = node_ctx->ctx;
     unsigned result_size = 0;
 
@@ -26,11 +27,11 @@ static unsigned calc(void * cfg, ui_ctx_t * node_ctx) {
         }
     }
 
-    return sizeof(ui_ctx_t) + result_size;
+    return result_size;
 };
 
-static void draw(void * cfg, ui_ctx_t * node_ctx) {
-    widget_union_cfg_t * union_cfg = (widget_union_cfg_t *)cfg;
+static void draw(ui_ctx_t * node_ctx) {
+    widget_union_cfg_t * union_cfg = (widget_union_cfg_t *)node_ctx->node->widget_cfg;
 
     // получаем указатели на контексты дочерних форм
     ui_ctx_t * child_ctx[2];
@@ -44,7 +45,7 @@ static void draw(void * cfg, ui_ctx_t * node_ctx) {
     form_union_calc_pos(&node_ctx->f, &child_ctx[0]->f, &child_ctx[1]->f, &union_cfg->align_mode);
     for (int i = 0; i < 2; i++) {
         unsigned child_idx = child_ctx[i]->idx;
-        draw_node(&union_cfg->nodes[child_idx], child_ctx[i]);
+        draw_node(child_ctx[i]);
     }
 };
 

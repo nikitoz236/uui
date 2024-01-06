@@ -4,9 +4,9 @@
 static form_t * emu_lcd_form;
 static widget_emu_lcd_cfg_t * emu_lcd_cfg;
 
-static unsigned calc(void * cfg, ui_ctx_t * node_ctx)
+static unsigned calc(ui_ctx_t * node_ctx)
 {
-    emu_lcd_cfg = (widget_emu_lcd_cfg_t *)cfg;
+    emu_lcd_cfg = (widget_emu_lcd_cfg_t *)node_ctx->node->widget_cfg;
     emu_lcd_form = &node_ctx->f;
 
     int px_size = emu_lcd_cfg->scale;
@@ -25,10 +25,10 @@ static unsigned calc(void * cfg, ui_ctx_t * node_ctx)
         ;
     }
 
-    return sizeof(ui_ctx_t);
+    return 0;
 };
 
-static void draw(void * cfg, ui_ctx_t * node_ctx) {
+static void draw(ui_ctx_t * node_ctx) {
     emu_draw_rect(emu_lcd_form, emu_lcd_cfg->bg_color);
 };
 
