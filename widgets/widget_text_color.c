@@ -3,6 +3,7 @@
 
 static unsigned calc(void * widget_cfg, ui_ctx_t * node_ctx)
 {
+    node_ctx->child_offset = sizeof(widget_text_color_ctx_t);
     widget_text_color_cfg_t * cfg = (widget_text_color_cfg_t *)widget_cfg;
     for (int i = 0; i < 2; i++) {
         node_ctx->f.s.ca[i] =

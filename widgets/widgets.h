@@ -28,8 +28,9 @@
 
 typedef struct {            // структура описания динамического элемента в дереве виджетов
     form_t f;               // геометрия виджета
-    uint8_t size;           // размер данного виджета в стеке включая всю дочернюю ветвь
     uint8_t idx;            // индекс данного виджета в описании родительского виджета
+    uint8_t child_offset;   // смещение в стеке до первого дочернего виджета
+    uint16_t size;          // размер контекста данного виджета в стеке включая всю дочернюю ветвь
     uint8_t ctx[];          // произвольный контекст данного виджета включая все дочерние виджеты
 } ui_ctx_t;
 
@@ -47,6 +48,10 @@ typedef struct {            // структура виджета для испо
                             // используется для построения массивов одного виджета, например клавиатур
     // ui_ctx_t * node_ctx  // указатель на контекст виджета
     void (*draw)(void * cfg, ui_ctx_t * node_ctx);
+
+    unsigned (*process)(void * widget_cfg, ui_ctx_t * node_ctx, unsigned event);
+    uint8_t ctx_len;        // размер контекста только данного виджета
+    uint8_t stretched;      // возможно ли менять данному виджету size перед вызовом draw
 } widget_t;
 
 typedef struct {            // элемент описания дерева виджетов
@@ -55,12 +60,25 @@ typedef struct {            // элемент описания дерева ви
 } ui_node_t;
 
 // считает размер прямоугольника виджета и размер контекста, заполняет индекс
-static inline void calc_node(const ui_node_t * node, ui_ctx_t * node_ctx, unsigned idx) {
-    node_ctx->size = node->widget->calc(node->widget_cfg, node_ctx);
+static inline unsigned calc_node(const ui_node_t * node, ui_ctx_t * node_ctx, unsigned idx) {
     node_ctx->idx = idx;
+    unsigned node_ctx_size = node->widget->calc(node->widget_cfg, node_ctx);
+    // поле child_offset каждый виджет должен заполнить сам
+    node_ctx->size = node_ctx_size;
+    return node_ctx_size;
 }
 
 // рисует виджет
 static inline void draw_node(const ui_node_t * node, ui_ctx_t * node_ctx) {
     node->widget->draw(node->widget_cfg, node_ctx);
+}
+
+static inline ui_ctx_t * next_child(ui_ctx_t * node_ctx)
+{
+    return (ui_ctx_t *)((void *)node_ctx + node_ctx->size);
+}
+
+static inline ui_ctx_t * first_child(ui_ctx_t * node_ctx)
+{
+    return (ui_ctx_t *)(node_ctx->ctx + node_ctx->child_offset);
 }

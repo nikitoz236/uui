@@ -8,8 +8,7 @@ static unsigned calc(void * cfg, ui_ctx_t * node_ctx) {
 
     for (int i = 0; i < 2; i++) {
         child_ctx[i] = ctx_ptr;
-        calc_node(&union_cfg->nodes[i], child_ctx[i], i);
-        unsigned child_node_size = child_ctx[i]->size;
+        unsigned child_node_size = calc_node(&union_cfg->nodes[i], child_ctx[i], i);
         result_size += child_node_size;
         ctx_ptr += child_node_size;
     }
