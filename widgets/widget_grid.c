@@ -49,6 +49,9 @@ static unsigned calc(ui_ctx_t * node_ctx)
                 max_size.ca[j] = child_ctx->f.s.ca[j];
             }
         }
+        unsigned st = child_ctx->node->widget->stretched;
+        printf("calc grid item %d size: (%d, %d), max size: (%d, %d), stretch %d\r\n", i, child_ctx->f.s.w, child_ctx->f.s.h, max_size.w, max_size.h, st);
+
         child_ctx = next_child(child_ctx);
         child_node_count++;
         if (child_node_count == cfg->childs[child_node_type].count) {
@@ -84,4 +87,5 @@ static void draw(ui_ctx_t * node_ctx)
 widget_t __widget_grid = {
     .calc = calc,
     .draw = draw,
+    .stretched = 1
 };
