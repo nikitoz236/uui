@@ -54,7 +54,7 @@ int main()
             .grid_cfg = {
                 .ca[0] = {
                     .count = 2,
-                    .gap = 10
+                    .gap = 4
                 },
                 .ca[1] = {
                     .count = 4,
@@ -70,7 +70,36 @@ int main()
                             .color = 0xFFff00
                         }
                     },
-                    .count = 8
+                    .count = 7
+                },
+                {
+                    .node = &(ui_node_t){
+                        .widget = &__widget_grid,
+                        .widget_cfg = &(widget_grid_cfg_t){
+                            .grid_cfg = {
+                                .ca[0] = {
+                                    .count = 2,
+                                    .gap = 4
+                                },
+                                .ca[1] = {
+                                    .count = 2,
+                                    .gap = 4
+                                }
+                            },
+                            .childs = (grid_child_elements_t[]){
+                                {
+                                    .node = &(ui_node_t){
+                                        .widget = &rect_widget_lcd,
+                                        .widget_cfg = &(rect_widget_cfg_t){
+                                            .size = { .w = 60, .h = 20 },
+                                            .color = 0xFF00FF
+                                        }
+                                    },
+                                    .count = 4
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
