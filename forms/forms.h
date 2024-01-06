@@ -71,6 +71,18 @@ typedef union {
     struct __align_cfg ca[2];
 } align_mode_t;
 
+#define ALIGN_MODE(hm, ho, vm, vo) \
+    { \
+        .h = { \
+            .mode = ALIGN_ ## hm, \
+            .offset = ho \
+        }, \
+        .v = { \
+            .mode = ALIGN_ ## vm, \
+            .offset = vo \
+        } \
+    }
+
 void form_align(form_t * pf, form_t * af, align_mode_t * mode);
 void form_union_calc_size(form_t * f1, form_t * f2, align_mode_t * mode, form_t * rf);
 void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * mode);
