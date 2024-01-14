@@ -18,7 +18,7 @@ static unsigned calc(ui_ctx_t * node_ctx)
             px_size * emu_lcd_cfg->size.ca[c] +
 
             // результирующий размер всех зазоров между пикселями
-            (emu_lcd_cfg->px_gap + (emu_lcd_cfg->size.ca[c] - 1)) +
+            (emu_lcd_cfg->px_gap * (emu_lcd_cfg->size.ca[c] - 1)) +
 
             // размер рамки по краям
             (2 * emu_lcd_cfg->border)
