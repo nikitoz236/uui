@@ -1,3 +1,4 @@
+#pragma once
 
 #define HZ_IN_KHZ                                   1000
 #define KHZ_IN_MHZ                                  1000
