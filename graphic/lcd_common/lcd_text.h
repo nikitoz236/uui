@@ -16,3 +16,4 @@ typedef struct __attribute__((packed)) {
 void lcd_text_calc_size(xy_t * size, lcd_text_cfg_t * cfg);
 void lcd_text_extend_text_size(xy_t * available_size, lcd_text_cfg_t * cfg);
 void lcd_text_extend_scale(xy_t * available_size, lcd_text_cfg_t * cfg);
+void lcd_text_extend_gaps(xy_t * available_size, lcd_text_cfg_t * cfg);
