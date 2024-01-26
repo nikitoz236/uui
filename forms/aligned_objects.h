@@ -28,6 +28,24 @@ typedef struct __attribute__((packed)) {
     } fa[2];
 } align_list_item_t;
 
+#define __GROUP_ALIGNMENT_C             { .center = 1 }
+#define __GROUP_ALIGNMENT_LO            { .edge = ALIGN_L, .side = ALIGN_O }
+#define __GROUP_ALIGNMENT_LI            { .edge = ALIGN_L, .side = ALIGN_I }
+#define __GROUP_ALIGNMENT_RO            { .edge = ALIGN_R, .side = ALIGN_O }
+#define __GROUP_ALIGNMENT_RI            { .edge = ALIGN_R, .side = ALIGN_I }
+#define __GROUP_ALIGNMENT_UO            __GROUP_ALIGNMENT_LO
+#define __GROUP_ALIGNMENT_UI            __GROUP_ALIGNMENT_LI
+#define __GROUP_ALIGNMENT_DO            __GROUP_ALIGNMENT_RO
+#define __GROUP_ALIGNMENT_DI            __GROUP_ALIGNMENT_RI
+
+#define GROUP_ALIGN_ITEM(ha, hm1, hm2, hri, va, vm1, vm2, vri) \
+    { \
+        .fa = { \
+            { .ref_object_idx = hri, .ap = { .margin = { hm1, hm2 }, .align = __GROUP_ALIGNMENT_ ## ha } }, \
+            { .ref_object_idx = vri, .ap = { .margin = { vm1, vm2 }, .align = __GROUP_ALIGNMENT_ ## va } }, \
+        } \
+    }
+
 /*
     мы имеем r_list - описание выравнивания n объектов в группе
 
@@ -39,5 +57,4 @@ typedef struct __attribute__((packed)) {
 */
 
 void aligned_group_calc_size(form_t form_list[], const align_list_item_t r_list[], unsigned n);
-
 void aligned_group_calc_pos(form_t form_list[], const align_list_item_t r_list[], unsigned n);
