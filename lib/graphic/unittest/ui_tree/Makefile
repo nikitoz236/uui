@@ -1,7 +1,6 @@
 UCLIB_PATH = ../../../..
 
 INC += ./
-
 SRC += ./*.c
 
 INC += $(UCLIB_PATH)/lib/graphic/ui_tree

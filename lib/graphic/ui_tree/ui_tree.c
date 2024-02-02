@@ -12,10 +12,15 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
 {
     ui_tree_ptr = ptr;
     ui_tree_size = size;
-    ui_tree_element(0)->f.s = *display_size;
-    ui_tree_element(0)->f.p = (xy_t){0, 0};
-
-    ui_tree_element(0)->ui_node = ui_node;
+    ui_element_t * el = ui_tree_element(0);
+    el->f.s = *display_size;
+    el->f.p = (xy_t){0, 0};
+    el->ui_node = ui_node;
+    el->owner = 0;
+    el->next = 0;
+    el->child = 0;
+    el->idx = 0;
+    el->active = 0;
 }
 
 static inline ui_element_t * ui_tree_owner(ui_element_t * element)

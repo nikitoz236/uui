@@ -2,15 +2,14 @@
 #include <stdint.h>
 #include "forms.h"
 
-typedef struct ui_node_desc ui_node_desc_t;
+typedef struct __ui_node_desc ui_node_desc_t;
 
 typedef struct {
     form_t f;
-    ui_node_desc_t * ui_node;
+    const ui_node_desc_t * ui_node;
     uint16_t owner;
     uint16_t child;
     uint16_t next;
-    uint16_t ctx_size;
     uint8_t idx;
     uint8_t active : 1;
     uint8_t ctx[];
@@ -25,9 +24,9 @@ typedef struct {
     uint16_t ctx_size;
 } widget_desc_t;
 
-struct ui_node_desc {
-    widget_desc_t * widget;
-    void * cfg;
+struct __ui_node_desc {
+    const widget_desc_t * widget;
+    const void * cfg;
 };
 
 
