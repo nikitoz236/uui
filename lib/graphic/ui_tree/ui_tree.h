@@ -32,15 +32,16 @@ struct __ui_node_desc {
 
 
 void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, const xy_t * display_size);
-    // создать элемент, прописать владельца, прописать следующего, прописать владельца следующего, прописать владельца ребенка, прописать следующего ребенка,
 
-static inline ui_element_t * ui_tree_owner(ui_element_t * element);
+ui_element_t * ui_tree_owner(ui_element_t * element);
 ui_element_t * ui_tree_child(ui_element_t * element);
 ui_element_t * ui_tree_next(ui_element_t * element);
 
 void * ui_tree_ctx(ui_element_t * element);
 
-void ui_tree_delete(ui_element_t * element);
+ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node);
+
+void ui_tree_delete_childs(ui_element_t * element);
 
 void ui_tree_draw(void);
 void ui_tree_update(void);

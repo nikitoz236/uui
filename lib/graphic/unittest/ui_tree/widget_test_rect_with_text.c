@@ -12,7 +12,7 @@ static inline void form_fill(form_t * f, lcd_color_t color)
     lcd_rect(f->p.x, f->p.y, f->s.w, f->s.h, color);
 }
 
-void draw_test_rect_with_text(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
     __widget_test_rect_with_text_cfg_t * cfg = (__widget_test_rect_with_text_cfg_t *)el->ui_node->cfg;
     form_fill(&el->f, cfg->cs.bg);
@@ -32,5 +32,5 @@ void draw_test_rect_with_text(ui_element_t * el)
 }
 
 const widget_desc_t __widget_test_rect_with_text = {
-    .draw = draw_test_rect_with_text,
+    .draw = draw,
 };
