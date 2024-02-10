@@ -3,7 +3,7 @@
 # цель для запуска <имя файла с исходником теста>_test_run
 
 %_test_app: %.c $(SRC)
-	gcc -o $@ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $^
+	gcc -o $@ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) -m32 $^
 
 %_test_run: %_test_app
 	./$<
