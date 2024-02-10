@@ -13,7 +13,7 @@ static void draw(ui_element_t * el)
             printf("layout mode %d add cidx: %d x %d, y %d, ", selected_layout, cidx, x, y);
             form_grid(&el->f, &ce->f, &cfg->borders, &cfg->gaps, &cfg->size_list[selected_layout], x, y);
             printf("form p (%d %d) s (%d %d)\n", ce->f.p.x, ce->f.p.y, ce->f.s.w, ce->f.s.h);
-            ce->ui_node->widget->draw(ce);
+            // ce->ui_node->widget->draw(ce);
             cidx++;
         }
     }
@@ -37,7 +37,7 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 
         printf("new val %d\n", *cfg->selected_layout);
         ui_tree_delete_childs(el);
-        draw(el);
+        ui_tree_element_draw(el);
         return 1;
     }
     return 0;

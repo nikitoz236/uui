@@ -1,5 +1,9 @@
 #include "ui_tree.h"
 #include "debug_print.h"
+#include "misc.h"
+
+// #define debug__create    debug_print
+#define debug__create
 
 static void * ui_tree_ptr = 0;
 static unsigned ui_tree_size = 0;
@@ -15,16 +19,23 @@ static uint16_t element_offset(ui_element_t * el)
     return (void *)el - (void *)ui_tree_ptr;
 }
 
+static inline unsigned element_size(ui_element_t * el)
+{
+    return round_up_deg2(sizeof(ui_element_t) + el->ui_node->widget->ctx_size, 4);
+}
+
 static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_offset, unsigned idx)
 {
     ui_element_t * el = ui_tree_element(ui_tree_top);
-    ui_tree_top += sizeof(ui_element_t) + ui_node->widget->ctx_size;
     el->ui_node = ui_node;
     el->idx = idx;
     el->owner = owner_offset;
     el->child = 0;
     el->next = 0;
     el->active = 0;
+
+    // after save ui_node pointer
+    ui_tree_top += element_size(el);
     return el;
 }
 
@@ -35,7 +46,6 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     ui_element_t * el = add_node(ui_node, 0, 0);
     el->f.s = *display_size;
     el->f.p = (xy_t){0, 0};
-
 }
 
 ui_element_t * ui_tree_owner(ui_element_t * element)
@@ -68,7 +78,7 @@ static ui_element_t * search_last_child(ui_element_t * owner)
 {
     ui_element_t * last = ui_tree_child(owner);
     while (last->next) {
-        debug_print("    search last child %d\n", last->next);
+        debug__create("    search last child %d\n", last->next);
         last = ui_tree_element(last->next);
     }
     return last;
@@ -77,18 +87,28 @@ static ui_element_t * search_last_child(ui_element_t * owner)
 ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node)
 {
     ui_element_t * el;
-    debug_print("ui tree add owner %d, tree top %d\n", element_offset(owner), ui_tree_top);
+    debug__create("ui tree add owner %d, tree top %d\n", element_offset(owner), ui_tree_top);
     if (owner->child == 0) {
         el = add_node(ui_node, element_offset(owner), 0);
         owner->child = element_offset(el);
-        debug_print("  first child. offset %d, tree top %d\n", owner->child, ui_tree_top);
+        debug__create("  first child. offset %d, tree top %d\n", owner->child, ui_tree_top);
     } else {
         ui_element_t * last = search_last_child(owner);
         el = add_node(ui_node, element_offset(owner), last->idx + 1);
         last->next = element_offset(el);
-        debug_print("  next child. offset %d, tree top %d\n", owner->next, ui_tree_top);
+        debug__create("  next child. offset %d, tree top %d\n", owner->next, ui_tree_top);
     }
     return el;
+}
+
+static ui_element_t * ui_tree_next_linear(ui_element_t * element)
+{
+    unsigned offset = element_offset(element);
+    offset += element_size(element);
+    if (offset >= ui_tree_top) {
+        return 0;
+    }
+    return ui_tree_element(offset);
 }
 
 static void move_tree(unsigned offset, unsigned size)
@@ -100,6 +120,12 @@ static void move_tree(unsigned offset, unsigned size)
         offset++;
         source++;
     }
+    // ui_element_t * element = ui_tree_element(offset);
+    // while (element) {
+    //     if (element->next) {
+    //         element->next -= size;
+    //     }
+    // }
     ui_tree_top -= size;
 }
 
@@ -108,11 +134,12 @@ void ui_tree_delete_childs(ui_element_t * element)
     while (1) {
         ui_element_t * last = ui_tree_element(element->child);
         ui_element_t * previous = 0;
+
+        //  ищем последний элемент последовательности, также надо запомнить последнего кто на него ссылался чтобы ему поставить 0
         while (last->next) {
             previous = last;
             last = ui_tree_element(last->next);
         }
-
 
         if (last->child) {
             ui_tree_delete_childs(last);
@@ -123,7 +150,7 @@ void ui_tree_delete_childs(ui_element_t * element)
                 либо переносить элементы осмысленно переписывая заголовки родителя
             */
         } else {
-            move_tree(element_offset(last), last->ui_node->widget->ctx_size + sizeof(ui_element_t));
+            move_tree(element_offset(last), element_size(last));
         }
 
         debug_print("        delete child %d, top %d\n", element_offset(last), ui_tree_top);
@@ -138,20 +165,23 @@ void ui_tree_delete_childs(ui_element_t * element)
 
 }
 
-static ui_element_t * ui_tree_next_linear(ui_element_t * element)
+
+void ui_tree_element_draw(ui_element_t * element)
 {
-    unsigned offset = element_offset(element);
-    offset += element->ui_node->widget->ctx_size + sizeof(ui_element_t);
-    if (offset >= ui_tree_top) {
-        return 0;
+    if (element->ui_node->widget->draw) {
+        element->ui_node->widget->draw(element);
     }
-    return ui_tree_element(offset);
+    ui_element_t * child = ui_tree_child(element);
+    while (child) {
+        ui_tree_element_draw(child);
+        child = ui_tree_next(child);
+    }
 }
 
 void ui_tree_draw(void)
 {
     ui_element_t * element = ui_tree_element(0);
-    element->ui_node->widget->draw(element);
+    ui_tree_element_draw(element);
 }
 
 void ui_tree_update(void);
@@ -167,7 +197,8 @@ void ui_tree_debug_print_linear(void)
     debug_print("ui tree linear:\n");
     ui_element_t * element = ui_tree_element(0);
     while (element) {
-        debug_print("    element %d offset %4d, owner %4d, child %4d, next %4d, ctx size %d\n", element->idx, element_offset(element), element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
+        debug_print_hex("--  ", element, sizeof(ui_element_t) + element->ui_node->widget->ctx_size);
+        debug_print("       element %d offset %4d, owner %4d, child %4d, next %4d, ctx size %d\n", element->idx, element_offset(element), element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
         element = ui_tree_next_linear(element);
     }
 }

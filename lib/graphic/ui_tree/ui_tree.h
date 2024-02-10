@@ -41,6 +41,8 @@ ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node)
 
 void ui_tree_delete_childs(ui_element_t * element);
 
+void ui_tree_element_draw(ui_element_t * element);
+
 void ui_tree_draw(void);
 void ui_tree_update(void);
 void ui_tree_process_event(unsigned event);
