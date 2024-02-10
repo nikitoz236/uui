@@ -1,4 +1,12 @@
-UCLIB_PATH = ../../../..
+UCLIB_PATH = ../..
+
+LIB = $(UCLIB_PATH)/lib
+
+INC += $(LIB)/common
+INC += $(LIB)/graphic/fonts
+
+SRC += $(LIB)/graphic/fonts/*.c
+SRC += $(LIB)/common/*.c
 
 INC += ./
 SRC += ./*.c
