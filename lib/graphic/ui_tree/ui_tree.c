@@ -114,27 +114,24 @@ ui_element_t * ui_tree_next_linear(ui_element_t * element)
 static void move_tree(unsigned offset, unsigned size)
 {
     unsigned source = offset + size;
-    unsigned dest = offset;
+    unsigned * src = (unsigned *)(ui_tree_ptr + source);
+    unsigned * dst = (unsigned *)(ui_tree_ptr + offset);
 
-    debug_print("move tree from %d to %d, size %d\n", source, dest, size);
+    debug_print("move tree from %d to %d, size %d\n", source, offset, size);
 
-    uint8_t * stack = (uint8_t *)ui_tree_ptr;
-    ui_element_t * element = ui_tree_element(source);
-    // while (element) {
-    //     debug_print("        prepare move element %d, offset: %d ptr: %p idx: %d, owner: %d, next %d, child %d\n", element->ctx[0], element_offset(element), element->ui_node, element->idx, element->owner, element->next, element->child);
-    //     element = ui_tree_next_linear(element);
-    // }
     while(source < ui_tree_top) {
-        stack[dest] = stack[source];
-        dest++;
-        source++;
+        *dst = *src;
+        src++;
+        dst++;
+        source += sizeof(unsigned);
     }
+
     ui_tree_top -= size;
 
-    element = ui_tree_element(0);
     unsigned last_offset = offset + size;
+    ui_element_t * element = ui_tree_element(0);
     while (element) {
-        // debug_print("        move element %d, offset: %d ptr: %p idx: %d, owner: %d, next %d, child %d\n", element->ctx[0], element_offset(element), element->ui_node, element->idx, element->owner, element->next, element->child);
+        // нужно актуализировать все ссылки в дереве если они ссылались в область которую переместили
         if (element->next >= last_offset) {
             element->next -= size;
         }
@@ -144,8 +141,6 @@ static void move_tree(unsigned offset, unsigned size)
         if (element->owner >= last_offset) {
             element->owner -= size;
         }
-        // debug_print("        moved element %d, offset: %d ptr: %p idx: %d, owner: %d, next %d, child %d\n", element->ctx[0], element_offset(element), element->ui_node, element->idx, element->owner, element->next, element->child);
-        // debug_print("\n");
         element = ui_tree_next_linear(element);
     }
 }
