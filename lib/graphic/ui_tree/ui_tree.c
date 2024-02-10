@@ -172,6 +172,77 @@ static unsigned calc_elements_continuous_len(unsigned * start, unsigned * previo
     return len;
 }
 
+unsigned some_recursive(unsigned * start, unsigned * previous)
+{
+    // удаляем с какогото элемента цепочки вместе с детями
+
+    unsigned this_previous = 0;
+    unsigned cont_start = *start;
+    unsigned len = calc_elements_continuous_len(&cont_start, &this_previous);
+    if (this_previous != 0) {
+        // ну точно придется еще раз пройтись но уже обозначив конец
+        ui_tree_element(this_previous)->next = 0;
+        // some_recursive(start);
+    }
+
+    // а зесь мы уже имеем непрерывную цепочку, надо проверить теперь ее чаилдов
+
+    unsigned child_position = cont_start + len;
+    unsigned offset = cont_start;
+    while (1) {
+        ui_element_t * el = ui_tree_element(offset);
+        if (el->child) {
+            if (el->child == child_position) {
+                unsigned child_previous = 0;
+                unsigned child_offset = el->child;
+                // кажется тут надо прогнать рекурсию
+
+                unsigned child_len = some_recursive(&child_offset, &child_previous);
+                if (child_previous != 0) {
+                    ui_tree_element(child_previous)->next = 0;
+                    // тут есть разрыв между последним элементом и началом чайлдов
+                } else {
+                    // тут все хорошо
+                }
+            } else {
+                // тут есть разрыв между последним элементом и началом чайлдов
+            }
+        }
+        offset += el->next;
+    }
+
+    // должна быть куча вызовов рекурсии выше и здесь состояние когда нам вернули какой - то конечный интервал. возможно весь
+        move_tree(cont_start, len);
+
+    /*
+    итак мы имеем элемент, его поле чайлд ссылается на цепочку которую будем удалять
+
+    выделяем интервал начиная с начала цепочки, и проверяем лежат ли все нексты друг за другом ?
+    если нет то обнуляем старт интервала
+
+    для каждого элемента в цепочке если есть чайлд то надо для него сделать тоже самое, и на выходе мы будем знать его интервал.
+    и вот тут нам надо надеяться что он соприкасается с нашим интервалом
+
+    мы удаляем дерева с конца и со дна
+
+    возможны варианты:
+        интервал начинается с середины цепочки
+            нужно обнулить ссылку на первый элемент интервала в предыдущем элементе
+            в этом сценарии чайлды тоже могут оказаться в интервале
+        интервал начинается от начала цепочки - зануляем чайлд владельца
+
+
+    */
+
+    // вот тут вайл в котором мы ищем последоватлеьные элементы
+
+    // если элементы не последовательны то запускаем себя начиная с последнего сайза тоесть какбы вниз по стеку ближе к концу
+
+    // и вот если оказалось что до конца вся цепочка в текущем вызове то удаляем все элементы начиная с текущего оффсета
+
+
+}
+
 void ui_tree_delete_childs(ui_element_t * element)
 {
     debug_print("delete childs of %d\n", element_offset(element));
