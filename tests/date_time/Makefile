@@ -1,12 +1,9 @@
-INC += ./
-INC += ../../
+LIB = ../../lib
 
-SRC += ./*.c
-SRC += ../../*.c
+INC += $(LIB)/common
 
-test: date_time_test
-	./$^
-	rm $^
+SRC += $(LIB)/common/*.c
 
-%_test: %_test.c $(SRC)
-	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) -o $@
+include ../test_console.mk
+
+all: date_time_test_run
