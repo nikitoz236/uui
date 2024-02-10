@@ -145,17 +145,103 @@ static void move_tree(unsigned offset, unsigned size)
     }
 }
 
+
+// static unsigned calc_row_len(unsigned offset)
+// {
+//     unsigned len = 0;
+//     unsigned start = offset;
+//     unsigned last = 0;
+
+
+//     // сначала мы находим последний непрерывный кусок
+//     while (1) {
+//         ui_element_t * el = ui_tree_element(offset);
+//         unsigned el_len = element_size(el);
+//         if (el->next) {
+//             unsigned next_linear = offset + el_len;
+//             if (el->next == next_linear) {
+//                 len += el_len;
+//             } else {
+//                 start = el->next;
+//                 len = 0;
+//             }
+//         } else {
+//             break;
+//         }
+//         offset = el->next;
+//     }
+
+//     потом начиная от старта бежим по чайлдам и считаем их размер
+
+
+
+
+
+
+//     if (el->next == next_linear) {
+//         len += el_len;
+//     } else {
+//         len = 0;
+//         start = el->next;
+//     }
+
+
+//     ui_element_t * element = ui_tree_element(offset);
+
+//     while (element) {
+//         len += element_size(element);
+//         element = ui_tree_next_linear(element);
+//     }
+//     return len;
+// }
+
 void ui_tree_delete_childs(ui_element_t * element)
 {
+    debug_print("delete childs of %d\n", element_offset(element));
     while (1) {
         ui_element_t * last = ui_tree_element(element->child);
+        unsigned start = element_offset(last);
+        unsigned len = 0;
         ui_element_t * previous = 0;
+
+/*
+итак мы имеем элемент, его поле чайлд ссылается на цепочку которую будем удалять
+
+выделяем интервал начиная с начала цепочки, и проверяем лежат ли все нексты друг за другом ?
+если нет то обнуляем старт интервала
+
+для каждого элемента в цепочке если есть чайлд то надо для него сделать тоже самое, и на выходе мы будем знать его интервал. и вот тут нам надо надеяться что он соприкасается с нашим интервалом 
+
+мы удаляем дерева с конца и со дна
+
+возможны варианты:
+    интервал начинается с середины цепочки
+        нужно обнулить ссылку на первый элемент интервала в предыдущем элементе
+        в этом сценарии чайлды тоже могут оказаться в интервале
+    интервал начинается от начала цепочки - зануляем чайлд владельца
+
+
+*/
+
+        
 
         //  ищем последний элемент последовательности, также надо запомнить последнего кто на него ссылался чтобы ему поставить 0
         while (last->next) {
-            previous = last;
+            unsigned this_offset = element_offset(last);
+            unsigned this_len = element_size(last);
+            unsigned next_linear = this_offset + this_len;
+            if (next_linear == last->next) {
+                len += this_len;
+            } else {
+                start = this_offset;
+                previous = last;
+            }
+            debug_print("- search interval for delete, start %d, len %d, prev %d\n", start, len, element_offset(previous));
             last = ui_tree_element(last->next);
         }
+        // last последний элемент
+        len += element_size(last);
+
 
         if (last->child) {
             ui_tree_delete_childs(last);
@@ -166,7 +252,7 @@ void ui_tree_delete_childs(ui_element_t * element)
                 либо переносить элементы осмысленно переписывая заголовки родителя
             */
         } else {
-            move_tree(element_offset(last), element_size(last));
+            move_tree(start, len);
         }
 
         debug_print("        delete child %d, top %d\n", element_offset(last), ui_tree_top);
@@ -178,7 +264,6 @@ void ui_tree_delete_childs(ui_element_t * element)
         }
     }
     element->child = 0;
-
 }
 
 
