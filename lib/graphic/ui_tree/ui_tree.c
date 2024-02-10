@@ -101,7 +101,7 @@ ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node)
     return el;
 }
 
-static ui_element_t * ui_tree_next_linear(ui_element_t * element)
+ui_element_t * ui_tree_next_linear(ui_element_t * element)
 {
     unsigned offset = element_offset(element);
     offset += element_size(element);
@@ -114,19 +114,40 @@ static ui_element_t * ui_tree_next_linear(ui_element_t * element)
 static void move_tree(unsigned offset, unsigned size)
 {
     unsigned source = offset + size;
+    unsigned dest = offset;
+
+    debug_print("move tree from %d to %d, size %d\n", source, dest, size);
+
     uint8_t * stack = (uint8_t *)ui_tree_ptr;
+    ui_element_t * element = ui_tree_element(source);
+    // while (element) {
+    //     debug_print("        prepare move element %d, offset: %d ptr: %p idx: %d, owner: %d, next %d, child %d\n", element->ctx[0], element_offset(element), element->ui_node, element->idx, element->owner, element->next, element->child);
+    //     element = ui_tree_next_linear(element);
+    // }
     while(source < ui_tree_top) {
-        stack[offset] = stack[source];
-        offset++;
+        stack[dest] = stack[source];
+        dest++;
         source++;
     }
-    // ui_element_t * element = ui_tree_element(offset);
-    // while (element) {
-    //     if (element->next) {
-    //         element->next -= size;
-    //     }
-    // }
     ui_tree_top -= size;
+
+    element = ui_tree_element(0);
+    unsigned last_offset = offset + size;
+    while (element) {
+        // debug_print("        move element %d, offset: %d ptr: %p idx: %d, owner: %d, next %d, child %d\n", element->ctx[0], element_offset(element), element->ui_node, element->idx, element->owner, element->next, element->child);
+        if (element->next >= last_offset) {
+            element->next -= size;
+        }
+        if (element->child >= last_offset) {
+            element->child -= size;
+        }
+        if (element->owner >= last_offset) {
+            element->owner -= size;
+        }
+        // debug_print("        moved element %d, offset: %d ptr: %p idx: %d, owner: %d, next %d, child %d\n", element->ctx[0], element_offset(element), element->ui_node, element->idx, element->owner, element->next, element->child);
+        // debug_print("\n");
+        element = ui_tree_next_linear(element);
+    }
 }
 
 void ui_tree_delete_childs(ui_element_t * element)
@@ -197,8 +218,9 @@ void ui_tree_debug_print_linear(void)
     debug_print("ui tree linear:\n");
     ui_element_t * element = ui_tree_element(0);
     while (element) {
-        debug_print_hex("--  ", element, sizeof(ui_element_t) + element->ui_node->widget->ctx_size);
-        debug_print("       element %d offset %4d, owner %4d, child %4d, next %4d, ctx size %d\n", element->idx, element_offset(element), element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
+        // debug_print_hex("--  ", element, sizeof(ui_element_t) + element->ui_node->widget->ctx_size);
+        debug_print_color(GREEN, NONE, "    element %d: ", element->ctx[0]);
+        debug_print("offset: %d, %p idx %2d, owner %4d, child %4d, next %4d, ctx size %d\n",  element_offset(element), element->ui_node, element->idx, element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
         element = ui_tree_next_linear(element);
     }
 }
@@ -208,7 +230,8 @@ static void ui_tree_debug_print_tree_element(ui_element_t * element, unsigned le
     for (unsigned i = 0; i < level; i++) {
         debug_print("    ");
     }
-    debug_print("element %d offset %4d, owner %4d, child %4d, next %4d, ctx size %d\n", element->idx, element_offset(element), element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
+    debug_print_color(RED, NONE, "element %d: ", element->ctx[0]);
+    debug_print("offset: %d, %p idx %2d, owner %4d, child %4d, next %4d, ctx size %d\n",  element_offset(element), element->ui_node, element->idx, element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
     if (element->child) {
         ui_element_t * child = ui_tree_child(element);
         while (child) {
