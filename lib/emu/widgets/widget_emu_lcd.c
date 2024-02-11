@@ -2,18 +2,18 @@
 #include "emu_common.h"
 
 static form_t * emu_lcd_form;
-static widget_emu_lcd_cfg_t * emu_lcd_cfg;
+static __widget_emu_lcd_cfg_t * emu_lcd_cfg;
 
-static unsigned calc(ui_ctx_t * node_ctx)
+static void calc(ui_element_t * node_ctx)
 {
-    emu_lcd_cfg = (widget_emu_lcd_cfg_t *)node_ctx->node->widget_cfg;
+    emu_lcd_cfg = (__widget_emu_lcd_cfg_t *)node_ctx->ui_node->cfg;
     emu_lcd_form = &node_ctx->f;
 
     int px_size = emu_lcd_cfg->scale;
     int px_step = px_size + emu_lcd_cfg->px_gap;
 
     for (int c = 0; c < 2; c++) {
-        node_ctx->f.s.ca[c] =
+        node_ctx->f.s.ca[c] = (
             // результирующий размер каждого пикселя
             px_size * emu_lcd_cfg->size.ca[c] +
 
@@ -22,19 +22,17 @@ static unsigned calc(ui_ctx_t * node_ctx)
 
             // размер рамки по краям
             (2 * emu_lcd_cfg->border)
-        ;
+        );
     }
-
-    return 0;
 };
 
-static void draw(ui_ctx_t * node_ctx) {
+static void draw(ui_element_t * node_ctx) {
     emu_draw_rect(emu_lcd_form, emu_lcd_cfg->bg_color);
 };
 
-widget_t __widget_emu_lcd = {
+widget_desc_t __widget_emu_lcd = {
     .calc = calc,
-    .draw = draw
+    .draw = draw,
 };
 
 void emu_lcd_px(int x, int y, int color)

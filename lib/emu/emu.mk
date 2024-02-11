@@ -1,24 +1,45 @@
 
-#	LIB_SRC - содержит библиотечные исходники абстрактного кода микроконтроллера для устройства
-#	EMU_SRC - содержит исходники среды исполнения эмуляции
+# должен быть определен путь к LIB
 
-INC += $(UCLIB_PATH)/emu
-INC += $(UCLIB_PATH)/forms
-INC += $(UCLIB_PATH)/widgets
-INC += $(UCLIB_PATH)/api
-INC += $(UCLIB_PATH)/fonts
-INC += $(UCLIB_PATH)/common
+INC += $(LIB)/hw/api
 
-EMU_SRC += $(UCLIB_PATH)/emu/*.c
-LIB_SRC += $(UCLIB_PATH)/forms/*.c
-LIB_SRC += $(UCLIB_PATH)/widgets/*.c
-LIB_SRC += $(UCLIB_PATH)/fonts/*.c
-# LIB_SRC += $(UCLIB_PATH)/common/*.c
+INC += $(LIB)/common
+SRC += $(LIB)/common/*.c
+
+INC += $(LIB)/emu/
+SRC += $(LIB)/emu/*.c
+
+INC += $(LIB)/emu/widgets
+SRC += $(LIB)/emu/widgets/*.c
+
+INC += $(LIB)/graphic
+SRC += $(LIB)/graphic/*.c
+
+INC += $(LIB)/graphic/fonts
+SRC += $(LIB)/graphic/fonts/*.c
+
+INC += $(LIB)/graphic/lcd_color
+SRC += $(LIB)/graphic/lcd_color/*.c
+
+INC += $(LIB)/graphic/ui_tree
+SRC += $(LIB)/graphic/ui_tree/*.c
+
+INC += $(LIB)/graphic/lcd_color
+SRC += $(LIB)/graphic/lcd_color/*.c
+
+INC += $(LIB)/graphic/widgets
+
 GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
 
-emu: emu_app
+%_test_app: %.c $(SRC)
+	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(GFX_FLAGS) -o $@
+
+%_test_run: %_test_app
 	./$<
 	rm $<
 
-emu_app: $(LIB_SRC) $(EMU_SRC) $(SRC)
-	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(GFX_FLAGS) -o $@
+%_test:
+	echo %
+
+clean:
+	rm -f *_test_app
