@@ -72,6 +72,7 @@ void lcd_text_color_print(char * c, xy_t * pos, lcd_text_cfg_t * cfg, color_sche
         // unsigned x = pos->x;
         // for(int cx = 0; cx < cfg->text_size.w ; cx++) {
 
+    lcd_color_t bg = cs->bg;
     unsigned y = pos->y + ((cfg->font->size.y * cfg->scale) + cfg->gaps.y) * ty;
     for (int cy = ty; cy < cfg->text_size.h; cy++) {
         unsigned x = pos->x + ((cfg->font->size.x * cfg->scale) + cfg->gaps.x) * tx;
@@ -86,27 +87,30 @@ void lcd_text_color_print(char * c, xy_t * pos, lcd_text_cfg_t * cfg, color_sche
             // если не в таблице        то рисуем шашечку               увеличиваем указатель       не выходим из цикла
             // utf 8 потом надо бы ....
 
-            printf("text draw font. y %d, cy %d, of %d\n", y, cy, cfg->text_size.h);
+            // printf("text draw font. y %d, cy %d, of %d\n", y, cy, cfg->text_size.h);
 
-            if (*c == '\r') {
-                c++;
+            if (c != 0) {
+                if (*c == '\r') {
+                    c++;
+                }
             }
 
-            lcd_color_t bg = cs->bg;
-            if (*c == 0) {
-                bg = 0xFF0000;
+            if ((c == 0) || (*c == 0)) {
+                // bg = 0xFF0000;
                 if (len == 0) {
                     fill_rem_form_str(x, y, cfg->text_size.w - cx, cfg, bg);
+                } else {
+                    fill_rem_form_str(x, y, len - char_count, cfg, bg);
                 }
                 cx = cfg->text_size.w;
             } else if (*c == '\n') {
-                bg = 0xFFFF00;
+                // bg = 0xFFFF00;
                 fill_rem_form_str(x, y, cfg->text_size.w - cx, cfg, bg);
                 cx = cfg->text_size.w;
                 c++;
             } else {
                 if (*c == ' ') {
-                    bg = 0x00FF00;
+                    // bg = 0x00FF00;
                     lcd_rect(x, y, (cfg->font->size.w * scale) + cfg->gaps.w, (cfg->font->size.h * scale), bg);
                     x += cfg->font->size.w * cfg->scale + cfg->gaps.w;
                 } else {
@@ -114,10 +118,11 @@ void lcd_text_color_print(char * c, xy_t * pos, lcd_text_cfg_t * cfg, color_sche
                     print_char(*c, x, y, cfg->font, cs->fg, cs->bg, scale);
                     x += cfg->font->size.w * cfg->scale;
                     if (cx != (cfg->text_size.w - 1)) {
-                        bg = 0xFF00FF;
+                        // bg = 0xFF00FF;
                         lcd_rect(x, y, cfg->gaps.w, cfg->font->size.h * scale, bg);
                     }
                     x += cfg->gaps.w;
+
                 }
                 c++;
             }
@@ -129,10 +134,12 @@ void lcd_text_color_print(char * c, xy_t * pos, lcd_text_cfg_t * cfg, color_sche
         }
         y += cfg->font->size.h * cfg->scale;
 
-        printf("text draw gap y %d, cy %d, of %d\n", y, cy, cfg->text_size.h);
+        // printf("text draw gap y %d, cy %d, of %d\n", y, cy, cfg->text_size.h);
         if (cy != (cfg->text_size.h - 1)) {
-            lcd_rect(pos->x, y, pos->w, cfg->gaps.h, 0xFFFF00);
-            printf("   drawed\n");
+            unsigned tw = (((cfg->font->size.x * cfg->scale) + cfg->gaps.x) * cfg->text_size.w) - cfg->gaps.x;
+            // bg = 0xFF8844;
+            lcd_rect(pos->x, y, tw, cfg->gaps.h, bg);
+            // printf("   drawed\n");
         }
         y += cfg->gaps.h;
     }
