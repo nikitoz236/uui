@@ -1,19 +1,10 @@
-UCLIB_PATH = ../..
 
-LIB = $(UCLIB_PATH)/lib
-
-INC += $(LIB)/common
-INC += $(LIB)/graphic/fonts
-
-SRC += $(LIB)/graphic/fonts/*.c
-SRC += $(LIB)/common/*.c
+LIB = ../../lib
 
 INC += ./
 SRC += ./*.c
 
-INC += $(UCLIB_PATH)/lib/graphic/ui_tree
-SRC += $(UCLIB_PATH)/lib/graphic/ui_tree/*.c
+main: ui_layout_test_run
 
-INC += $(UCLIB_PATH)/tests/
+include $(LIB)/emu/emu.mk
 
-include $(UCLIB_PATH)/emu/emu.mk

@@ -1,33 +1,33 @@
-#include "widget_emu_lcd.h"
-#include "emu_common.h"
+#include "emu_lcd.h"
 
 #include "widget_test_rect_with_text.h"
 #include "widget_layout_tree.h"
 
+void view_process(char key)
+{
+    unsigned event = 0;
+    if (key == 'h') {
+        event = 1;
+    } else if (key == 'l') {
+        event = 2;
+    }
+
+    ui_tree_process_event(event);
+}
 
 int main()
 {
     printf("test widget test\r\n");
 
-    ui_node_t emu_root = {
-        .widget = &__widget_emu_lcd,
-        .widget_cfg = &(widget_emu_lcd_cfg_t){
-            .size = { .w = 320, .h = 240 },
-            .bg_color = 0x202020,
-            .border = 10,
-            .px_gap = 0,
-            .scale = 3
-        }
+    __widget_emu_lcd_cfg_t emu_lcd_cfg = {
+        .size = { .w = 320, .h = 240 },
+        .bg_color = 0x202020,
+        .border = 10,
+        .px_gap = 0,
+        .scale = 3
     };
 
-    uint8_t emu_ui_stack[1024];
-    ui_ctx_t * emu_ui_ctx = (ui_ctx_t *)emu_ui_stack;
-    calc_node(&emu_root, emu_ui_ctx, 0);
-    emu_ui_ctx->f.p = (xy_t){0, 0};
-    gfx_open(emu_ui_ctx->f.s.w, emu_ui_ctx->f.s.h, "test widget test");
-    draw_node(emu_ui_ctx);
-
-    // init_view();
+    emu_lcd_init(&emu_lcd_cfg);
 
     uint8_t layout_selector = 2;
 
@@ -67,29 +67,9 @@ int main()
     }
 
     uint8_t ui_ctx[1024];
-    ui_tree_init(ui_ctx, 1024, &ui, &((widget_emu_lcd_cfg_t*)emu_root.widget_cfg)->size);
-
+    ui_tree_init(ui_ctx, 1024, &ui, &emu_lcd_cfg.size);
     ui_tree_draw();
-
-    while (1) {
-        char key = gfx_routine();
-        if (key == 'q') {
-            break;
-        }
-
-        unsigned event = 0;
-        if (key == 'h') {
-            event = 1;
-        } else if (key == 'l') {
-            event = 2;
-        }
-
-        ui_tree_process_event(event);
-
-        // view_process(event);
-
-        usleep(250000);
-    }
+    emu_lcd_loop(view_process);
 
     return 0;
 }
