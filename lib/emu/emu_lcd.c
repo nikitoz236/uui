@@ -23,9 +23,10 @@ void emu_lcd_loop(void (*process)(char key))
         if (key == 'q') {
             break;
         }
+        if (process) {
+            process(key);
+        }
 
-        process(key);
-
-        usleep(250000);
+        usleep(100000);
     }
 }
