@@ -64,7 +64,9 @@ typedef struct {
     // mstimer_t timer;
     const cr_func_t * current;
     const cr_func_t * who_call;
-    unsigned error;
+    uint8_t thread;
+    uint8_t call_thread;
+    uint16_t error;
 } cr_ctx_t;
 
 typedef enum {
@@ -83,7 +85,7 @@ typedef struct {
 } process_state_t;
 
 struct __cr_func {
-    void (*func)(cr_ctx_t * ctx, unsigned cr_thread);
+    void (*func)(cr_ctx_t * ctx);
     process_state_t * state;
     unsigned threads_num;
 };
@@ -91,20 +93,19 @@ struct __cr_func {
 #define CR_ERROR_TIMEOUT                1
 #define CR_ERROR_INVALID_THREAD         2
 
-
 #define cr_create(name, __threads_num, code) \
-    static void __cr_func_async_wrap_ ## name(cr_ctx_t * cr_ctx, unsigned cr_thread) \
+    static void __cr_func_async_wrap_ ## name(cr_ctx_t * cr_ctx) \
     { \
-        if (cr_ctx->current->state[cr_thread].pos != 0) { \
-            goto *(cr_ctx->current->state[cr_thread].pos); \
+        if (cr_ctx->current->state[cr_ctx->thread].pos != 0) { \
+            goto *(cr_ctx->current->state[cr_ctx->thread].pos); \
         } \
         do { code } while (0); \
-        cr_ctx->current->state[cr_thread].pos = 0; \
-        cr_ctx->current->state[cr_thread].state = CR_STOP; \
+        cr_ctx->current->state[cr_ctx->thread].pos = 0; \
+        cr_ctx->current->state[cr_ctx->thread].state = CR_STOP; \
         if (cr_ctx->who_call) { \
             /* то есть мы используем сохраненный номер вызвавшего нас потока */ \
-            unsigned cr_call_thread = cr_ctx->current->state[cr_thread].call_thread; \
-            cr_ctx->who_call->state[cr_call_thread].state = CR_READY; \
+            unsigned call_thread = cr_ctx->current->state[cr_ctx->thread].call_thread; \
+            cr_ctx->who_call->state[call_thread].state = CR_READY; \
         } \
     }; \
     process_state_t __func_saved_ ## name[__threads_num]; \
@@ -131,49 +132,57 @@ static inline void func_print(cr_func_t * f)
     }
 }
 
-static inline void cr_current_init(cr_ctx_t * cr_ctx, unsigned cr_thread)
+static inline void cr_current_init(cr_ctx_t * cr_ctx)
 {
-    cr_ctx->current->state[cr_thread].state = CR_READY;
-    cr_ctx->current->state[cr_thread].pos = 0;
-    cr_ctx->current->state[cr_thread].call_process = 0;
-    cr_ctx->current->state[cr_thread].call_thread = 0;
+    unsigned thread = cr_ctx->thread;
+    cr_ctx->current->state[thread].state = CR_READY;
+    cr_ctx->current->state[thread].pos = 0;
+    cr_ctx->current->state[thread].call_process = 0;
+    cr_ctx->current->state[thread].call_thread = 0;
 }
 
 #define cr_lock() \
     /* cr_ctx и cr_thread доступны как локальные переменные функции, переданные ей в качестве аргументов */ \
-    cr_ctx->current->state[cr_thread].state = CR_WAIT; \
-    cr_ctx->current->state[cr_thread].pos = &&CR_LABEL; \
+    cr_ctx->current->state[cr_ctx->thread].state = CR_WAIT; \
+    cr_ctx->current->state[cr_ctx->thread].pos = &&CR_LABEL; \
     return; \
     CR_LABEL:; \
 
-static inline void cr_unlock(cr_ctx_t * ctx, unsigned cr_thread)
+static inline void cr_unlock(cr_ctx_t * ctx)
 {
-    ctx->current->state[cr_thread].state = CR_READY;
+    ctx->current->state[ctx->thread].state = CR_READY;
 }
 
 #define cr_subprocess(sf, __new_thread) \
     /* cr_ctx и cr_thread доступны как локальные переменные функции, переданные ей в качестве аргументов */ \
     /* сохраняем текущее положение в функции */ \
-    cr_ctx->current->state[cr_thread].pos = &&CR_LABEL; \
-    cr_ctx->current->state[cr_thread].state = CR_WAIT; \
+    cr_ctx->current->state[cr_ctx->thread].pos = &&CR_LABEL; \
+    cr_ctx->current->state[cr_ctx->thread].state = CR_WAIT; \
     /* вызывающая функция будет сохраняется для текущий потока выполнения */ \
-    cr_ctx->current->state[cr_thread].call_process = cr_ctx->who_call; \
-    cr_ctx->current->state[cr_thread].call_thread = cr_thread; \
+    cr_ctx->current->state[cr_ctx->thread].call_process = cr_ctx->who_call; \
+    cr_ctx->current->state[cr_ctx->thread].call_thread = cr_ctx->call_thread; \
     cr_ctx->who_call = cr_ctx->current; \
     cr_ctx->current = sf; \
-    cr_current_init(cr_ctx, __new_thread); \
-    cr_ctx->current->func(cr_ctx, __new_thread); \
-    if (cr_ctx->who_call->state[cr_thread].state != CR_READY) { \
+    cr_ctx->call_thread = cr_ctx->thread; \
+    cr_ctx->thread = __new_thread; \
+    cr_current_init(cr_ctx); \
+    cr_ctx->current->func(cr_ctx); \
+    if (cr_ctx->who_call->state[cr_ctx->thread].state != CR_READY) { \
         return; \
     } \
     CR_LABEL:; \
-    cr_ctx->current = cr_ctx->who_call; \
-    cr_ctx->who_call = cr_ctx->current->state[cr_thread].call_process
+    do { \
+        cr_ctx->thread = cr_ctx->call_thread; \
+        cr_ctx->current = cr_ctx->who_call; \
+        cr_ctx->who_call = cr_ctx->current->state[cr_ctx->thread].call_process; \
+        cr_ctx->call_thread = cr_ctx->current->state[cr_ctx->thread].call_thread; \
+        cr_ctx->current->func(cr_ctx); \
+    } while (0)
 
-static inline void cr_resume_if_ready(cr_ctx_t * cr_ctx, unsigned cr_thread)
+static inline void cr_resume_if_ready(cr_ctx_t * cr_ctx)
 {
-    if (cr_ctx->current->state[cr_thread].state == CR_READY) {
-        cr_ctx->current->func(cr_ctx, cr_thread);
+    if (cr_ctx->current->state[cr_ctx->thread].state == CR_READY) {
+        cr_ctx->current->func(cr_ctx);
     }
 }
 
@@ -186,10 +195,11 @@ static inline void cr_run(cr_ctx_t * cr_ctx, const cr_func_t * f, unsigned cr_th
     cr_ctx->who_call = 0;
     cr_ctx->current = f;
     cr_ctx->error = 0;
-    cr_current_init(cr_ctx, cr_thread);
+    cr_ctx->thread = cr_thread;
+    cr_current_init(cr_ctx);
 
     // run!
     printf("run func %p\n", cr_ctx->current);
-    cr_ctx->current->func(cr_ctx, cr_thread);
+    cr_ctx->current->func(cr_ctx);
 }
 
