@@ -92,14 +92,14 @@ struct __cr_func {
 #define CR_ERROR_INVALID_THREAD         2
 
 
-#define cr_create(name, __threads_num) \
-    static inline void _ _cr_func_ ## name(cr_ctx_t * cr_ctx, unsigned cr_thread); \
+#define cr_create(name, __threads_num, code) \
+    static inline void __cr_func_ ## name(cr_ctx_t * cr_ctx, unsigned cr_thread); \
     static void __cr_func_async_wrap_ ## name(cr_ctx_t * cr_ctx, unsigned cr_thread) \
     { \
         if (cr_ctx->current->state[cr_thread].pos != 0) { \
             goto *(cr_ctx->current->state[cr_thread].pos); \
         } \
-        __cr_func_ ## name(cr_ctx, cr_thread); \
+        do { code } while (0); \
         cr_ctx->current->state[cr_thread].pos = 0; \
         cr_ctx->current->state[cr_thread].state = CR_STOP; \
         if (cr_ctx->who_call) { \
@@ -113,8 +113,7 @@ struct __cr_func {
         .func = __cr_func_async_wrap_ ## name, \
         .state = __func_saved_ ## name, \
         .threads_num = __threads_num \
-    }; \
-    static inline void __cr_func_ ## name(cr_ctx_t * cr_ctx, unsigned cr_thread) \
+    };
 
 static inline void ctx_print(cr_ctx_t * ctx)
 {
@@ -137,7 +136,6 @@ static inline void func_print(cr_func_t * f)
     /* cr_ctx и cr_thread доступны как локальные переменные функции, переданные ей в качестве аргументов */ \
     cr_ctx->current->state[cr_thread].state = CR_WAIT; \
     cr_ctx->current->state[cr_thread].pos = &&CR_LABEL; \
-    ctx_print(cr_ctx); \
     return; \
     CR_LABEL:; \
 
