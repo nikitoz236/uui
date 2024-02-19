@@ -1,10 +1,11 @@
 #include "metrics_view.h"
-#include <stdint.h>
 #include "honda_units.h"
 #include "array_size.h"
 #include "str_utils.h"
 
-#define METRIC_ENUM_NUM(id, ...)         ____ENUM_NUM_ ## id
+#define FIX_POINT_BITS                  14
+
+#define METRIC_ENUM_NUM(id, ...)        ____ENUM_NUM_ ## id
 
 enum {
     METRIC_ECU_BOOL_LIST(METRIC_ENUM_NUM),
@@ -17,7 +18,7 @@ enum {
 };
 
 typedef struct {
-    unsigned factor;
+    unsigned mull;
     unsigned sub;
     uint8_t address;
     enum {
@@ -32,12 +33,12 @@ typedef struct {
 
 #define METRIC_ECU_BOOL_INDEXES(id, name, index) index
 
-#define METRIC_ECU_MAP(id, name, units, factor, a, l, type, m, s) \
+#define METRIC_ECU_MAP(id, name, units, f, a, l, t, m, s) \
     { \
         .address = a, \
-        .type = METRIC_TYPE ## type, \
         .len = l, \
-        .factor = (m << 16), \
+        .type = METRIC_TYPE_ ## t, \
+        .mull = (m * (1 << FIX_POINT_BITS)), \
         .sub = s \
     }
 
@@ -46,7 +47,7 @@ static const ecu_map_t honda_ecu_map[] = { METRIC_ECU_VAR_LIST(METRIC_ECU_MAP) }
 
 
 uint16_t honda_metric_raw[METRIC_ECU_VAR_NUM] = {};
-unsigned honda_metric_real[METRIC_ECU_VAR_NUM] = {};
+int honda_metric_real[METRIC_ECU_VAR_NUM] = {};
 uint8_t honda_metric_bool[8] = {};
 
 
@@ -55,10 +56,13 @@ static inline unsigned metric_bool(metric_id_t metric)
     unsigned index = honda_metric_bool_map[metric];
     unsigned offset = index >> 3;
     unsigned mask = (1 << (index & (8 - 1)));
-    return honda_metric_bool[offset] & mask;
+    if (honda_metric_bool[offset] & mask) {
+        return 1;
+    }
+    return 0;
 }
 
-unsigned metric_get_val(metric_id_t metric)
+int metric_get_val(metric_id_t metric)
 {
     if (metric < METRIC_ECU_BOOL_NUM) {
         return metric_bool(metric);
@@ -92,9 +96,14 @@ const char * metric_get_unit(metric_id_t metric)
     return metric_units[metric - METRIC_ECU_BOOL_NUM];
 }
 
-unsigned metric_bool_num(void)
+unsigned metric_ecu_bool_num(void)
 {
     return METRIC_ECU_BOOL_NUM;
+}
+
+unsigned metric_ecu_var_num(void)
+{
+    return METRIC_ECU_VAR_NUM;
 }
 
 static unsigned obd_t_conv(unsigned hex){
@@ -143,7 +152,18 @@ static inline void ecu_data_ready(unsigned addr, uint8_t * data, unsigned len)
                     raw <<= 8;
                     raw += data[1];
                 }
-                honda_metric_raw[metric_idx] = raw;
+
+                // printf("dlc address: %d map %s : address %d, type %d, len %d, mull %d, sub %d, raw %d\n",
+                //     addr,
+                //     metric_get_name(metric_ecu_bool_num() + metric_idx),
+                //     map->address,
+                //     map->type,
+                //     map->len,
+                //     map->mull,
+                //     map->sub,
+                //     raw
+                // );
+
                 int real;
                 switch (map->type) {
                     case METRIC_TYPE_RAW:
@@ -153,18 +173,18 @@ static inline void ecu_data_ready(unsigned addr, uint8_t * data, unsigned len)
                         real = obd_t_conv(raw);
                         break;
                     case METRIC_TYPE_MUL_SUB:
-                        real = raw * map->factor;
-                        real >>= 16;
+                        real = raw * map->mull;
+                        real >>= FIX_POINT_BITS;
                         real -= map->sub;
                         break;
                     case METRIC_TYPE_SUB_MUL:
                         real = raw - map->sub;
-                        real *= map->factor;
-                        real >>= 16;
+                        real *= map->mull;
+                        real >>= FIX_POINT_BITS;
                         break;
                     case METRIC_TYPE_FROM_SUB_M:
-                        real = raw * map->factor;
-                        real >>= 16;
+                        real = raw * map->mull;
+                        real >>= FIX_POINT_BITS;
                         real = map->sub - real;
                         break;
                     default:

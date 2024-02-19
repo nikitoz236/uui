@@ -1,5 +1,7 @@
 #pragma once
+#include <stdint.h>
 #include "metrics_list.h"
+#include "honda_units.h"
 
 #define METRIC_ENUM(id, ...)         METRIC_ID_ ## id
 
@@ -12,10 +14,10 @@ typedef enum {
     METRIC_ID_NUM
 } metric_id_t;
 
-unsigned metric_bool_num(void);
+unsigned metric_ecu_bool_num(void);
+unsigned metric_ecu_var_num(void);
 
-unsigned metric_get_val(metric_id_t metric);
-unsigned metric_get_val(metric_id_t metric);
+int metric_get_val(metric_id_t metric);
 
 const char * metric_get_name(metric_id_t metric);
 const char * metric_get_unit(metric_id_t metric);
