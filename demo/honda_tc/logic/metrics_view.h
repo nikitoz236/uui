@@ -15,5 +15,11 @@ typedef enum {
 unsigned metric_bool_num(void);
 
 unsigned metric_get_val(metric_id_t metric);
+unsigned metric_get_val(metric_id_t metric);
+
 const char * metric_get_name(metric_id_t metric);
 const char * metric_get_unit(metric_id_t metric);
+
+
+// from poll hw
+void dlc_data_ready(honda_unit_t unit, unsigned addr, uint8_t * data, unsigned len);
