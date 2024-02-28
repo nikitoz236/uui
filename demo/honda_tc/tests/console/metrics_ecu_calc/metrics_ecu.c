@@ -1,7 +1,14 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "metrics_view.h"
+#include "metrics_ecu.h"
+
+#define METRIC_ENUM(id, ...)         METRIC_ID_ ## id
+#define METRIC_NAME(id, name, ...) name
+enum { METRIC_ECU_VAR_LIST(METRIC_ENUM), METRIC_VAR_NUM };
+enum { METRIC_ECU_BOOL_LIST(METRIC_ENUM), METRIC_BOOL_NUM };
+static const char * metric_var_names[] = { METRIC_ECU_VAR_LIST(METRIC_NAME) };
+static const char * metric_bool_names[] = { METRIC_ECU_BOOL_LIST(METRIC_NAME) };
 
 // from red obd project
 #define OBD_SPEED_KMH			123
@@ -29,7 +36,7 @@ const uint8_t obd_test_map_ecu[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-const int result_metrics[] = {
+const int result_metrics_bool[] = {
     [METRIC_ID_STARTER] = 0,
     [METRIC_ID_AC_BUTTON] = 0,
     [METRIC_ID_POWER_STEERING] = 0,
@@ -48,8 +55,10 @@ const int result_metrics[] = {
     [METRIC_ID_VTEC_E] = 0,
     [METRIC_ID_ECONO] = 1,
     [METRIC_ID_AT_CONTOL] = 0,
-    [METRIC_ID_CLOSED_LOOP] = 0,
+    [METRIC_ID_CLOSED_LOOP] = 0
+};
 
+const int result_metrics_real[] = {
     [METRIC_ID_RPM] = 4567,
     [METRIC_ID_ECU_SPEED] = 123,
     [METRIC_ID_ENGINE_T] = 79393,
@@ -60,7 +69,7 @@ const int result_metrics[] = {
     [METRIC_ID_OXY_1] = 370,
     [METRIC_ID_VOLTAGE_ECU] = 14066,
     [METRIC_ID_ALTERNATOR_LOAD] = 51764,
-    [METRIC_ID_CURRENT] = -23448,               // какаято ерунда, в сыром значении 0xFF, как он раньше показывал 42.08 я тоже не знаю
+    [METRIC_ID_CURRENT] = -23448,               // какая то ерунда, в сыром значении 0xFF, как он раньше показывал 42.08 я тоже не знаю
     [METRIC_ID_ERG_VALVE_V] = 0,
     [METRIC_ID_CORR_SHORT] = -48628,
     [METRIC_ID_CORR_LONG] = -49804,
@@ -81,25 +90,32 @@ const int result_metrics[] = {
     [METRIC_ID_CKP_LEARN] = 0,
 };
 
+
+int test_result = 0;
+
+void do_test(const char * name, int val, int expected)
+{
+    printf("%20s: %10d %10d", name, val, expected);
+    if (val == expected) {
+        printf(" - OK\n");
+    } else {
+        printf(" - FAIL\n");
+        test_result = 1;
+    }
+}
+
 int main ()
 {
     for (unsigned a = 0; a < sizeof(obd_test_map_ecu); a += 16) {
-        dlc_data_ready(HONDA_UNIT_ECU, a, &obd_test_map_ecu[a], 16);
+        metric_ecu_data_ready(a, &obd_test_map_ecu[a], 16);
     }
 
-    int test_result = 0;
+    for (unsigned i = 0; i < METRIC_VAR_NUM; i++) {
+        do_test(metric_var_names[i], metric_ecu_get_real(i), result_metrics_real[i]);
+    }
 
-    unsigned metric_num = metric_ecu_bool_num() + metric_ecu_var_num();
-
-    for (unsigned i = 0; i < metric_num; i++) {
-        int metric = metric_get_val(i);
-        printf("%20s: %10d %10d", metric_get_name(i), metric, result_metrics[i]);
-        if (metric == result_metrics[i]) {
-            printf(" - OK\n");
-        } else {
-            printf(" - FAIL\n");
-            test_result = 1;
-        }
+    for (unsigned i = 0; i < METRIC_BOOL_NUM; i++) {
+        do_test(metric_bool_names[i], metric_ecu_get_bool(i), result_metrics_bool[i]);
     }
 
     return test_result;
