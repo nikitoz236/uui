@@ -34,15 +34,15 @@ static void draw(ui_element_t * el)
         .fg = cfg->color_text,
         .bg = cfg->color_bg
     };
-    unsigned m_id = el->idx + metric_bool_num();
+    unsigned m_id = el->idx;
     unsigned pos_val = METRIC_NAME_MAX_LEN + 1;
     unsigned pos_unit = pos_val + 10;
     unsigned pos_raw = pos_unit + METRIC_UNIT_MAX_LEN + 1;
 
-    lcd_text_color_print(metric_get_name(m_id), &el->f.p, &ctx->text_cfg, &cs, 0, 0, METRIC_NAME_MAX_LEN + 1);
+    lcd_text_color_print(metric_var_get_name(m_id), &el->f.p, &ctx->text_cfg, &cs, 0, 0, METRIC_NAME_MAX_LEN + 1);
 
     cs.fg = cfg->color_unit;
-    lcd_text_color_print(metric_get_unit(m_id), &el->f.p, &ctx->text_cfg, &cs, pos_unit, 0, METRIC_UNIT_MAX_LEN + 1);
+    lcd_text_color_print(metric_var_get_unit(m_id), &el->f.p, &ctx->text_cfg, &cs, pos_unit, 0, METRIC_UNIT_MAX_LEN + 1);
 
     cs.fg = cfg->color_value;
     lcd_text_color_print("0123456", &el->f.p, &ctx->text_cfg, &cs, pos_val, 0, 8);

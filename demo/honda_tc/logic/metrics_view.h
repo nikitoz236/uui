@@ -48,6 +48,9 @@ typedef enum {
     METRIC_VAR_ID_NUM
 } metric_var_id_t;
 
+#define METRIC_NAME_MAX_LEN         (sizeof("CHECK ENGINE"))
+#define METRIC_UNIT_MAX_LEN         (sizeof("L/100"))
+
 int metric_var_get_real(metric_var_id_t id);
 unsigned metric_var_get_raw(metric_var_id_t id);
 const char * metric_var_get_name(metric_var_id_t id);

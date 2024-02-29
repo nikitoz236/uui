@@ -48,7 +48,7 @@ int main()
             .borders = { .w = 4, .h = 4 },
             .gaps = { .x = 2, .y = 4 },
             .color_bg = 0,
-            .num = METRIC_ID_NUM - metric_bool_num()
+            .num = METRIC_VAR_ID_NUM
         }
 
     };
