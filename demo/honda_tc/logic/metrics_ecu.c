@@ -6,7 +6,7 @@
 #define ECU_FLAGS_ADDR                  0x08
 #define ECU_FLAGS_BYTES                 8
 
-#define METRIC_ENUM_NUM(id, ...)        ____ENUM_NUM_ ## id
+#define METRIC_ENUM_NUM(id, ...)        __ECU_VAR_ ## id
 
 enum {
     METRIC_ECU_VAR_LIST(METRIC_ENUM_NUM),
@@ -167,6 +167,12 @@ void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
                 }
                 honda_metric_raw[metric_idx] = raw;
                 honda_metric_real[metric_idx] = real;
+
+                if (metric_idx == __ECU_VAR_INJECTION) {
+                    trip_integrate_injectors(raw, honda_metric_raw[__ECU_VAR_RPM]);
+                } else if (metric_idx == __ECU_VAR_ECU_SPEED) {
+                    trip_integrate_speed(raw);
+                }
             }
         }
         len -= var_len;

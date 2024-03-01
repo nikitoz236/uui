@@ -9,6 +9,8 @@ enum { METRIC_ECU_VAR_LIST(METRIC_ENUM), METRIC_VAR_NUM };
 enum { METRIC_ECU_BOOL_LIST(METRIC_ENUM), METRIC_BOOL_NUM };
 static const char * metric_var_names[] = { METRIC_ECU_VAR_LIST(METRIC_NAME) };
 static const char * metric_bool_names[] = { METRIC_ECU_BOOL_LIST(METRIC_NAME) };
+void trip_integrate_speed(unsigned val) {};
+void trip_integrate_injectors(unsigned injection_time, unsigned rpm) {};
 
 // from red obd project
 #define OBD_SPEED_KMH			123
