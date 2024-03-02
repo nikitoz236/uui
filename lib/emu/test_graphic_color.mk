@@ -38,8 +38,8 @@ GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
 	./$<
 	rm $<
 
-%_test:
-	echo %
+src_print:
+	echo $(SRC)
 
 clean:
 	rm -f *_test_app
