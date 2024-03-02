@@ -12,9 +12,9 @@ int main()
         printf("metric id %2d, name %16s     value %10d", m_id, metric_var_get_name(m_id), metric_var_get_real(m_id));
         const char * unit = metric_var_get_unit(m_id);
         if (unit) {
-            printf(" %3s", unit);
+            printf(" %6s", unit);
         } else {
-            printf("    ");
+            printf("       ");
         }
         printf("  - %04X\n", metric_var_get_raw(m_id));
     }

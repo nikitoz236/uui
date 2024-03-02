@@ -2,6 +2,7 @@
 #include <stdint.h>
 
 #include "metrics_ecu.h"
+#include "trip_integrate.h"
 #include "metrics_list.h"
 
 /*
@@ -39,6 +40,7 @@ const char * metric_bool_get_name(metric_bool_id_t id);
 
 #define METRIC_VAR_LIST(macro) \
     METRIC_ECU_VAR_LIST(macro), \
+    TRIP_INTEGRATE_VAR_LIST(macro), \
     METRIC_CALC_VAR_LIST(macro), \
     METRIC_ADC_VAR_LIST(macro), \
     METRIC_TEMP_VAR_LIST(macro)
