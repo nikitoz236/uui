@@ -169,9 +169,7 @@ void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
                 honda_metric_real[metric_idx] = real;
 
                 if (metric_idx == __ECU_VAR_INJECTION) {
-                    trip_integrate_injectors(raw, honda_metric_raw[__ECU_VAR_RPM]);
-                } else if (metric_idx == __ECU_VAR_ECU_SPEED) {
-                    trip_integrate_speed(raw);
+                    trip_integrate(honda_metric_raw[__ECU_VAR_RPM], honda_metric_raw[__ECU_VAR_ECU_SPEED], raw);
                 }
             }
         }
