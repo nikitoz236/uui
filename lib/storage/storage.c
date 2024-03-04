@@ -95,12 +95,59 @@ unsigned page_for_write(unsigned full_file_size)
     // страница с минимальным счетчиком стирания
 }
 
+
+static inline file_header_t * page_max_file(page_header_t * page_header)
+{
+    return file_by_offset_in_page(page_header, FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t));
+}
+
+static inline unsigned is_file_version_older(file_header_t * old, file_header_t * test_file)
+{
+    int diff = old->version - test_file->version;
+    if (diff < 0) {
+        return 1;
+    }
+    return 0;
+}
+
+static unsigned search_file_in_page(unsigned page, file_id_t id, file_header_t ** result_file)
+{
+    page_header_t * ph = page_header_from_page(page);
+    file_header_t * file = ph->file;
+    file_header_t * max_file = page_max_file(ph);
+    while (file) {
+        if (file->id == id) {
+            if ((result_file == 0) ||
+                (is_file_version_newer(*result_file, file))
+            ) {
+                *result_file = file;
+            }
+        }
+        file = next_file(file);
+        if (file >= max_file) {
+            break;
+        }
+    }
+    return 0;
+}
+
+static file_header_t * search_file_by_id(file_id_t id, unsigned * page)
+{
+    file_header_t * file = 0;
+    for (unsigned i = 0; i < STORAGE_PAGES; i++) {
+        if (search_file_in_page(i, id, &file)) {
+            *page = i;
+        }
+    }
+    return file;
+}
+
 static void move_usefull_files_from_page(unsigned page)
 {
     // нужно перенести все полезные файлы из страницы page в другую страницу
     page_header_t * ph = page_header_from_page(page);
     file_header_t * file = ph->file;
-    file_header_t * max_file = file_by_offset_in_page(page, FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t));
+    file_header_t * max_file = page_max_file(ph);
     while (file) {
         if (file->len) {
             file_id_t id = file->id;
@@ -158,7 +205,7 @@ static void page_update_ctx_after_write(unsigned new_page, unsigned full_file_si
     storage_ctx[new_page].usefull += full_file_size;
 }
 
-static void save_file(file_id_t id, const void * data, unsigned len, const file_header_t * old_file, unsigned old_page)
+static void * save_file(file_id_t id, const void * data, unsigned len, const file_header_t * old_file, unsigned old_page)
 {
     unsigned full_file_size = file_record_full_size(len);
     unsigned new_page = page_for_write(full_file_size);
@@ -185,16 +232,28 @@ static void save_file(file_id_t id, const void * data, unsigned len, const file_
     }
 
     page_update_ctx_after_write(new_page, full_file_size);
+    return new_file;
 }
 
-file_header_t * search_file_by_id(file_id_t id)
+void * storage_search_file(file_id_t id, unsigned * len)
 {
-
+    unsigned page = 0;
+    file_header_t * file = search_file_by_id(id, &page);
+    if (file) {
+        *len = file->len;
+        return file->data;
+    }
+    return 0;
 }
 
-void * storage_search_file(file_id_t id, unsigned * len);
-void * storage_write_file(file_id_t id, void * data, unsigned len);
-
+void * storage_write_file(file_id_t id, void * data, unsigned len)
+{
+    unsigned page = 0;
+    file_header_t * file = search_file_by_id(id, &page);
+    // save file проигнорирует page если file == 0
+    file_header_t * new_file = save_file(id, data, len, file, page);
+    return new_file->data;
+}
 
 void storage_init(void)
 {
