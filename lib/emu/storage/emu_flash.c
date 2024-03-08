@@ -1,29 +1,34 @@
 #include "flash_hw.h"
+#include "storage_hw.h"
 
-static uint8_t * flash_start;
+static uint8_t flash_mem[STORAGE_PAGES][FLASH_ATOMIC_ERASE_SIZE];
 static unsigned flash_size;
 
-void init_flash_memory(void * start, unsigned size)
+void * storage_page_to_pointer(unsigned page)
 {
-    flash_start = start;
-    flash_size = size;
+    return flash_mem[page];
 }
 
-void flash_erase_page(unsigned page)
+void storage_erase_page(unsigned page)
 {
-    if (page >= (flash_size / FLASH_ATOMIC_ERASE_SIZE)) {
+    if (page >= STORAGE_PAGES) {
         return;
     }
-    uint8_t * ptr = flash_start[page * FLASH_ATOMIC_ERASE_SIZE];
     for (unsigned i = 0; i < FLASH_ATOMIC_ERASE_SIZE; i++) {
-        ptr[i] = 0xFF;
+        flash_mem[page][i] = 0xFF;
     }
 }
 
-void flash_write(void * addr, const void * data, unsigned size)
+void flash_write(const void * addr, const void * data, unsigned size)
 {
-    uint8_t * ptr = addr;
-    for (unsigned i = 0; i < size; i++) {
-        ptr[i] = ((uint8_t *)data)[i];
+    flash_wr_t * dst = (flash_wr_t *)addr;
+    const flash_wr_t * src = data;
+    while (size) {
+        *dst++ = *src++;
+        if (size >= sizeof(flash_wr_t)) {
+            size -= sizeof(flash_wr_t);
+        } else {
+            size = 0;
+        }
     }
 }
