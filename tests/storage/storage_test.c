@@ -81,13 +81,13 @@ int main ()
 
     storage_init();
 
-    for (int k = 0; k < 1000; k++) {
+    for (int k = 0; k < 1000 ; k++) {
         unsigned rv = rand();
-        unsigned n = (rv / 4) % 16;
+        unsigned n = (rv / 4) % 256;
         unsigned fidx = rv % 4;
 
         for (unsigned i = 0; i < n; i++) {
-            printf("\n!!! Writing cycle %d : %d file %d\n", k, i, files[fidx].id);
+            // printf("\n!!! Writing cycle %d : %d file %d\n", k, i, files[fidx].id);
             file_write(fidx);
             storage_prepare_page();
         }

@@ -56,10 +56,6 @@ static unsigned flash_is_erased(const void * ptr, unsigned len)
 
 static unsigned file_is_valid(const file_header_t * file)
 {
-    // flash_wr_t * ptr = (flash_wr_t *) file;
-    // if (*ptr == FLASH_ERASED) {
-    //     return 0;
-    // }
     if (file->id == (file_id_t)-1) {
         return 0;
     }
@@ -107,7 +103,7 @@ unsigned page_for_write(unsigned full_file_record_size)
     unsigned max_acceptable = FLASH_ATOMIC_ERASE_SIZE - full_file_record_size;
     unsigned max_used = 0;
 
-    printf("    search_page_for_write for size %d, max_acceptable %d  ", full_file_record_size, max_acceptable);
+    // printf("    search_page_for_write for size %d, max_acceptable %d  ", full_file_record_size, max_acceptable);
 
     for (unsigned i = 0; i < STORAGE_PAGES; i++) {
         if (storage_ctx[i].used <= max_acceptable) {
@@ -118,7 +114,7 @@ unsigned page_for_write(unsigned full_file_record_size)
         }
     }
 
-    printf(" - page %d\n", page);
+    // printf(" - page %d\n", page);
 
     return page;
 }
@@ -131,7 +127,7 @@ static inline const file_header_t * page_max_file(const page_header_t * page_hea
 
 static inline unsigned is_file_version_newer(const file_header_t * old, const file_header_t * file)
 {
-    int diff = (int16_t)file->version - (int16_t)old->version;
+    int16_t diff = (int16_t)file->version - (int16_t)old->version;
     if (diff > 0) {
         return 1;
     }
@@ -218,9 +214,9 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
 
     if (old_file) {
         header.version = old_file->version + 1;
-        printf("                    save_file old file %p id %d ver %d new ver %d\n", old_file, old_file->id, old_file->version, header.version);
+        // printf("                    save_file old file %p id %d ver %d new ver %d\n", old_file, old_file->id, old_file->version, header.version);
     } else {
-        header.version = 65530;
+        header.version = 0;
     }
 
     uint16_t crc = calc_crc(data, len, 0);
@@ -245,7 +241,7 @@ static void move_usefull_files_from_page(unsigned page)
     const file_header_t * max_file = page_max_file(ph);
     const file_header_t * last_version_of_file = 0;
 
-    printf("    move_usefull_files_from_page page %d\n", page);
+    // printf("    move_usefull_files_from_page page %d\n", page);
 
     // чтоб данная страница не выбиралась для записи
     storage_ctx[page].used = FLASH_ATOMIC_ERASE_SIZE;
@@ -295,8 +291,8 @@ void storage_prepare_page(void)
         return;
     }
 
-    printf("\n\n\n  storage_prepare_page\n");
-    storage_print_info();
+    // printf("\n\n\n  storage_prepare_page\n");
+    // storage_print_info();
 
     unsigned page_for_erase = 0;
     unsigned min_metric = -1;
@@ -313,10 +309,10 @@ void storage_prepare_page(void)
             min_metric = metric;
             page_for_erase = i;
         }
-        printf("            storage_prepare_page page %d metric %d\n", i, metric);
+        // printf("            storage_prepare_page page %d metric %d\n", i, metric);
     }
 
-    printf("  storage_prepare_page erase %d\n", page_for_erase);
+    // printf("  storage_prepare_page erase %d\n", page_for_erase);
 
     move_usefull_files_from_page(page_for_erase);
     storage_clean_page(page_for_erase);
@@ -362,7 +358,7 @@ void storage_init(void)
                 storage_erase_page(i);
             }
 
-            storage_page_add_header(ph, 65200);
+            storage_page_add_header(ph, 0);
             empty_page_num++;
         } else {
             const file_header_t * file = first_file_in_page_header(ph);
