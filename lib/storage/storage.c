@@ -153,13 +153,19 @@ static unsigned file_is_crc_correct(const file_header_t * file)
     return 0;
 }
 
+// макрос обеспечивает цикл по всем файлам на странице, не выходя за пределы страницы
+#define for_each_file_in_page_header(ph) \
+    const file_header_t * max_file = page_max_file(ph); \
+    for (const file_header_t * file = first_file_in_page_header(ph); \
+        file && (file <= max_file); \
+        file = next_file(file))
+
 static unsigned search_file_in_page(unsigned page, file_id_t id, const file_header_t ** result_file)
 {
     unsigned ret = 0;
     const page_header_t * ph = page_header_from_page(page);
-    const file_header_t * file = first_file_in_page_header(ph);
-    const file_header_t * max_file = page_max_file(ph);
-    while (file) {
+
+    for_each_file_in_page_header(ph) {
         if (file->id == id) {
             // printf("    search_file_in_page finded file %p id %d ver %d\n", file, file->id, file->version);
             if (file_is_crc_correct(file)) {
@@ -170,11 +176,6 @@ static unsigned search_file_in_page(unsigned page, file_id_t id, const file_head
                     ret = 1;
                 }
             }
-        }
-        file = next_file(file);
-        if (file > max_file) {
-            // printf("    search_file_in_page break file %p max %p\n", file, max_file);
-            break;
         }
     }
     return ret;
@@ -216,7 +217,7 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
         header.version = old_file->version + 1;
         // printf("                    save_file old file %p id %d ver %d new ver %d\n", old_file, old_file->id, old_file->version, header.version);
     } else {
-        header.version = 0;
+        header.version = 65530;
     }
 
     uint16_t crc = calc_crc(data, len, 0);
@@ -236,16 +237,15 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
 static void move_usefull_files_from_page(unsigned page)
 {
     // нужно перенести все полезные файлы из страницы page в другую страницу
-    const page_header_t * ph = page_header_from_page(page);
-    const file_header_t * file = first_file_in_page_header(ph);
-    const file_header_t * max_file = page_max_file(ph);
-    const file_header_t * last_version_of_file = 0;
-
     // printf("    move_usefull_files_from_page page %d\n", page);
 
     // чтоб данная страница не выбиралась для записи
     storage_ctx[page].used = FLASH_ATOMIC_ERASE_SIZE;
-    while (file) {
+
+    const page_header_t * ph = page_header_from_page(page);
+    const file_header_t * last_version_of_file = 0;
+
+    for_each_file_in_page_header(ph) {
         if (file->len) {
             // может быть такое что файл перезаписывался несколько раз подряд
             // в этом случае не нужно искать последнюю версию файла повторно
@@ -256,11 +256,6 @@ static void move_usefull_files_from_page(unsigned page)
             if (file == last_version_of_file) {
                 save_file(file->id, file->data, file->len, file, page);
             }
-        }
-
-        file = next_file(file);
-        if (file > max_file) {
-            break;
         }
     }
 }
@@ -291,8 +286,8 @@ void storage_prepare_page(void)
         return;
     }
 
-    // printf("\n\n\n  storage_prepare_page\n");
-    // storage_print_info();
+    printf("\n\n\n  storage_prepare_page\n");
+    storage_print_info();
 
     unsigned page_for_erase = 0;
     unsigned min_metric = -1;
@@ -309,10 +304,10 @@ void storage_prepare_page(void)
             min_metric = metric;
             page_for_erase = i;
         }
-        // printf("            storage_prepare_page page %d metric %d\n", i, metric);
+        printf("            storage_prepare_page page %d metric %d\n", i, metric);
     }
 
-    // printf("  storage_prepare_page erase %d\n", page_for_erase);
+    printf("  storage_prepare_page erase %d\n", page_for_erase);
 
     move_usefull_files_from_page(page_for_erase);
     storage_clean_page(page_for_erase);
@@ -358,13 +353,11 @@ void storage_init(void)
                 storage_erase_page(i);
             }
 
-            storage_page_add_header(ph, 0);
+            storage_page_add_header(ph, 65530);
             empty_page_num++;
         } else {
-            const file_header_t * file = first_file_in_page_header(ph);
             const file_header_t * last_version_of_file = 0;
-            const file_header_t * max_file = page_max_file(ph);
-            while (file) {
+            for_each_file_in_page_header(ph) {
                 // может быть такое что файл перезаписывался несколько раз подряд
                 // в этом случае не нужно искать последнюю версию файла повторно
                 if ((last_version_of_file == 0) || (last_version_of_file->id != file->id)) {
@@ -375,11 +368,6 @@ void storage_init(void)
                 used += file_full_size;
                 if (file == last_version_of_file) {
                     usefull += file_full_size;
-                }
-
-                file = next_file(file);
-                if (file > max_file) {
-                    break;
                 }
             }
             for (unsigned idx = used; idx < FLASH_ATOMIC_ERASE_SIZE; idx++) {
@@ -398,16 +386,10 @@ void storage_print_info(void)
     printf("\n+++   stroage info: empty pages %d\n", empty_page_num);
     for (unsigned i = 0; i < STORAGE_PAGES; i++) {
         const page_header_t * ph = page_header_from_page(i);
-        const file_header_t * file = first_file_in_page_header(ph);
-        const file_header_t * max_file = page_max_file(ph);
 
         printf("  page %2d erased %3d used %5d usefull [%5d] free [%5d]\n", i, ph->erase_cnt, storage_ctx[i].used, storage_ctx[i].usefull, FLASH_ATOMIC_ERASE_SIZE - storage_ctx[i].used);
-        while (file) {
+        for_each_file_in_page_header(ph) {
             printf("                    file id <%05d> ver %5d len %5d full len %5d\n", file->id, file->version, file->len, file_record_full_size(file->len));
-            file = next_file(file);
-            if (file > max_file) {
-                break;
-            }
         }
     }
 }
