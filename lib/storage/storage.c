@@ -295,25 +295,27 @@ void storage_prepare_page(void)
         return;
     }
 
+    printf("\n\n\n  storage_prepare_page\n");
+    storage_print_info();
 
     unsigned page_for_erase = 0;
-    unsigned min_metric = FLASH_ATOMIC_ERASE_SIZE;
+    unsigned min_metric = -1;
     for (unsigned i = 0; i < STORAGE_PAGES; i++) {
         // решаем какую страницу стирать, нужно ту в которой меньше всего полезных данных, и больше всего использовано
-        unsigned metric = (FLASH_ATOMIC_ERASE_SIZE - storage_ctx[i].used) + storage_ctx[i].usefull;
+        // если таких страниц несколько то стирать нужно ту у которой меньше счетчик стираний
+        unsigned free = FLASH_ATOMIC_ERASE_SIZE - storage_ctx[i].used;
+        // на случай если free + usefull = 0 нам нужно будет вычесть откуда то отрицательное значение счетчика стирания
+        unsigned metric = free + storage_ctx[i].usefull + 1;
+        metric <<= 16;
+        // счетчик стирания знаковый для обработки переполнений
+        metric += (int16_t)(page_header_from_page(i)->erase_cnt);
         if (min_metric > metric) {
             min_metric = metric;
             page_for_erase = i;
         }
-
-        // if (min_metric > storage_ctx[i].usefull) {
-        //     min_metric = storage_ctx[i].usefull;
-        //     page_for_erase = i;
-        // }
+        printf("            storage_prepare_page page %d metric %d\n", i, metric);
     }
 
-    printf("\n\n\n  storage_prepare_page\n");
-    storage_print_info();
     printf("  storage_prepare_page erase %d\n", page_for_erase);
 
     move_usefull_files_from_page(page_for_erase);
@@ -321,7 +323,7 @@ void storage_prepare_page(void)
 
     empty_page_num++;
 
-    storage_print_info();
+    // storage_print_info();
 }
 
 
@@ -360,7 +362,7 @@ void storage_init(void)
                 storage_erase_page(i);
             }
 
-            storage_page_add_header(ph, 0);
+            storage_page_add_header(ph, 65200);
             empty_page_num++;
         } else {
             const file_header_t * file = first_file_in_page_header(ph);
