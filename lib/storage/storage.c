@@ -2,8 +2,10 @@
 #include "misc.h"
 #include "stddef.h"
 #include "storage_hw.h"
+#include "flash_atomic.h"
 
 #define STORAGE_PAGE_MAGIC          0x5A6B
+#define MAX_FILE_OFFSET_IN_PAGE     (FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t))
 
 typedef struct {
     file_id_t id;
@@ -74,8 +76,6 @@ static const file_header_t * next_file(const file_header_t * file)
     return 0;
 }
 
-#define MAX_FILE_OFFSET_IN_PAGE             (FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t))
-
 static const file_header_t * file_by_offset_in_page(const page_header_t * page_header, unsigned offset)
 {
     if (offset > MAX_FILE_OFFSET_IN_PAGE) {
@@ -103,7 +103,6 @@ unsigned page_for_write(unsigned full_file_record_size)
     unsigned max_acceptable = FLASH_ATOMIC_ERASE_SIZE - full_file_record_size;
     unsigned max_used = 0;
 
-    // printf("    search_page_for_write for size %d, max_acceptable %d  ", full_file_record_size, max_acceptable);
 
     for (unsigned i = 0; i < STORAGE_PAGES; i++) {
         if (storage_ctx[i].used <= max_acceptable) {
@@ -114,7 +113,7 @@ unsigned page_for_write(unsigned full_file_record_size)
         }
     }
 
-    // printf(" - page %d\n", page);
+    printf("    search_page_for_write for size %d, max_acceptable %d - page %d\n", full_file_record_size, max_acceptable, page);
 
     return page;
 }
@@ -167,7 +166,7 @@ static unsigned search_file_in_page(unsigned page, file_id_t id, const file_head
 
     for_each_file_in_page_header(ph) {
         if (file->id == id) {
-            // printf("    search_file_in_page finded file %p id %d ver %d\n", file, file->id, file->version);
+            printf("    search_file_in_page finded file %p id %d ver %d in page %d\n", file, file->id, file->version, page);
             if (file_is_crc_correct(file)) {
                 if ((*result_file == 0) ||
                     (is_file_version_newer(*result_file, file))
@@ -223,8 +222,8 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
     uint16_t crc = calc_crc(data, len, 0);
     header.crc = calc_crc(&header, offsetof(file_header_t, crc), crc);
 
-    flash_write(new_file->data, data, len);
-    flash_write(new_file, &header, sizeof(header));
+    storage_write(new_file->data, data, len);
+    storage_write(new_file, &header, sizeof(header));
 
     if (old_file) {
         storage_ctx[old_page].usefull -= file_record_full_size(old_file->len);
@@ -237,7 +236,7 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
 static void move_usefull_files_from_page(unsigned page)
 {
     // нужно перенести все полезные файлы из страницы page в другую страницу
-    // printf("    move_usefull_files_from_page page %d\n", page);
+    printf("    move_usefull_files_from_page page %d\n", page);
 
     // чтоб данная страница не выбиралась для записи
     storage_ctx[page].used = FLASH_ATOMIC_ERASE_SIZE;
@@ -247,6 +246,7 @@ static void move_usefull_files_from_page(unsigned page)
 
     for_each_file_in_page_header(ph) {
         if (file->len) {
+            printf("            move_usefull_files_from_page file %p id %d ver %d\n", file, file->id, file->version);
             // может быть такое что файл перезаписывался несколько раз подряд
             // в этом случае не нужно искать последнюю версию файла повторно
             if ((last_version_of_file == 0) || (last_version_of_file->id != file->id)) {
@@ -265,14 +265,19 @@ static void storage_page_add_header(const page_header_t * ph, unsigned counter)
     page_header_t header;
     header.magic = STORAGE_PAGE_MAGIC;
     header.erase_cnt = counter;
-    flash_write(ph, &header, sizeof(header));
+    storage_write(ph, &header, sizeof(header));
 }
 
 static void storage_clean_page(unsigned page)
 {
+    printf("    storage_clean_page page %d\n", page);
+
     const page_header_t * ph = page_header_from_page(page);
     unsigned cnt = ph->erase_cnt + 1;
     storage_erase_page(page);
+
+    printf("    page erased, write header with counter %d\n", cnt);
+
     storage_page_add_header(ph, cnt);
     storage_ctx[page].usefull = 0;
     storage_ctx[page].used = sizeof(page_header_t);
@@ -331,6 +336,10 @@ const void * storage_search_file(file_id_t id, unsigned * len)
 
 const void * storage_write_file(file_id_t id, const void * data, unsigned len)
 {
+    if (len > FLASH_ATOMIC_ERASE_SIZE - sizeof(page_header_t) - sizeof(file_header_t)) {
+        printf("storage_write_file file %d too big %d\n", id, len);
+        return 0;
+    }
     unsigned page = 0;
     const file_header_t * file = search_file_by_id(id, &page);
     // save file проигнорирует page если file == 0

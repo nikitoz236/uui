@@ -1,8 +1,7 @@
-#include "flash_hw.h"
+#include "flash_atomic.h"
 #include "storage_hw.h"
 
 static uint8_t flash_mem[STORAGE_PAGES][FLASH_ATOMIC_ERASE_SIZE];
-static unsigned flash_size;
 
 void * storage_page_to_pointer(unsigned page)
 {
@@ -19,7 +18,7 @@ void storage_erase_page(unsigned page)
     }
 }
 
-void flash_write(const void * addr, const void * data, unsigned size)
+void storage_write(const void * addr, const void * data, unsigned size)
 {
     flash_wr_t * dst = (flash_wr_t *)addr;
     const flash_wr_t * src = data;

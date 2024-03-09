@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 typedef uint16_t flash_wr_t;
 
