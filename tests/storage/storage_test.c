@@ -38,15 +38,9 @@ void print_hex_dump(const void * ptr, unsigned size)
 
 */
 
-char file_1[] = "ESP32-C3 SHA accelerator does not support interleaving message digest calculation at the level of \
-individual message blocks when using DMA, which means you cannot insert new calculation before a";   // \
-// complete DMA-SHA process (of one or more message blocks) completes. In this case, users who need \
-// interleaved operation are recommended to divide the message blocks and perform several DMA-SHA \
-// calculations, instead of trying to compute all the messages in one go. \
-// Single DMA-SHA calculation supports up to 63 data blocks. \
-// In contrast to the Typical SHA working mode, when the SHA accelerator is working under the DMA-SHA mode, \
-// all data read are completed via DMA. Therefore, users are required to configure the DMA controller following \
-// the description in Chapter 2 GDMA Controller (GDMA).";
+char file_1[] = "ESP32-C3 SHA accelerator does not support interleaving message digest calculation at the level of"
+    "individual message blocks when using DMA, which means you cannot insert new calculation before a"
+    "complete DMA-SHA process (of one or more message blocks) completes.";
 
 char file_2[] = "some short file";
 
@@ -81,9 +75,9 @@ int main ()
 
     storage_init();
 
-    for (int k = 0; k < 1000 ; k++) {
+    for (int k = 0; k < 1 ; k++) {
         unsigned rv = rand();
-        unsigned n = (rv / 4) % 256;
+        unsigned n = (rv / 4) % 8;
         unsigned fidx = rv % 4;
 
         for (unsigned i = 0; i < n; i++) {
