@@ -6,6 +6,8 @@
 
 #define STORAGE_PAGE_MAGIC          0x5A6B
 #define MAX_FILE_OFFSET_IN_PAGE     (FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t))
+#define FILE_VERSION_START          65530
+#define PAGE_ERASE_CNT_START        65530
 
 typedef struct {
     file_id_t id;
@@ -216,7 +218,7 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
         header.version = old_file->version + 1;
         // printf("                    save_file old file %p id %d ver %d new ver %d\n", old_file, old_file->id, old_file->version, header.version);
     } else {
-        header.version = 65530;
+        header.version = FILE_VERSION_START;
     }
 
     uint16_t crc = calc_crc(data, len, 0);
@@ -362,7 +364,7 @@ void storage_init(void)
                 storage_erase_page(i);
             }
 
-            storage_page_add_header(ph, 65530);
+            storage_page_add_header(ph, PAGE_ERASE_CNT_START);
             empty_page_num++;
         } else {
             const file_header_t * last_version_of_file = 0;
