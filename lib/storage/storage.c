@@ -168,7 +168,7 @@ static unsigned search_file_in_page(unsigned page, file_id_t id, const file_head
 
     for_each_file_in_page_header(ph) {
         if (file->id == id) {
-            printf("    search_file_in_page finded file %p id %d ver %d in page %d\n", file, file->id, file->version, page);
+            // printf("    search_file_in_page finded file %p id %d ver %d in page %d\n", file, file->id, file->version, page);
             if (file_is_crc_correct(file)) {
                 if ((*result_file == 0) ||
                     (is_file_version_newer(*result_file, file))
@@ -399,8 +399,19 @@ void storage_print_info(void)
         const page_header_t * ph = page_header_from_page(i);
 
         printf("  page %2d erased %3d used %5d usefull [%5d] free [%5d]\n", i, ph->erase_cnt, storage_ctx[i].used, storage_ctx[i].usefull, FLASH_ATOMIC_ERASE_SIZE - storage_ctx[i].used);
+        const file_header_t * last_version_of_file = 0;
         for_each_file_in_page_header(ph) {
-            printf("                    file id <%05d> ver %5d len %5d full len %5d\n", file->id, file->version, file->len, file_record_full_size(file->len));
+            if ((last_version_of_file == 0) || (last_version_of_file->id != file->id)) {
+                unsigned file_page;
+                printf("                search last_version_of_file %d\n", file->id);
+                last_version_of_file = search_file_by_id(file->id, &file_page);
+            }
+            printf("                    file id <%05d> ver %5d len %5d full len %5d", file->id, file->version, file->len, file_record_full_size(file->len));
+            if (file == last_version_of_file) {
+                printf("   <<- !!! actual\n");
+            } else {
+                printf("\n");
+            }
         }
     }
 }
