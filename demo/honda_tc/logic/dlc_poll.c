@@ -21,7 +21,7 @@
 static mstimer_t timeout = {};
 
 #define UNIT_RESPONCE_TIMEOUT           200
-#define UNIT_NEXT_POLL                  2000
+#define UNIT_NEXT_POLL_TRY              2000
 
 uint8_t engine_state = 0;
 
@@ -148,6 +148,7 @@ static void dlc_send_request(void)
 
 static void dlc_poll_process_rx_data(void)
 {
+    // printf("DLC poll process rx data\n");
     if (check_rx_frame_valid()) {
         if (engine_state == 0) {
             engine_state = 1;
@@ -168,14 +169,14 @@ static void dlc_poll_process_rx_data(void)
 
 static void dlc_poll_process_timeout(void)
 {
+    // printf("DLC poll process timeout\n");
     if (engine_state) {
         engine_state = 0;
         tc_engine_set_status(0);
-        mstimer_start_timeout(&timeout, UNIT_RESPONCE_TIMEOUT);
-    } else {
-        dlc_first();
-        dlc_send_request();
     }
+    dlc_first();
+    dlc_send_request();
+    mstimer_start_timeout(&timeout, UNIT_NEXT_POLL_TRY);
 }
 
 void dlc_poll(void)
