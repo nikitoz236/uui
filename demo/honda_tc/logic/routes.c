@@ -3,9 +3,16 @@
 #include "rtc.h"
 #include "str_utils.h"
 #include "storage.h"
-#include "trip_history.h"
 
-#define ROUTES_FILE_ID          850
+#define ROUTES_FILE_ID              800
+
+#define TRIP_HISTORY_FILE_ID        840
+#define TRIP_HISTORY_LAST_SLOT      (TRIP_HISTORY_RECORDS - 1)
+
+unsigned route_start[ROUTE_TYPE_NUM_SAVED][ROUTE_VAL_LOADABLE] = {};
+unsigned trip_start_s = 0;
+
+static uint8_t trip_history_last_index = 0;
 
 static inline uint16_t route_file_id(route_t route)
 {
@@ -21,53 +28,59 @@ const char * route_name(route_t route)
     return route_names[route];
 }
 
-unsigned route_start[ROUTE_TYPE_NUM_SAVED][ROUTE_VAL_LOADABLE] = {};
-unsigned trip_start = 0;
-
 unsigned trip_get_value(route_value_t value_type)
 {
     switch (value_type) {
         case ROUTE_VALUE_DIST:  return trip_get_dist_m();
         case ROUTE_VALUE_FUEL:  return trip_get_fuel_ml();
         case ROUTE_VALUE_TIME:
-            if (trip_start) {
-                return rtc_get_time_s() - trip_start;
+            if (trip_start_s) {
+                return rtc_get_time_s() - trip_start_s;
             }
             return 0;
-        case ROUTE_VALUE_SINCE: return trip_start;
+        case ROUTE_VALUE_SINCE: return trip_start_s;
         default: return 0;
     }
 }
 
 unsigned total_get_value(route_value_t value_type)
 {
-    unsigned start = route_start[ROUTE_TYPE_TOTAL][value_type];
-    switch (value_type) {
-        case ROUTE_VALUE_DIST:  return start + trip_get_dist_m();
-        case ROUTE_VALUE_FUEL:  return start + trip_get_fuel_ml();
-        case ROUTE_VALUE_TIME:  return start + trip_get_value(ROUTE_VALUE_TIME);
-        case ROUTE_VALUE_SINCE: return 0; // увы бессмысленно
-        default: return 0;
+    if (value_type == ROUTE_VALUE_SINCE) {
+        return 0;
     }
+    unsigned start = route_start[ROUTE_TYPE_TOTAL][value_type];
+    return start + trip_get_value(value_type);
+}
+
+unsigned calc_cons_dist(unsigned dist, unsigned fuel)
+{
+    // ml/m = l/km = 100 l/100km
+    if (dist) {
+        return fuel * 100 / dist;
+    }
+    return 0;
+}
+
+unsigned calc_cons_time(unsigned time, unsigned fuel)
+{
+    // ml/s = 3600 ml/h
+    if (time) {
+        return fuel * 3600 / time;
+    }
+    return 0;
 }
 
 unsigned route_get_value(route_t route, route_value_t value_type)
 {
     if (value_type == ROUTE_VALUE_CONS_DIST) {
-        // ml/m = l/km = 100 l/100km
         unsigned dist = route_get_value(route, ROUTE_VALUE_DIST);
-        if (dist) {
-            return route_get_value(route, ROUTE_VALUE_FUEL) * 100 / dist;
-        }
-        return 0;
+        unsigned fuel = route_get_value(route, ROUTE_VALUE_FUEL);
+        return calc_cons_dist(dist, fuel);
     }
     if (value_type == ROUTE_VALUE_CONS_TIME) {
-        // ml/s = 3600 ml/h
         unsigned time = route_get_value(route, ROUTE_VALUE_TIME);
-        if (time) {
-            return route_get_value(route, ROUTE_VALUE_FUEL) * 3600 / time;
-        }
-        return 0;
+        unsigned fuel = route_get_value(route, ROUTE_VALUE_FUEL);
+        return calc_cons_time(time, fuel);
     }
     if (route == ROUTE_TYPE_TRIP) {
         return trip_get_value(value_type);
@@ -90,20 +103,67 @@ static void route_save(route_t route)
     storage_write_file(route_file_id(route), &route_start[route], sizeof(route_start[0]));
 }
 
+static file_id_t trip_history_file_id(unsigned slot)
+{
+    unsigned file_idx = trip_history_last_index;
+    if (file_idx < slot) {
+        file_idx += TRIP_HISTORY_RECORDS;
+    }
+    file_idx -= slot;
+    return TRIP_HISTORY_FILE_ID + file_idx;
+}
+
+unsigned trip_history_get_value(unsigned slot, route_value_t value_type)
+{
+    if (slot >= TRIP_HISTORY_RECORDS) {
+        return 0;
+    }
+    unsigned len = 0;
+    const unsigned * history_data = storage_search_file(trip_history_file_id(slot), &len);
+    if (history_data) {
+        switch (value_type) {
+            case ROUTE_VALUE_CONS_DIST:
+                return calc_cons_dist(history_data[ROUTE_VALUE_DIST], history_data[ROUTE_VALUE_FUEL]);
+
+            case ROUTE_VALUE_CONS_TIME:
+                return calc_cons_time(history_data[ROUTE_VALUE_TIME], history_data[ROUTE_VALUE_FUEL]);
+
+            default:
+                return history_data[value_type];
+        }
+    }
+    return 0;
+}
+
+static void save_trip_to_history(void)
+{
+    unsigned trip_data[ROUTE_VAL_LOADABLE];
+    for (unsigned type = 0; type < ROUTE_VAL_LOADABLE; type++) {
+        trip_data[type] = trip_get_value(type);
+    }
+    file_id_t file_id = trip_history_file_id(TRIP_HISTORY_LAST_SLOT);
+    trip_history_last_index++;
+    if (trip_history_last_index >= TRIP_HISTORY_RECORDS) {
+        trip_history_last_index = 0;
+    }
+    printf("save trip to history to file %d\n", file_id);
+    storage_write_file(file_id, trip_data, sizeof(trip_data));
+}
+
 void route_trip_end(void)
 {
-    save_trip_to_history(trip_start, rtc_get_time_s() - trip_start, trip_get_dist_m(), trip_get_fuel_ml());
+    save_trip_to_history();
     for (unsigned type = 0; type <= ROUTE_VALUE_TIME; type++) {
         route_start[ROUTE_TYPE_TOTAL][type] = total_get_value(type);
     }
     route_save(ROUTE_TYPE_TOTAL);
-    trip_start = 0;
+    trip_start_s = 0;
     trip_restart();
 }
 
 void route_trip_start(void)
 {
-    trip_start = rtc_get_time_s();
+    trip_start_s = rtc_get_time_s();
 }
 
 static void route_reset_counters(route_t route)
@@ -126,7 +186,7 @@ void route_reset(route_t route)
     route_save(route);
 }
 
-void route_load(void)
+static void route_starts_load(void)
 {
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
         unsigned len = 0;
@@ -144,4 +204,29 @@ void route_load(void)
             route_reset_counters(i);
         }
     }
+}
+
+static void trip_history_load(void)
+{
+    unsigned last_since = 0;
+    for (unsigned i = 0; i < TRIP_HISTORY_RECORDS; i++) {
+        unsigned len = 0;
+        const unsigned * history_data = storage_search_file(TRIP_HISTORY_FILE_ID + i, &len);
+        if (history_data) {
+            if (last_since < history_data[ROUTE_VALUE_SINCE]) {
+                last_since = history_data[ROUTE_VALUE_SINCE];
+                trip_history_last_index = i;
+            }
+        }
+    }
+    if (last_since == 0) {
+        trip_history_last_index = TRIP_HISTORY_LAST_SLOT;
+    }
+    printf("trip history last index %d\n", trip_history_last_index);
+}
+
+void route_load(void)
+{
+    route_starts_load();
+    trip_history_load();
 }

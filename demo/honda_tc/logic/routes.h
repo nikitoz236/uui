@@ -40,3 +40,7 @@ void route_reset(route_t route);
 void route_load(void);
 void route_trip_end(void);
 void route_trip_start(void);
+
+#define TRIP_HISTORY_RECORDS        20
+// slot 0 - последний, slot 1 - предпоследний, TRIP_HISTORY_RECORDS - 1 - самый старый
+unsigned trip_history_get_value(unsigned slot, route_value_t value_type);
