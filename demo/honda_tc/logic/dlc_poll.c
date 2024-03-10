@@ -44,14 +44,15 @@ typedef struct {
     uint8_t cs;
 } kline_request_t;
 
-static kline_request_t kline_request;
+static kline_request_t kline_request = {};
 static uint8_t rx_type = 0;
 
-static uint8_t kline_rx_buf[32];
+static uint8_t kline_rx_buf[32] = {};
 
-static uint8_t dump_data[16];
-static uint8_t dump_addr;
-static uint8_t dump_len;
+static uint8_t dump_poll = 0;
+static uint8_t dump_data[16] = {};
+static uint8_t dump_addr = 0;
+static uint8_t dump_len = 0;
 
 static honda_unit_t dump_unit = HONDA_UNIT_COUNT;       // no active
 
@@ -91,26 +92,39 @@ void dlc_dump_request(honda_unit_t unit)
 
 unsigned dlc_dump_get_new_data(uint8_t * data, unsigned * address)
 {
+    unsigned len = dump_len;
     if (dump_len) {
         *address = dump_addr;
         str_cp(data, dump_data, dump_len);
+        dump_len = 0;
     }
-    return dump_len;
+    return len;
 }
 
 static void dlc_next(void)
 {
+    /*
+        планировщик обязательно будет опрашивать ECU
+        если есть запрос на дамп, то он будет выполнен как только закончится полностью чтение всей памяти ECU
+        между запросами на дамп обязательно будет вставлен один цикл опроса ECU
+    */
     uint8_t len = 16;
     if (next_address < honda_units_desc[current_unit].len) {
         if ((next_address + len) >= honda_units_desc[current_unit].len) {
             len = honda_units_desc[current_unit].len - next_address;
         }
     } else {
-        if (dump_unit == HONDA_UNIT_COUNT) {
+        if (dump_poll) {
             current_unit = HONDA_UNIT_ECU;
+            dump_poll = 0;
         } else {
-            current_unit = dump_unit;
-            dump_unit = HONDA_UNIT_COUNT;
+            if (dump_unit == HONDA_UNIT_COUNT) {
+                current_unit = HONDA_UNIT_ECU;
+            } else {
+                dump_poll = 1;
+                current_unit = dump_unit;
+                dump_unit = HONDA_UNIT_COUNT;
+            }
         }
         next_address = 0;
     }
@@ -154,7 +168,7 @@ static void dlc_poll_process_rx_data(void)
             engine_state = 1;
             tc_engine_set_status(1);
         }
-        if (dump_unit != HONDA_UNIT_COUNT) {
+        if (dump_poll) {
             dump_addr = kline_request.offset;
             dump_len = kline_request.len;
             str_cp(dump_data, &kline_rx_buf[2], kline_request.len);

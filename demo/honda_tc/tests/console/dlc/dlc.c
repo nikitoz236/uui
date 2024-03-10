@@ -33,9 +33,28 @@ int main() {
                 printf("DLC EMU engine off\n");
                 emu_engine_ctrl(0);
             }
+            if (key == 'E') {
+                printf("DLC EMU request ECU dump\n");
+                dlc_dump_request(HONDA_UNIT_ECU);
+            }
+            if (key == 'A') {
+                printf("DLC EMU request ABS dump\n");
+                dlc_dump_request(HONDA_UNIT_ABS);
+            }
+            if (key == 'S') {
+                printf("DLC EMU request SRS dump\n");
+                dlc_dump_request(HONDA_UNIT_SRS);
+            }
         }
         usleep(10000);
         dlc_poll();
+        uint8_t dump[16];
+        unsigned address = 0;
+        unsigned len = dlc_dump_get_new_data(dump, &address);
+
+        if (len) {
+            printf("DLC dump new data ready, addr %d, len %d\n", address, len);
+        }
     }
 
     return 0;
