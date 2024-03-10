@@ -15,12 +15,12 @@
     /* TRIP не сохраняется, по этому должен быть последним */ \
     macro(TRIP,         "TRIP")                             /* с момента запуска двигателя */
 
-#define __ROUTE_ENUM(x) ROUTE_TYPE_ ## x
+#define __ROUTE_ENUM(x, ...) ROUTE_TYPE_ ## x
 
 typedef enum {
     __ROUTE_DESC(__ROUTE_ENUM),
-    ROUTE_NUM,
-    ROUTE_NUM_SAVED = ROUTE_TYPE_TRIP,
+    ROUTE_TYPE_NUM,
+    ROUTE_TYPE_NUM_SAVED = ROUTE_TYPE_TRIP,
 } route_t;
 
 typedef enum {
@@ -38,3 +38,5 @@ const char * route_name(route_t route);
 unsigned route_get_value(route_t route, route_value_t value_type);
 void route_reset(route_t route);
 void route_load(void);
+void route_trip_end(void);
+void route_trip_start(void);
