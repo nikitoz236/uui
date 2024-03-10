@@ -1,0 +1,290 @@
+Honda Diagnostic Serial Data Link Protocol—ABS/VSA System
+RATIONALE
+Not applicable.
+
+TABLE OF CONTENTS
+
+1. SCOPE..........................................................................................................................................................2
+2. REFERENCES..............................................................................................................................................2
+2.1  Applicable Publications.................................................................................................................................2
+2.1.1 SAE Publications...........................................................................................................................................2
+2.1.2 ISO Publications............................................................................................................................................2
+3. DEFINITIONS AND ACRONYMS.................................................................................................................2
+4. OVERVIEW...................................................................................................................................................3
+4.1 Telegram-Specific Overview.........................................................................................................................3
+4.2 Message-Specific Overview..........................................................................................................................5
+4.3  Acknowledge/No Acknowledge Message.....................................................................................................6
+5. INTERFACE..................................................................................................................................................6
+6. INITIATION OF SERIAL DIAGNOSIS, ADDRESS WORD..........................................................................7
+6.1 Stimulation of the ABS/VSA Control Unit......................................................................................................7
+6.2 Communication Set-Up.................................................................................................................................8
+6.3 Error Handling During Communication Setup.............................................................................................10
+7. COMMUNICATION.....................................................................................................................................10
+7.1 Message Structure......................................................................................................................................10
+7.1.1 Message Length..........................................................................................................................................11
+7.1.2 Message Counter........................................................................................................................................11
+7.1.3 Message Title..............................................................................................................................................11
+7.1.4 Message-Specific Bytes..............................................................................................................................11
+7.1.5 Message End Byte......................................................................................................................................11
+7.2 Data Protection...........................................................................................................................................11
+7.3 Error Handling During Normal Communication..........................................................................................12
+7.4 Telegram Structure.....................................................................................................................................13
+7.5 Function Sequence.....................................................................................................................................14
+
+
+__________________________________________________________________________________________________________________________________________
+SAE Technical Standards Board Rules provide that: “This report is published by SAE to advance the state of technical and engineering sciences. The use of this report isentirely voluntary, and its applicability and suitability for any particular use, including any patent infringement arising therefrom, is the sole responsibility of the user.”SAE reviews each technical report at least every five years at which time it may be reaffirmed, revised, or cancelled. SAE invites your written comments and suggestions.Copyright © 2007 SAE International All rights reserved. No part of this publication may be reproduced, stored in a retrieval system or transmitted, in any form or by any means, electronic, mechanical,photocopying, recording, or otherwise, without the prior written permission of SAE.TO PLACE A DOCUMENT ORDER: Tel: 877-606-7323 (inside USA and Canada)Tel: 724-776-4970 (outside USA)Fax: 724-776-0790Email: CustomerService@sae.orgSAE WEB ADDRESS: http://www.sae.org
+
+		SAE J2809 Issued OCT2007 - 2 -
+
+1. SCOPE
+
+This Technical Information Report defines the proprietary diagnostic communication protocol for ABS or VSA ECU(Electronic Control Unit) implemented on some Honda vehicles. This protocol does not apply to all Honda vehicles.This document should be used in conjunction with SAE J2534-2 in order to fully implement the communication protocol inan enhanced SAE J2534 interface.The purpose of this document is to specify the requirements necessary to implement the communication protocol in anenhanced SAE J2534 interface.
+
+2. REFERENCES
+
+2.1 Applicable PublicationsThe following publications form a part of this specification to the extent specified herein. Unless otherwise indicated, the latest version of SAE publications shall apply.
+
+2.1.1 SAE Publications Available from SAE, 400 Commonwealth Drive, Warrendale, PA 15096-0001, Tel: 877-606-7323 (inside USA andCanada) or 724-776-4970 (outside USA),www.sae.org.SAE J2534-1 Recommended Practice for Pass-Thru Vehicle ProgrammingSAE J2534-2 Optional Pass-Thru Features
+
+2.1.2 ISO Publications Available from ANSI, 25 West 43rd Street, New York, NY 10036-8002, Tel: 212-642-4900,www.ansi.org.ISO 9141:1989 Road vehicles—Diagnostic systems—Requirements for interchange of digital informationISO 9141-2:1994 Road vehicles—Diagnostic systems—CARB requirements for interchange of digital information
+
+3. DEFINITIONS AND ACRONYMS
+
+3.1 “ABS” Anti-lock Brake System.
+
+3.2 “VSA”Vehicle Stability Assist.
+
+3.3 “Serial Diagnosis”
+
+The serial diagnosis offers the possibility of rapid access to control unit information and functions without disconnecting the wire harness. Serial diagnosis allows interrogation of all input signals present at the control unit, external switching of all actuators to which the control unit has access as well as reading the internal unit information such as the fault memory.Serial diagnosis can be used in the end of line inspection or in the service workshops and can contribute towards considerable savings in inspection time.
+
+		SAE J2809 Issued OCT2007 - 3 -
+
+3.4 “MESSAGE”
+
+The smallest repeatable unit of transmission is a “MESSAGE”. A message consists of a certain number of bytes and always has the same format.
+
+3.5 “TELEGRAM”
+
+The sum of all messages transmitted during communication with a control unit is a “TELEGRAM”.
+
+3.6 “TRANSMITTER”
+
+The unit (control unit or tester) which is entitled to output a message is called a “TRANSMITTER”.
+
+3.7 “RECEIVER”
+
+The transmitter executes a passive handshake (i.e. it checks the complemented byte with respect to correct transmission). The receiver of a message is called a “RECEIVER”.
+
+The receiver performs an active “handshake” (each received byte (except “ETX”) is complemented and returned to the transmitter).
+
+4. OVERVIEW
+
+4.1 Telegram-Specific Overview
+
+FIGURE 1 - INITIATION OF DIAGNOSIS
+
+		SAE J2809 Issued OCT2007 - 4 -
+
+FIGURE 2 - COMMUNICATION TELEGRAM
+
+
+		SAE J2809 Issued OCT2007 - 5 -
+
+4.2 Message-Specific Overview
+
+
+FIGURE 3 - MESSAGE TRANSMISSION
+
+		SAE J2809 Issued OCT2007 - 6 -
+
+TABLE 1 - TIMING PARAMETERS
+
+Description	Parameter Name	Minimum Value	Maximum Value
+
+Stimulation
+
+Idle line before start of stimulation	t0	10 msec	∞
+
+Start of Communication
+
+Time between correct stimulation and start of the synchronization byte	t1	200 msec	400 msec
+Time between synchronization byte and key-byte 1	t2	20 msec	200 msec
+Time between key-byte 1 and key-byte 2	t3	1 msec	200 msec
+Time between key-byte 2 and complement key-byte 2	t4	1 msec	200 msec
+Time between key-byte 2 and the renewed output of the synchronization byte(If complement key-byte 2 incorrectly received by control unit)	t5	200 msec	1 sec
+Time between key-byte 2 and start of ECU identification	t6	1 msec	200 msec
+
+During Communication
+
+Time between bytes within a message (i.e. between a byte from thetransmitter and its complement from the receiver)	t7	1 msec	40 msec
+For the Receiver: the minimum time the receiver waits before sendingthe response if ETX is lost (i.e. it starts receiving retried message if the first byte of the message is received within t8). Note: ETX is not required to be received by the Receiver.	t8	N/A	80msec
+
+Time between end of a message and start of the next message	t9	1 msec	2 sec
+
+4.3 Acknowledge/No Acknowledge Message
+
+5. INTERFACE
+
+The ABS/VSA control unit requires one line for communication with an external tester, the bi-directional communicationline (K line). This line possesses bus capability, i.e. it can be connected together with lines with the same function fromother control units (see Figure 4). Activation of a control unit on the diagnosis bus by the tester takes place by means ofan address specific to the control unit which is transmitted via the bi-directional line (K line).
+
+		SAE J2809 Issued OCT2007 - 7 -
+
+FIGURE 4 - DIAGNOSIS CONNECTION CONCEPT
+
+6. INITIATION OF SERIAL DIAGNOSIS, ADDRESS WORD
+
+6.1 Stimulation of the ABS/VSA Control Unit
+
+The ABS/VSA control unit is selected from all control units connected to the diagnosis bus for a subsequentcommunication by the means of stimulation by the tester. Stimulation takes place by transmission of the address wordassigned to the ABS/VSA control unit.
+
+In normal mode, stimulation can occur only when the vehicle is at a standstill with a speed below the diagnosis limit speedand with the ignition switched on. If the control unit is in the failure mode (valve relay switched off), stimulation isaccepted at any speed.
+
+In order to access diagnosis mode, the address word must first be transmitted via the K line. The address word used forstimulation must be transmitted in 10-bit format at a transfer rate of 5 baud ±0.5%.
+
+		SAE J2809 Issued OCT2007 - 8 -
+
+The address word is made up as follows, in the order of transmission (see Figure 5):
+
+1 start bit 	(logical “0”, low potential, reaction of control unit to 1-0 transition)
+7 data bits 	(ECU-specific address), starting with the LSB
+1 parity bit 	(parity odd)
+1 stop bit 		(logical “1”, high potential)
+
+The control unit aborts stimulation detection if
+– wheel speed > limit diagnosis speed = 2.75 km/h
+– no valid stop bit recognized
+– wrong parity recognized
+– no valid start bit recognized
+– received address not same as own address
+
+After abortion of stimulation detection, the control unit synchronizes itself to a stimulation operating again, whereby this can be repeated an arbitrary number of times by the tester.
+
+FIGURE 5 - ADDRESS WORD
+
+The ABS/VSA function is no longer available after completion of a valid stimulation operation. The control unit is then in the diagnosis mode. During the diagnosis mode, the monitoring routines for the control unit peripherals required for the ABS/VSA function are processed only to a restricted extent.
+
+The ABS/VSA safety lamp is activated continuously during the diagnosis.
+
+6.2 Communication Set-Up
+
+Communication is set up on the basis of the existing ISO 9141 specification. After the control unit has received the stop bit of the address word which has been identified as its own address, it waits for 1 bit duration of the stimulation word in order to give the tester an opportunity to prepare itself for a subsequent communication.
+
+After this waiting time, the control unit reacts with output of a synchronization byte on the K line. The reaction takes place within a time of t1, calculated from complete reception of the stimulation address stop bit.
+
+		SAE J2809 Issued OCT2007 - 9 -
+
+The synchronization byte has the following structure (see Figure 6):
+
+1 start bit (logical “0”, low potential)
+8 data bits (content = 0x55, starting with the LSB)
+1 stop bit (logical “1”, high potential)
+
+FIG. 6 - SYNCHRONIZATION BYTE
+
+The synchronization byte is transmitted with the same baud rate as is used for subsequent data transfer. The tester can recognize the baud rate on the basis of the synchronization byte (e.g. by measurement of the intervals between the falling edges).
+
+2 key-bytes are transmitted after the synchronization byte. These inform the tester of the parameters for subsequent communication. The key-bytes have the following structure (See Figure 7).
+
+1 start bit (logical “0”, low potential)
+7 Key data bits1 parity bit (odd parity)
+1 stop bit (logical “1”, high potential)
+
+The 2 key-bytes must be considered as belonging together and represent a 14-bit piece of information. The low byte =0xAB is transmitted first, followed by the high byte = 0x02.
+
+Keyword information: 299 (P000 0010 P010 1011 B)
+KeywordLow HighWithout parity 0x2B (010 1011B) 0x02 (000 0010B)With parity 0xAB (1010 1011B) 0x02 (0000 0010B)
+
+FIGURE 7 - KEYWORD
+
+Following transmission of the synchronization byte, the control unit waits for t2 before transmitting the first key-byte. This allows the tester sufficient time to change its baud rate to that measured from the synchronization byte.
+
+		SAE J2809 Issued OCT2007 - 10 -
+
+The 2 key-bytes are transmitted at an interval of t3.
+
+After output of the second key-byte, the control unit expects the complement of the second key-byte from the tester as confirmation of successful communication, whereby the tester must observe an interval of t4 before it sends the complement. This interval serves the purpose of allowing the control unit sufficient time to switch over to receive mode. After successfully completing the communication setup, the control unit starts with the first byte of the ECU ID message after a time of t6.During communication, the ABS/VSA control unit operates with the following data format (see Figure 8):1 start bit (logical “0”, low potential)8 data bitsNo parity1 stop bit (logical “1”, high potential)FIGURE 8 - DATA FORMAT
+
+6.3 Error Handling During Communication Setup
+
+If the control unit recognizes the complement of the key-byte as containing an error, then it can assume that the tester has not correctly determined the baud rate of the synchronization byte. The control unit waits for t5 before it starts with renewed output of the synchronization byte so that the tester experiences a time-out and also detects an error.
+
+In the event of a fault, communication setup can be performed once more without renewed stimulation. A time-out representing approximately 1 bit period of the stimulation word (200 msec) is used for detection of a fault. This means that the interval between 2 bytes during communication setup must never be longer than the time corresponding to the time-out.
+
+If a tester time-out occurs during communication setup, the tester can assume that the control unit (if it is still capable of functioning) will start communication setup again with output of the synchronization byte, unless the number of communication setup repetitions programmed in the control unit has been reached.
+
+If a control unit time-out occurs, which can happen only if the control unit does not receive the complement of the second key-byte, it reacts with output of the synchronization byte after the time-out, as mentioned above.
+
+7. COMMUNICATION
+
+7.1 Message StructureThe information which is exchanged between the tester and the control unit is combined in messages on the basis of the respective content. All Messages have the same message structure. Each message consists of a byte in which the message length is transmitted, a message counter, the message title, message-specific information and the message end.
+
+		SAE J2809 Issued OCT2007 - 11 -
+
+This results in the following structure in the order of transmission.
+
+Byte Content1 Message length2 Message counter3 Message title4 ~ n-1 Message-specific information (if necessary)n Message end
+
+7.1.1 Message LengthThe message length byte specifies the number of following bytes (in the above table, this is therefore (n-1)).
+
+7.1.2 Message CounterThe first transmitted message (this is the first message of the ECU identifier) has a message counter value of ‘1’. The value of the message counter is incremented by each transmitted message. The value ‘0’ follows the value ‘255’. Since two successive messages must never have the same direction of transmission this also means that the value of the message counter is always an even number for messages which are output by the tester. Correspondingly, the message output by the control unit always possesses an odd message number value. The message counter thus offers an additional check for correctness of transmission.
+
+7.1.3 Message TitleThe message title, which is transmitted as the third byte, provides information as to the message involved and regarding the data which is transmitted or requested in this message.
+
+7.1.4 Message-Specific BytesMessage-specific bytes are needed wherever other information is required in addition to the message title. In the case of the message “clear fault memory”, it is obvious what is intended with this message, i.e. no message specific bytes are necessary. This is not the case; however, for the message “output fault memory”. Message-specific information must be present here, in this case the bytes of the fault memory.
+
+7.1.5 Message End ByteThe last byte of a message is the “message end” byte. The byte always has the same content, namely the ASCIIcharacter “ETX”, which is transmitted with MSB = 0 and thus represents the value 0x03. The reason for this is that only the last byte of a message is not safeguarded by a handshake. The receiver must check the last byte to establish whether it actually contains the value “ETX” on the basis of the earlier correctly received message length (something which can be assumed with a handshake). If this is not the case, the receiver can take corresponding measures (seeSection 6.2).
+
+7.2 Data ProtectionThe bytes of a message which are output by the transmitter are returned by the receiver byte-by-byte in complemented form, i.e. the first byte of the transmitter results in the complemented first byte from the receiver (byte handshake). As aresult of this, the transmitter outputs the second byte to the receiver in turn, etc. Using this output form, the transmitter immediately receives information from the receiver after every byte indicating whether the output byte has been correctly received. In addition, the tester adapts itself to the processing speed of the control unit.
+
+
+		SAE J2809 Issued OCT2007 - 12 -
+
+7.3 Error Handling During Normal CommunicationFault detection within a message occurs in a similar way as for the communication setup, namely by means of a time-out t7 max. This applies to both the control unit and the tester. If a time-out has been recognized, both tester and control unit jump back to the start of the message. The transmitter allows a further time-out time unit to elapse before it starts renewed output of the first byte (message length) in order to guarantee that a receiver time-out occurs under all circumstances. The same reaction occurs if the transmitter receives an incorrect byte from the receiver. In this case, the transmitter allows the time-out time to elapse twice before output of the first message byte takes place again.The last byte of a message (=ETX) is not returned by the receiver. If the last byte is correctly received by the receiver, it replies with output of the response message or, if no response message exists, with an acknowledgement (= message“Acknowledge”).If the receiver has not received an ETX after expiration of the time-out between bytes (= t7max), then it does not know whethera. The last byte (=ETX) has been lost as a result of a fault.b. The complement of the penultimate byte was transmitted with an error.c. The complement of the penultimate byte has been completely lost.
+
+In case b) or c), the transmitter will restart transmission of the original message after expiration of two t7time-outs since transmission of the penultimate byte of the message. In order to avoid a bus conflict, the receiver allows the time t8max(= 2*t7max) to elapse. If a byte arrives during this time, this is the first byte of the message (repeated by the transmitter),and the receiver treats this as a retry.If the time t8max elapses without a byte being received the receiver concludes that the complement of the penultimate byte was received by the transmitter and that it attempted ETX transmission (case a). Then the receiver can immediately assume the transmitter function. The same reaction then occurs as for incorrect reception of the ETX byte (see next section).
+
+FIGURE 9 - HANDLING OF CASE A) - ETX LOST
+
+
+		SAE J2809 Issued OCT2007 - 13 -
+
+FIGURE 10 - HANDLING OF CASES B) AND C) - PENULTIMATE BYTE LOST
+
+If the last byte is received incorrectly, the receiver has the possibility of having the just-received message repeated. For this purpose, it transfers the message “no acknowledge” with the message number of the message to be repeated.EXAMPLE: A message has been transferred from the transmitter to the receiver with the message counter “7” (content of the second byte). The receiver does not recognize any “ETX” (last transmitted byte of a message). The receiver (e.g. tester) then takes over the transmitter function by sending a “no acknowledge” message to the control unit (now receiver). The message counter of the “no acknowledge” message is incremented by “1”(old count = “7” + 1= “8” = new count). The message specific byte of the message contains the message number of the message which is to be repeated (“7”). As a result, the receiver recognizes which message it must repeat when it takes over the transmitter function.
+
+Response message of the control unit (no acknowledge):Byte Content1 Message length : 0x042 Message number : x3 Message title : 0x0A4 Message number to be repeated : x-15 ETX : 0x03The control unit (irrespective of whether currently functioning as transmitter or receiver) aborts communication if itrecognizes an error three times successively during the transmission of one message. After this, the control unit canenter diagnosis mode again only as a result of renewed stimulation.7.4 Telegram StructureThe telegram starts with the (first) message of the ECU ID. It can be terminated by the following conditions. – Switching off of the ignition – Time-out of 2 sec elapsed between two communication blocks. A constant interchange of transmitter and receiver functions occurs between the first and last message of a telegram, i.e.message are continuously exchanged between the control unit and the tester, whereby the transmission direction of twosuccessive messages must never be the same. The Tester always has the role of Master, the Control Unit only transmitsmessages in response to Tester requests. The interval between two messages must not exceed t9max. If this shouldoccur, the control unit aborts communication and waits for renewed stimulation by the tester.
+
+		SAE J2809 Issued OCT2007 - 14 -
+
+If the control unit receives a message with an unknown message title, it transfers an “acknowledge” message to thetester. The latter must then recognize that the control unit cannot interpret this message.Reaction of the control unit to unknown message title (acknowledge):
+Byte Content1 Message length : 0x032 Message number : x3 Message title : 0x094 ETX : 0x03
+
+7.5 Function Sequence
+
+Physical data exchange between the control unit and tester consists of a message handshake with additional bytehandshake. The physical length (message length) of a message is limited.
+
+A logic function, such as “output error memory” uses this message exchange for transfer of information. The logicfunction is, however not bound to a single message but covers several communication messages.
+
+The underlying reasons for this are as follows:
+• the limited number of data bytes which can be transmitted per message (quantity of information)
+• the time limitation between tester request and control unit response message (function duration)
+
+Functions, which require either more data or longer times than can be realized with one message exchange, are dividedup to several messages.
+
+In this case, the physical message exchange takes place by the tester sending acknowledge messages to the control unitafter a request covering several messages until the control unit replies with an acknowledge message. Only then has thefunction been completely executed and all data is transferred to the tester (see Figure 9):
+
+		SAE J2809 Issued OCT2007 - 15 -
+
+FIGURE 11 - MESSAGE SEQUENCE FOR EXECUTION OF A FUNCTION
+
+NOTE: Polling of the control unit acknowledge message can be dispensed with:
+
+• for functions which possess an exactly defined number of control unit response messages (e.g. ECU ID)
+OR
+• where the last control unit response message differs from all previous ECU response messages of this function (e.g.speed sensor test).
+
+In this case, the next tester request can follow directly after the last control unit response message.
+
+PREPARED BY THE SAE VEHICLE E/E SYSTEMS DIAGNOSTIC STANDARDS COMMITTEE

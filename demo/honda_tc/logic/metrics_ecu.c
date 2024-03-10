@@ -1,5 +1,6 @@
 #include "metrics_ecu.h"
 #include "str_utils.h"
+#include "trip_integrate.h"
 
 #define FIX_POINT_BITS                  14
 

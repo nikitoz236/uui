@@ -1,10 +1,11 @@
 #include <stdint.h>
-#include "dlc_poll.h"
-#include "mstimer.h"
 #include "stddef.h"
-#include "kline.h"
-#include "metrics_ecu.h"
 #include "str_utils.h"
+#include "mstimer.h"
+#include "kline.h"
+#include "dlc_poll.h"
+#include "metrics_ecu.h"
+#include "tc.h"
 
 /*
 
