@@ -11,11 +11,6 @@
 
 unsigned uptime_ms = 0;
 
-void save_trip_to_history(unsigned since, unsigned time, unsigned distance, unsigned fuel)
-{
-    printf("save_trip_to_history since %d time %d dist %d fuel %d\n", since, time, distance, fuel);
-}
-
 void view_screen_off(void)
 {
     printf("view_screen_off\n");
@@ -86,7 +81,16 @@ int main() {
                     route_reset(key - '0');
                 }
             }
-
+            if (key == 'H') {
+                printf("\ntrip history   DIST        FUEL        TIME       SINCE   CONS_DIST   CONS_TIME\n");
+                for (unsigned i = 0; i < TRIP_HISTORY_RECORDS; i++) {
+                    printf("trip %2d: ", i);
+                    for (route_value_t vt = 0; vt < ROUTE_VALUE_NUM; vt++) {
+                        printf("%10d  ", trip_history_get_value(i, vt));
+                    }
+                    printf("\n");
+                }
+            }
         }
         usleep(50000);
         dlc_poll();
