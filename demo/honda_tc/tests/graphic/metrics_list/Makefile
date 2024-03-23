@@ -5,8 +5,15 @@ LIB = $(PROJECT)/../../lib
 INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/*.c
 
+INC += ./$(LIB)/hw/include/
+
+SRC += ./$(LIB)/emu/hw/systick.c
+
 INC += $(PROJECT)/logic
-SRC += $(PROJECT)/logic/*.c
+SRC += $(PROJECT)/logic/metrics_view.c
+SRC += $(PROJECT)/logic/metrics_ecu.c
+SRC += $(PROJECT)/logic/trip_integrate.c
+
 
 widget_metrics_list_test_run:
 
