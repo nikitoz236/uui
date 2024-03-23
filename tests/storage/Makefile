@@ -7,7 +7,13 @@ INC += $(LIB)/storage
 INC += $(LIB)/hw/include
 INC += $(LIB)/common
 
-SRC += ./emu_flash.c
+# image in ram
+# SRC += ./emu_flash_in_ram.c
+
+# image in file
+INC += $(LIB)/emu/storage
+SRC += $(LIB)/emu/storage/emu_storage.c
+
 SRC += $(LIB)/storage/storage.c
 
 include $(LIB)/emu/test_console.mk

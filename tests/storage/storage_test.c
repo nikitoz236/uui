@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 #include "storage.h"
 #include "storage_hw.h"
+
+#include "emu_storage.h"
 
 void print_hex_dump(const void * ptr, unsigned size)
 {
@@ -73,11 +74,12 @@ int main ()
 {
     printf("storage lib test\n");
 
+    emu_storage_load();
     storage_init();
 
-    for (int k = 0; k < 100 ; k++) {
+    for (int k = 0; k < 10 ; k++) {
         unsigned rv = rand();
-        unsigned n = (rv / 4) % 16;
+        unsigned n = (rv / 4) % 256;
         unsigned fidx = rv % 4;
 
         for (unsigned i = 0; i < n; i++) {

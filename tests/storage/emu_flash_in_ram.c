@@ -1,6 +1,10 @@
 #include "flash_atomic.h"
 #include "storage_hw.h"
 
+/*
+    Реализация области flash в ОЗУ, пустой по умолчанию.
+*/
+
 static uint8_t flash_mem[STORAGE_PAGES][FLASH_ATOMIC_ERASE_SIZE];
 
 void * storage_page_to_pointer(unsigned page)
