@@ -11,3 +11,6 @@
 
 src_print:
 	echo $(SRC)
+
+inc_print:
+	echo $(INC)
