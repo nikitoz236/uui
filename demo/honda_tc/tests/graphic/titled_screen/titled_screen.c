@@ -37,20 +37,24 @@ int main()
 
     emu_lcd_init(&emu_lcd_cfg);
 
-    unsigned screen_selector = 0;
+
 
     ui_node_desc_t ui = {
         .widget = &__widget_titled_screen,
         .cfg = &(__widget_titled_screen_cfg_t){
             .title = "Titled screen",
+            .cs = (color_scheme_t){
+                .bg = 0x00ff00,
+                .fg = 0x000000
+            },
             .screen = &(ui_node_desc_t){
                 .widget = &__widget_test_rect_with_text,
                 .cfg = &(__widget_test_rect_with_text_cfg_t){
                     .text = "Hello world",
-                    .cs = {
-                        .bg = 0x00ff00,
-                        .fg = 0x000000
-                    }
+                    .cs = (color_scheme_t){
+                        .bg = 0xA2345B,
+                        .fg = 0x123457
+                    },
                 }
             }
         }
