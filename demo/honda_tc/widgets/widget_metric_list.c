@@ -43,7 +43,7 @@ static void draw(ui_element_t * el)
 
     draw_color_form(&el->f, cfg->color_bg);
 
-    ui_element_t * item = ui_tree_add(el, cfg->ui_node);
+    ui_element_t * item = ui_tree_add(el, cfg->ui_node, 0);
     ui_tree_element_calc(item);
 
     ctx->pos = 0;

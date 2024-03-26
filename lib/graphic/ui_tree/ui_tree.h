@@ -18,6 +18,7 @@ typedef struct {
 typedef struct {
     // unsigned (*ctx_size)(void);
     void (*init_ctx)(ui_element_t * el);
+    void (*calc)(ui_element_t * el);
     void (*draw)(ui_element_t * el);
     void (*update)(ui_element_t * el);
     unsigned (*process_event)(ui_element_t * el, unsigned event);
@@ -37,11 +38,16 @@ ui_element_t * ui_tree_next(ui_element_t * element);
 
 void * ui_tree_ctx(ui_element_t * element);
 
-ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node);
+ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node, unsigned idx);
 
 void ui_tree_delete_childs(ui_element_t * element);
 
+
+void ui_tree_element_update(ui_element_t * element);
 void ui_tree_element_draw(ui_element_t * element);
+void ui_tree_element_calc(ui_element_t * element);
+unsigned ui_tree_element_process(ui_element_t * element, unsigned event);
+
 
 void ui_tree_draw(void);
 void ui_tree_update(void);

@@ -40,8 +40,7 @@ static void draw(ui_element_t * el)
     ctx->text[0] = 'A' + el->idx;
     ctx->text[2] = 0;
 
-
-    ui_element_t * item = ui_tree_add(el, &ctx->child_node);
+    ui_element_t * item = ui_tree_add(el, &ctx->child_node, el->idx);
     item->f = el->f;
 
     update(el);

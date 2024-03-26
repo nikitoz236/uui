@@ -21,7 +21,7 @@ static uint16_t element_offset(ui_element_t * el)
 
 static inline unsigned element_size(ui_element_t * el)
 {
-    return round_up_deg2(sizeof(ui_element_t) + el->ui_node->widget->ctx_size, 4);
+    return round_up_deg2(sizeof(ui_element_t) + el->ui_node->widget->ctx_size, sizeof(uint32_t));
 }
 
 static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_offset, unsigned idx)
@@ -44,7 +44,9 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     ui_tree_ptr = ptr;
     ui_tree_size = size;
     ui_element_t * el = add_node(ui_node, 0, 0);
-    el->f.s = *display_size;
+    if (display_size) {
+        el->f.s = *display_size;
+    }
     el->f.p = (xy_t){0, 0};
 }
 
@@ -84,20 +86,20 @@ static ui_element_t * search_last_child(ui_element_t * owner)
     return last;
 }
 
-ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node)
+ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node, unsigned idx)
 {
     ui_element_t * el;
     debug__create("ui tree add owner %d, tree top %d\n", element_offset(owner), ui_tree_top);
     if (owner->child == 0) {
+        // первый дочерний элемент
         el = add_node(ui_node, element_offset(owner), 0);
         owner->child = element_offset(el);
-        debug__create("  first child. offset %d, tree top %d\n", owner->child, ui_tree_top);
     } else {
         ui_element_t * last = search_last_child(owner);
         el = add_node(ui_node, element_offset(owner), last->idx + 1);
         last->next = element_offset(el);
-        debug__create("  next child. offset %d, tree top %d\n", owner->next, ui_tree_top);
     }
+    el->idx = idx;
     return el;
 }
 
@@ -275,17 +277,55 @@ void ui_tree_delete_childs(ui_element_t * element)
     element->child = 0;
 }
 
+void ui_tree_element_update(ui_element_t * element)
+{
+    if (element->ui_node->widget->update) {
+        element->ui_node->widget->update(element);
+    }
+}
+
+void ui_tree_element_calc(ui_element_t * element)
+{
+    if (element->ui_node->widget->calc) {
+        element->ui_node->widget->calc(element);
+    }
+}
 
 void ui_tree_element_draw(ui_element_t * element)
 {
     if (element->ui_node->widget->draw) {
         element->ui_node->widget->draw(element);
     }
+    // ui_element_t * child = ui_tree_child(element);
+    // while (child) {
+    //     ui_tree_element_draw(child);
+    //     child = ui_tree_next(child);
+    // }
+}
+
+unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
+{
     ui_element_t * child = ui_tree_child(element);
+    unsigned result = 0;
     while (child) {
-        ui_tree_element_draw(child);
+        if (event) {
+            printf("    process event %p for child %p\n", element, child);
+        }
+        if (ui_tree_element_process(child, event)) {
+            result = 1;
+        }
         child = ui_tree_next(child);
     }
+    if (result == 0) {
+        if (event) {
+            printf("    process own event in %p\n", element);
+        }
+
+        if (element->ui_node->widget->process_event) {
+            return element->ui_node->widget->process_event(element, event);
+        }
+    }
+    return 0;
 }
 
 void ui_tree_draw(void)
@@ -294,12 +334,13 @@ void ui_tree_draw(void)
     ui_tree_element_draw(element);
 }
 
-void ui_tree_update(void);
-
 void ui_tree_process_event(unsigned event)
 {
     ui_element_t * element = ui_tree_element(0);
-    element->ui_node->widget->process_event(element, event);
+        if (event) {
+            printf("event !\n");
+        }
+    ui_tree_element_process(element, event);
 }
 
 void ui_tree_debug_print_linear(void)

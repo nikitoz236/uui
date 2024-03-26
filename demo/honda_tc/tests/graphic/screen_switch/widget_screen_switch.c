@@ -5,9 +5,8 @@ static void draw(ui_element_t * el)
     __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     unsigned current_screen = *cfg->selector_ptr;
     ui_node_desc_t * node = &cfg->screens_list[current_screen];
-    ui_element_t * item = ui_tree_add(el, node);
+    ui_element_t * item = ui_tree_add(el, node, current_screen);
     item->f = el->f;
-    item->idx = current_screen;
     ui_tree_element_draw(item);
 }
 
