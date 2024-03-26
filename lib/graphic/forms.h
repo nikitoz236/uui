@@ -18,6 +18,22 @@
 
 #include "coord_type.h"
 
+typedef enum {
+    DIMENSION_X,
+    DIMENSION_Y,
+    DIMENSION_WIDTH = DIMENSION_X,
+    DIMENSION_HEIGHT = DIMENSION_Y,
+
+    DIMENSION_COUNT
+} dimension_t;
+
+typedef enum {
+    EDGE_U,
+    EDGE_D,
+    EDGE_L = EDGE_U,
+    EDGE_R = EDGE_D
+} form_edge_t;
+
 typedef union {                 // описание двумерного вектора
     struct {                    // for position
         coord_t x;
@@ -27,14 +43,12 @@ typedef union {                 // описание двумерного век�
         coord_t w;
         coord_t h;
     };
-    coord_t ca[2];              // coordinates array
+    coord_t ca[DIMENSION_COUNT];              // coordinates array
 } xy_t;
 
-typedef union {
-    struct {
-        xy_t p;         // position
-        xy_t s;         // size
-    };
+typedef struct {
+    xy_t p;         // position
+    xy_t s;         // size
 } form_t;
 
 enum align {
@@ -68,7 +82,7 @@ typedef union {
         struct __align_cfg h;
         struct __align_cfg v;
     };
-    struct __align_cfg ca[2];
+    struct __align_cfg ca[DIMENSION_COUNT];
 } align_mode_t;
 
 #define ALIGN_MODE(hm, ho, vm, vo) \
@@ -86,3 +100,8 @@ typedef union {
 void form_align(form_t * pf, form_t * af, align_mode_t * mode);
 void form_union_calc_size(form_t * f1, form_t * f2, align_mode_t * mode, form_t * rf);
 void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * mode);
+
+void form_split(form_t * pf, form_t * sf, xy_t * offsets, unsigned x_index, unsigned y_index);
+void form_grid(form_t * pf, form_t * af, xy_t * borders, xy_t * gaps, xy_t * grid_size, unsigned x_index, unsigned y_index);
+
+void form_cut(form_t * f, unsigned offset, dimension_t d, form_edge_t edge);
