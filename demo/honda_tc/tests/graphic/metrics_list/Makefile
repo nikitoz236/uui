@@ -1,9 +1,9 @@
 PROJECT = ../../..
 LIB = $(PROJECT)/../../lib
 
-
 INC += $(PROJECT)/widgets
-SRC += $(PROJECT)/widgets/*.c
+SRC += $(PROJECT)/widgets/widget_metric_list_item.c
+SRC += $(PROJECT)/widgets/widget_metric_list.c
 
 INC += ./$(LIB)/hw/include/
 
