@@ -14,7 +14,7 @@ void ui_node_draw(ui_element_t * el)
 {
     ui_node_cfg_t * cfg = (ui_node_cfg_t *)el->ui_node->cfg;
     for (unsigned i = 0; i < cfg->num; i++) {
-        ui_element_t * ce = ui_tree_add(el, cfg->node);
+        ui_element_t * ce = ui_tree_add(el, cfg->node, i);
         ce->idx = i;
         // if (ce->ui_node->widget->draw) {
         //     ce->ui_node->widget->draw(ce);
@@ -23,7 +23,7 @@ void ui_node_draw(ui_element_t * el)
 }
 
 ui_node_desc_t ui_node_16 = { .widget = &(widget_desc_t){ .ctx_size = 5}, .cfg = 0 };
-ui_node_desc_t ui_node_8 = { .widget = &(widget_desc_t){ .ctx_size = 4, .draw = ui_node_draw }, .cfg = &(ui_node_cfg_t){ .node = &ui_node_16, .num = 2 }};
+ui_node_desc_t ui_node_8 = { .widget = &(widget_desc_t){ .ctx_size = 4, .draw = ui_node_draw }, .cfg = &(ui_node_cfg_t){ .node = &ui_node_16, .num = 4 }};
 ui_node_desc_t ui_node_4 = { .widget = &(widget_desc_t){ .ctx_size = 3, .draw = ui_node_draw }, .cfg = &(ui_node_cfg_t){ .node = &ui_node_8, .num = 1 }};
 ui_node_desc_t ui_node_2 = { .widget = &(widget_desc_t){ .ctx_size = 2, .draw = ui_node_draw }, .cfg = &(ui_node_cfg_t){ .node = &ui_node_4, .num = 3 }};
 
@@ -63,10 +63,12 @@ int main() {
     ui_tree_debug_print_linear();
     ui_tree_debug_print_tree();
 
+    // return 0;
+
     printf("add childs to 14 element\n");
 
-    ui_tree_add(el, &ui_node_2)->ctx[0] = n++;
-    ui_tree_add(el, &ui_node_2)->ctx[0] = n++;
+    ui_tree_add(el, &ui_node_2, 0)->ctx[0] = n++;
+    ui_tree_add(el, &ui_node_2, 1)->ctx[0] = n++;
 
     ui_tree_debug_print_linear();
     ui_tree_debug_print_tree();
@@ -84,8 +86,8 @@ int main() {
 
     printf("add childs to 12 element\n");
 
-    ui_tree_add(el, &ui_node_8)->ctx[0] = n++;
-    ui_tree_add(el, &ui_node_8)->ctx[0] = n++;
+    ui_tree_add(el, &ui_node_8, 0)->ctx[0] = n++;
+    ui_tree_add(el, &ui_node_8, 1)->ctx[0] = n++;
 
     ui_tree_debug_print_linear();
     ui_tree_debug_print_tree();
