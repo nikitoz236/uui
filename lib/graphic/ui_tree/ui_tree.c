@@ -9,12 +9,12 @@ static void * ui_tree_ptr = 0;
 static unsigned ui_tree_size = 0;
 static unsigned ui_tree_top = 0;
 
-static ui_element_t * ui_tree_element(uint16_t element_offset)
+static inline ui_element_t * ui_tree_element(uint16_t element_offset)
 {
     return (ui_element_t *)((void *)ui_tree_ptr + element_offset);
 }
 
-static uint16_t element_offset(ui_element_t * el)
+static inline uint16_t element_offset(ui_element_t * el)
 {
     return (void *)el - (void *)ui_tree_ptr;
 }
@@ -103,6 +103,7 @@ ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node,
     return el;
 }
 
+// следующий элемент в памяти
 ui_element_t * ui_tree_next_linear(ui_element_t * element)
 {
     unsigned offset = element_offset(element);
@@ -113,66 +114,9 @@ ui_element_t * ui_tree_next_linear(ui_element_t * element)
     return ui_tree_element(offset);
 }
 
-static void move_tree(unsigned offset, unsigned size)
-{
-    unsigned source = offset + size;
-    unsigned * src = (unsigned *)(ui_tree_ptr + source);
-    unsigned * dst = (unsigned *)(ui_tree_ptr + offset);
 
-    debug_print("move tree from %d to %d, size %d\n", source, offset, size);
 
-    while(source < ui_tree_top) {
-        *dst = *src;
-        src++;
-        dst++;
-        source += sizeof(unsigned);
-    }
-
-    ui_tree_top -= size;
-
-    unsigned last_offset = offset + size;
-    ui_element_t * element = ui_tree_element(0);
-    while (element) {
-        // нужно актуализировать все ссылки в дереве если они ссылались в область которую переместили
-        if (element->next >= last_offset) {
-            element->next -= size;
-        }
-        if (element->child >= last_offset) {
-            element->child -= size;
-        }
-        if (element->owner >= last_offset) {
-            element->owner -= size;
-        }
-        element = ui_tree_next_linear(element);
-    }
-}
-
-static unsigned calc_elements_continuous_len(unsigned * start, unsigned * previous)
-{
-    unsigned len = 0;
-    unsigned offset = *start;
-
-    // сначала мы находим последний непрерывный кусок
-    while (1) {
-        ui_element_t * el = ui_tree_element(offset);
-        unsigned el_len = element_size(el);
-        if (el->next) {
-            unsigned next_linear = offset + el_len;
-            if (el->next == next_linear) {
-                len += el_len;
-            } else {
-                *previous = offset;
-                *start = el->next;
-                len = 0;
-            }
-            offset = el->next;
-        } else {
-            len += el_len;
-            break;
-        }
-    }
-    return len;
-}
+    /*
 
 unsigned some_recursive(unsigned * start, unsigned * previous)
 {
@@ -243,38 +187,131 @@ unsigned some_recursive(unsigned * start, unsigned * previous)
     // и вот если оказалось что до конца вся цепочка в текущем вызове то удаляем все элементы начиная с текущего оффсета
 
 
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void move_tree(unsigned offset, unsigned size)
+{
+    unsigned from = offset + size;
+    unsigned * src = (unsigned *)(ui_tree_ptr + from);
+    unsigned * dst = (unsigned *)(ui_tree_ptr + offset);
+
+    // debug_print("move tree from %d to %d, size %d\n", from, offset, size);
+
+    // фактически перенос если после удаляемой области есть что-то еще
+    while(from < ui_tree_top) {
+        *dst = *src;
+        src++;
+        dst++;
+        from += sizeof(unsigned);
+    }
+
+    ui_tree_top -= size;
+
+    unsigned last_offset = offset + size;
+    ui_element_t * element = ui_tree_element(0);
+    while (element) {
+        // нужно актуализировать все ссылки в дереве если они ссылались в область которую переместили
+        if (element->next >= last_offset) {
+            element->next -= size;
+        }
+        if (element->child >= last_offset) {
+            element->child -= size;
+        }
+        if (element->owner >= last_offset) {
+            element->owner -= size;
+        }
+        element = ui_tree_next_linear(element);
+    }
+}
+
+static void ui_tree_delete_child_chain(ui_element_t * child);
+
+// функция ищет такой офсет start в цепочке, чтобы все элементы начиная с него до конца цепочки шли в памяти подряд
+// если будет разрыв то в previous запишется офсет предыдущего элемента, а в start офсет первого элемента непрерывной цепочки
+static unsigned calc_elements_continuous_len(unsigned * start, unsigned * previous)
+{
+    unsigned len = 0;
+    unsigned offset = *start;
+
+    // один раз пробегаем по всей цепочке
+    while (1) {
+        ui_element_t * el = ui_tree_element(offset);
+        unsigned el_len = element_size(el);
+
+        // важно чтобы у элементов цепочки не было чайлдов
+        if (el->child) {
+            ui_tree_delete_child_chain(ui_tree_child(el));
+            el->child = 0;
+        }
+
+        if (el->next == 0) {
+            // для последнего элемента возвращаем длину цепочки и его собственную длину
+            len += el_len;
+            break;
+        }
+
+        // думаем не рвется ли цепочка
+        unsigned next_linear = offset + el_len;
+        if (el->next == next_linear) {
+            len += el_len;
+        } else {
+            // следующий элемент не находится после текущего - цепочка порвалась
+            // передвигаем старт цепочки
+            *previous = element_offset(el);
+            *start = el->next;
+            len = 0;
+        }
+
+        offset = el->next;
+    }
+    return len;
+}
+
+static void ui_tree_delete_child_chain(ui_element_t * child)
+{
+    while (1) {
+        unsigned previous = 0;
+        unsigned delete_child_offset = element_offset(child);
+        unsigned len = calc_elements_continuous_len(&delete_child_offset, &previous);
+        move_tree(delete_child_offset, len);
+        if (previous == 0) {
+            break;
+        } else {
+            ui_element_t * previous_el = ui_tree_element(previous);
+            previous_el->next = 0;
+        }
+    }
 }
 
 void ui_tree_delete_childs(ui_element_t * element)
 {
-    debug_print("delete childs of %d\n", element_offset(element));
-    while (1) {
-        ui_element_t * last = ui_tree_element(element->child);
-        unsigned start = element_offset(last);
-        ui_element_t * previous = 0;
-        unsigned len = calc_elements_continuous_len(&start, &previous);
+    /*
+        сам элемиент оставляем в дереве, а для всех чайлдов вызываем ui_tree_delete_child_chain
+        которая с помощью calc_elements_continuous_len понимает какой интервал в памяти непрерывный можно удалить
+        после удаляет его с помощью move_tree
+        если calc_elements_continuous_len встречает элемент с дочерними элементами то для каждого вызывает ui_tree_delete_child_chain
+    */
 
-        if (last->child) {
-            ui_tree_delete_childs(last);
-            /*
-                очень не оптимальная история. надо бежать по
-                указатели на следующие элементы в следующих элементах поломаются после удаления дочерних контекстов
-                так что надо вычислять размер непрерывно удаляемой области
-                либо переносить элементы осмысленно переписывая заголовки родителя
-            */
-        } else {
-            move_tree(start, len);
-        }
-
-        debug_print("        delete child %d, top %d\n", element_offset(last), ui_tree_top);
-
-        if (previous == 0) {
-            break;
-        } else {
-            previous->next = 0;
-        }
+    if (element->child) {
+        ui_tree_delete_child_chain(ui_tree_child(element));
+        element->child = 0;
     }
-    element->child = 0;
 }
 
 void ui_tree_element_update(ui_element_t * element)
