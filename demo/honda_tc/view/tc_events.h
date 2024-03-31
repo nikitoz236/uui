@@ -1,6 +1,6 @@
 #pragma once
 
-typedef enum {
+enum {
     EVENT_NONE = 0,
     EVENT_BTN_LEFT,
     EVENT_BTN_RIGHT,

@@ -5,7 +5,7 @@
 #include "widget_screen_switch.h"
 #include "widget_debug_metrics.h"
 
-unsigned screen_selector = 0;
+uint8_t screen_selector = 0;
 
 ui_node_desc_t ui = {
     .widget = &__widget_screen_switch,

@@ -37,7 +37,7 @@ static inline void update_title(ui_element_t * el)
         cs.bg = cfg->color_bg_unselected;
     }
 
-    char * title = cfg->titles[ctx->current_idx];
+    const char * title = cfg->titles[ctx->current_idx];
 
     form_fill(&ctx->text_box, cs.bg);
     lcd_text_color_print(title, &ctx->text_form.p, &text_cfg, &cs, 0, 0, 0);

@@ -9,7 +9,7 @@ ui_node_desc_t debug_metrics_screen = {
     .widget = &__widget_titled_screen,
     .cfg = &(__widget_titled_screen_cfg_t){
         .screen_num = 2,
-        .titles = (char * []){
+        .titles = (const char * []){
             "Debug real val list",
             "Debug switches list",
         },
