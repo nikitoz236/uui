@@ -1,5 +1,6 @@
 #include "widget_metric_list.h"
 #include "draw_color.h"
+#include "tc_events.h"
 // extern font_t font_5x7;
 
 typedef struct {
@@ -59,12 +60,12 @@ static unsigned process(ui_element_t * el, unsigned event)
     __widget_metric_list_ctx_t * ctx = (__widget_metric_list_ctx_t *)el->ctx;
     ui_element_t * item = ui_tree_child(el);
     unsigned refresh = 0;
-    if (event == 1) {
+    if (event == EVENT_BTN_UP) {
         if (ctx->pos > 0) {
             ctx->pos--;
             refresh = 1;
         }
-    } else if (event == 2) {
+    } else if (event == EVENT_BTN_DOWN) {
         if (ctx->pos < (cfg->num - ctx->max)) {
             ctx->pos++;
             refresh = 1;
