@@ -27,7 +27,7 @@ SRC += $(LIB)/graphic/ui_tree/*.c
 INC += $(LIB)/graphic/lcd_color
 SRC += $(LIB)/graphic/lcd_color/*.c
 
-INC += $(LIB)/graphic/widgets
+# INC += $(LIB)/graphic/widgets
 
 GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
 
@@ -40,6 +40,9 @@ GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
 
 src_print:
 	echo $(SRC)
+
+inc_print:
+	echo $(INC)
 
 clean:
 	rm -f *_test_app
