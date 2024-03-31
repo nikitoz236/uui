@@ -5,6 +5,7 @@ INC += ./$(LIB)/../tests/ui_layout
 SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
 
 INC += $(PROJECT)/view
+SRC += $(PROJECT)/view/view.c
 
 INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/widget_metric_list_item.c
