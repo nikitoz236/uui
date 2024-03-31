@@ -56,13 +56,13 @@ static inline void print_char(char c, unsigned x, unsigned y, const font_t * fon
     }
 }
 
-static inline void fill_rem_form_str(unsigned x, unsigned y, unsigned rem_chars, lcd_text_cfg_t * cfg, unsigned color)
+static inline void fill_rem_form_str(unsigned x, unsigned y, unsigned rem_chars, const lcd_text_cfg_t * cfg, unsigned color)
 {
     unsigned rem_w = (rem_chars * cfg->font->size.w * cfg->scale) + ((rem_chars - 1) * cfg->gaps.w);
     lcd_rect(x, y, rem_w, cfg->font->size.h * cfg->scale, color);
 }
 
-void lcd_text_color_print(const char * c, xy_t * pos, lcd_text_cfg_t * cfg, color_scheme_t * cs, unsigned tx, unsigned ty, unsigned len)
+void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg, const color_scheme_t * cs, unsigned tx, unsigned ty, unsigned len)
 {
     unsigned scale = cfg->scale;
     unsigned char_count = 0;
