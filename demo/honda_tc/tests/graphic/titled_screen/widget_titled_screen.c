@@ -42,15 +42,23 @@ static inline void update_title(ui_element_t * el)
     lcd_text_color_print(title, &ctx->text_form.p, &text_cfg, &cs, 0, 0, 0);
 }
 
+static inline void calc_child_form(ui_element_t * el, ui_element_t * item)
+{
+    __widget_titled_screen_ctx_t * ctx = (__widget_titled_screen_ctx_t *)el->ctx;
+
+    item->f = el->f;
+    form_cut(&item->f, ctx->text_box.s.h, DIMENSION_HEIGHT, EDGE_U);
+}
+
 static void update_child(ui_element_t * el)
 {
     __widget_titled_screen_ctx_t * ctx = (__widget_titled_screen_ctx_t *)el->ctx;
     __widget_titled_screen_cfg_t * cfg = (__widget_titled_screen_cfg_t *)el->ui_node->cfg;
 
-    ui_element_t * item = ui_tree_add(el, &cfg->screen_list[ctx->current_idx], 0);
-    item->f = el->f;
-    form_cut(&item->f, ctx->text_box.s.h, DIMENSION_HEIGHT, EDGE_U);
+    ui_tree_delete_childs(el);
 
+    ui_element_t * item = ui_tree_add(el, &cfg->screen_list[ctx->current_idx], 0);
+    calc_child_form(el, item);
     ui_tree_element_draw(item);
 }
 
@@ -72,7 +80,11 @@ static void draw(ui_element_t * el)
     form_align(&ctx->text_box, &ctx->text_form, &ALIGN_MODE(LI, 6, C, 0));
 
     update_title(el);
-    update_child(el);
+
+    ui_element_t * item = ui_tree_add(el, &cfg->screen_list[ctx->current_idx], 0);
+
+    calc_child_form(el, item);
+    ui_tree_element_draw(item);
 }
 
 static unsigned process(ui_element_t * el, unsigned event)
