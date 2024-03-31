@@ -9,9 +9,10 @@ SRC += $(PROJECT)/view/view.c
 
 INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/widget_metric_list_item.c
-SRC += $(PROJECT)/widgets/widget_metric_list.c
+SRC += $(PROJECT)/widgets/widget_debug_metrics.c
 
 INC += $(PROJECT)/widgets/common/
+SRC += $(PROJECT)/widgets/common/widget_metric_list.c
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
 SRC += $(PROJECT)/widgets/common/widget_titled_screen.c
 
@@ -24,6 +25,6 @@ SRC += $(PROJECT)/logic/metrics_view.c
 SRC += $(PROJECT)/logic/metrics_ecu.c
 SRC += $(PROJECT)/logic/trip_integrate.c
 
-titled_screen_test_run:
+tc_view_test_run:
 
 include $(LIB)/emu/test_graphic_color.mk
