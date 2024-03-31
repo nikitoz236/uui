@@ -313,6 +313,7 @@ unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
         }
         if (ui_tree_element_process(child, event)) {
             result = 1;
+            // где делаем update ? brake; ?
         }
         child = ui_tree_next(child);
     }
