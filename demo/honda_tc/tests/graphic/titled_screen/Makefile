@@ -1,9 +1,6 @@
 PROJECT = ../../..
 LIB = $(PROJECT)/../../lib
 
-INC += ./
-SRC += ./*.c
-
 INC += ./$(LIB)/../tests/ui_layout
 SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
 
@@ -13,8 +10,9 @@ INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/widget_metric_list_item.c
 SRC += $(PROJECT)/widgets/widget_metric_list.c
 
-INC += ../screen_switch/
-SRC += ../screen_switch/widget_screen_switch.c
+INC += $(PROJECT)/widgets/common/
+SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+SRC += $(PROJECT)/widgets/common/widget_titled_screen.c
 
 INC += ./$(LIB)/hw/include/
 
