@@ -1,4 +1,5 @@
 #include "widget_titled_screen.h"
+#include "color_forms.h"
 #include "lcd_text_color.h"
 
 #include "fonts.h"
@@ -8,20 +9,16 @@ extern font_t font_5x7;
 
 #define MARGIN 2
 
-static inline void form_fill(form_t * f, lcd_color_t color)
-{
-    lcd_rect(f->p.x, f->p.y, f->s.w, f->s.h, color);
-}
+typedef struct {
+    uint8_t current_idx;
+    uint8_t focus;
+} __widget_titled_screen_ctx_t;
 
 static inline void create_title(char * title, color_scheme_t * cs, form_t * pf, form_t * sf)
 {
-/*
-    мне нужно создать формочку для текста, и отрезать ей остальное для вложеного элемента
-
-    у меня есть размер который нужен для текста
-    плюс я хочу с двух сторон сделать отступ
-*/
-
+    /*
+        также посчитает размер формы sf оставшегося доступного окна
+    */
 
     lcd_text_cfg_t text_cfg = {
         .font = &font_5x7,
@@ -45,14 +42,79 @@ static inline void create_title(char * title, color_scheme_t * cs, form_t * pf, 
     form_cut(sf, text_form.s.h + (2 * MARGIN), DIMENSION_HEIGHT, EDGE_U);
 }
 
+#include "str_val.h"
+
+static void update(ui_element_t * el)
+{
+    __widget_titled_screen_ctx_t * ctx = (__widget_titled_screen_ctx_t *)el->ctx;
+    __widget_titled_screen_cfg_t * cfg = (__widget_titled_screen_cfg_t *)el->ui_node->cfg;
+
+    unsigned screen_idx = ctx->current_idx;
+
+    ui_element_t * item = ui_tree_add(el, &cfg->screen_list[screen_idx], 0);
+    color_scheme_t cs;
+    cs.fg = cfg->color_text;
+    if (ctx->focus) {
+        cs.bg = cfg->color_bg_selected;
+    } else {
+        cs.bg = cfg->color_bg_unselected;
+    }
+
+    create_title(cfg->titles[screen_idx], &cs, &el->f, &item->f);
+    ui_tree_element_draw(item);
+}
+
+
 static void draw(ui_element_t * el)
 {
     __widget_titled_screen_cfg_t * cfg = (__widget_titled_screen_cfg_t *)el->ui_node->cfg;
-    ui_element_t * item = ui_tree_add(el, cfg->screen, 0);
-    create_title(cfg->title, &cfg->cs, &el->f, &item->f);
-    ui_tree_element_draw(item);
+    __widget_titled_screen_ctx_t * ctx = (__widget_titled_screen_ctx_t *)el->ctx;
+
+    ctx->current_idx = 0;
+    ctx->focus = 0;
+
+    update(el);
+}
+
+static unsigned process(ui_element_t * el, unsigned event)
+{
+    __widget_titled_screen_cfg_t * cfg = (__widget_titled_screen_cfg_t *)el->ui_node->cfg;
+    __widget_titled_screen_ctx_t * ctx = (__widget_titled_screen_ctx_t *)el->ctx;
+
+    if (ctx->focus) {
+        ui_element_t * item = ui_tree_child(el);
+        if (ui_tree_element_process(item, event)) {
+            return 1;
+        }
+        if (event == 3) {
+            ctx->current_idx++;
+            if (ctx->current_idx == cfg->screen_num) {
+                ctx->current_idx = 0;
+            }
+            update(el);
+            return 1;
+        }
+        if (event == 4) {
+            if (ctx->current_idx == 0) {
+                ctx->current_idx = cfg->screen_num;
+            }
+            ctx->current_idx--;
+            update(el);
+            return 1;
+        }
+    } else {
+        // а если мы провалились в дочерний элемент, и там есть свой фокус ? нам надо из него выйти
+    }
+    if (event == 10) {
+        ctx->focus = !ctx->focus;
+        update(el);
+        return 1;
+    }
+    return 0;
 }
 
 widget_desc_t __widget_titled_screen = {
     .draw = draw,
+    .process_event = process,
+    .ctx_size = sizeof(__widget_titled_screen_ctx_t)
 };
