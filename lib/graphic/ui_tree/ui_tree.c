@@ -398,6 +398,11 @@ static void ui_tree_debug_print_tree_element(ui_element_t * element, unsigned le
     }
 }
 
+void print_el_offset(ui_element_t * element)
+{
+    debug_print("element %d: ", element_offset(element));
+}
+
 void ui_tree_debug_print_tree(void)
 {
     debug_print("ui tree tree:\n");

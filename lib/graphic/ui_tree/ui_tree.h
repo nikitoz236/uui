@@ -58,3 +58,4 @@ void ui_tree_process_event(unsigned event);
 
 void ui_tree_debug_print_linear(void);
 void ui_tree_debug_print_tree(void);
+void print_el_offset(ui_element_t * element);
