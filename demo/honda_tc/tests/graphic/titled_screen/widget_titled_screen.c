@@ -1,6 +1,7 @@
 #include "widget_titled_screen.h"
 #include "color_forms.h"
 #include "lcd_text_color.h"
+#include "tc_events.h"
 
 #include "fonts.h"
 #include "str_utils.h"
@@ -97,7 +98,7 @@ static unsigned process(ui_element_t * el, unsigned event)
         if (ui_tree_element_process(item, event)) {
             return 1;
         }
-        if (event == 3) {
+        if (event == EVENT_BTN_RIGHT) {
             ctx->current_idx++;
             if (ctx->current_idx == cfg->screen_num) {
                 ctx->current_idx = 0;
@@ -106,7 +107,7 @@ static unsigned process(ui_element_t * el, unsigned event)
             update_child(el);
             return 1;
         }
-        if (event == 4) {
+        if (event == EVENT_BTN_LEFT) {
             if (ctx->current_idx == 0) {
                 ctx->current_idx = cfg->screen_num;
             }
@@ -118,7 +119,7 @@ static unsigned process(ui_element_t * el, unsigned event)
     } else {
         // а если мы провалились в дочерний элемент, и там есть свой фокус ? нам надо из него выйти
     }
-    if (event == 10) {
+    if (event == EVENT_BTN_OK) {
         ctx->focus = !ctx->focus;
         update_title(el);
         return 1;

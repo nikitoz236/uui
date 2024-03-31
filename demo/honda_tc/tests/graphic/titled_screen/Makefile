@@ -1,31 +1,29 @@
 PROJECT = ../../..
 LIB = $(PROJECT)/../../lib
 
-
-# INC += $(PROJECT)/widgets
-# SRC += $(PROJECT)/widgets/*.c
-
-# INC += ./$(LIB)/hw/include/
-
 INC += ./
 SRC += ./*.c
-
-# INC += ../screen_switch/
-# SRC += ../screen_switch/widget_screen_switch.c
 
 INC += ./$(LIB)/../tests/ui_layout
 SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
 
-# SRC += ./$(LIB)/emu/hw/systick.c
+INC += $(PROJECT)/view
 
-# INC += $(PROJECT)/logic
-# SRC += $(PROJECT)/logic/metrics_view.c
-# SRC += $(PROJECT)/logic/metrics_ecu.c
-# SRC += $(PROJECT)/logic/trip_integrate.c
+INC += $(PROJECT)/widgets
+SRC += $(PROJECT)/widgets/widget_metric_list_item.c
+SRC += $(PROJECT)/widgets/widget_metric_list.c
 
+INC += ../screen_switch/
+SRC += ../screen_switch/widget_screen_switch.c
 
-# INC += ./$(LIB)/common/
-# SRC += ./$(LIB)/common/str_utils.c
+INC += ./$(LIB)/hw/include/
+
+SRC += ./$(LIB)/emu/hw/systick.c
+
+INC += $(PROJECT)/logic
+SRC += $(PROJECT)/logic/metrics_view.c
+SRC += $(PROJECT)/logic/metrics_ecu.c
+SRC += $(PROJECT)/logic/trip_integrate.c
 
 titled_screen_test_run:
 

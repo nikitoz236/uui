@@ -1,4 +1,5 @@
 #include "widget_screen_switch.h"
+#include "tc_events.h"
 
 static void draw(ui_element_t * el)
 {
@@ -27,7 +28,7 @@ static unsigned process(ui_element_t * el, unsigned event)
     }
 
     uint8_t * current_screen = cfg->selector_ptr;
-    if (event == 1) {
+    if (event == EVENT_BTN_DOWN) {
         (*current_screen)++;
         if (*current_screen == cfg->screens_num) {
             *current_screen = 0;
@@ -35,7 +36,7 @@ static unsigned process(ui_element_t * el, unsigned event)
         update(el);
         return 1;
     }
-    if (event == 2) {
+    if (event == EVENT_BTN_UP) {
         if (*current_screen == 0) {
             *current_screen = cfg->screens_num;
         }

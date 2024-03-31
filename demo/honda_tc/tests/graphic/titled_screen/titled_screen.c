@@ -2,6 +2,7 @@
 #include "ui_tree.h"
 #include "emu_lcd.h"
 
+#include "tc_events.h"
 #include "widget_test_rect_with_text.h"
 #include "widget_titled_screen.h"
 
@@ -15,15 +16,15 @@ void view_process(char key)
 {
     unsigned event = 0;
     if (key == 'j') {
-        event = 1;
+        event = EVENT_BTN_DOWN;
     } else if (key == 'k') {
-        event = 2;
+        event = EVENT_BTN_UP;
     } else if (key == ' ') {
-        event = 10;
+        event = EVENT_BTN_OK;
     } else if (key == 'h') {
-        event = 3;
+        event = EVENT_BTN_LEFT;
     } else if (key == 'l') {
-        event = 4;
+        event = EVENT_BTN_RIGHT;
     }
 
     ui_tree_process_event(event);
