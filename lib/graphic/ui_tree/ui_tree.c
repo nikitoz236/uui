@@ -342,28 +342,20 @@ void ui_tree_element_draw(ui_element_t * element)
 
 unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
 {
-    ui_element_t * child = ui_tree_child(element);
     unsigned result = 0;
-    while (child) {
-        if (event) {
-            printf("    process event %p for child %p\n", element, child);
-        }
-        if (ui_tree_element_process(child, event)) {
-            result = 1;
-            // где делаем update ? brake; ?
-        }
-        child = ui_tree_next(child);
-    }
-    if (result == 0) {
-        if (event) {
-            printf("    process own event in %p\n", element);
-        }
-
-        if (element->ui_node->widget->process_event) {
-            return element->ui_node->widget->process_event(element, event);
+    if (element->ui_node->widget->process_event) {
+        result = element->ui_node->widget->process_event(element, event);
+    } else {
+        ui_element_t * child = ui_tree_child(element);
+        while (child) {
+            if (ui_tree_element_process(child, event)) {
+                result = 1;
+                // где делаем update ? brake; ?
+            }
+            child = ui_tree_next(child);
         }
     }
-    return 0;
+    return result;
 }
 
 void ui_tree_draw(void)
@@ -375,9 +367,6 @@ void ui_tree_draw(void)
 void ui_tree_process_event(unsigned event)
 {
     ui_element_t * element = ui_tree_element(0);
-        if (event) {
-            printf("event !\n");
-        }
     ui_tree_element_process(element, event);
 }
 
