@@ -106,12 +106,15 @@ void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * m
     }
 }
 
+// в аргументе указываем что отрезаем а не что останется
 void form_cut(form_t * f, unsigned offset, dimension_t d, form_edge_t cut_edge)
 {
     if (cut_edge == EDGE_U) {
         f->p.ca[d] += offset;
+        f->s.ca[d] -= offset;
+    } else {
+        f->s.ca[d] = offset;
     }
-    f->s.ca[d] -= offset;
 }
 
 void form_split(form_t * pf, form_t * sf, xy_t * offsets, unsigned x_index, unsigned y_index)
