@@ -1,6 +1,12 @@
 #include "stdio.h"
 #include "metrics_view.h"
 
+/*
+    тест модуля metrics_view.c
+
+    - проверяет все существующие измеряемые и вычисляемые параметры, как они склеиваются в один список, численные и флаговые
+*/
+
 int metric_ecu_get_real(unsigned id) { return id * 100; };
 unsigned metric_ecu_get_raw(unsigned id) { return id * 16; };
 

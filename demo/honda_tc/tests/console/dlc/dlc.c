@@ -4,6 +4,16 @@
 #include "dlc_emu.h"
 #include "systick.h"
 
+/*
+    тест модуля dlc_poll
+
+    - проверяет как работает планировщик пакетов
+    - проверяет структуру пакетов
+    - возвращает какие то реальные данные
+    - проверяет как работает таймаут и вызывается tc_engine_set_status
+    - позволяет вклинить запрос данных из других блоков для рисования дампов
+*/
+
 void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
 {
     printf("DLC metric_ecu_data_ready! addr %d len %d\n", addr, len);
@@ -17,7 +27,14 @@ void tc_engine_set_status(unsigned state)
 unsigned uptime_ms = 0;
 
 int main() {
-    printf("DLC test!\n");
+    printf(
+        "DLC test!\n"
+        "   r - run engine\n"
+        "   s - stop engine\n"
+        "   E - request data from ECU unit\n"
+        "   A - request data from ABS unit\n"
+        "   S - request data from SRS unit\n"
+    );
     init_systick();
 
     char key = 0;

@@ -3,6 +3,13 @@
 
 #include "metrics_ecu.h"
 
+/*
+    автотест модуля metrics_ecu
+
+    - проверяет как вычисляются все параметры на примере одного реального дампа
+*/
+
+
 #define METRIC_ENUM(id, ...)         METRIC_ID_ ## id
 #define METRIC_NAME(id, name, ...) name
 enum { METRIC_ECU_VAR_LIST(METRIC_ENUM), METRIC_VAR_NUM };
