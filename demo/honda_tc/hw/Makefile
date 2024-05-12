@@ -19,5 +19,6 @@ SRC += hw_cfg.c
 
 SRC += $(LIB)/hw/uc_hw/rcc_stm32f10x.c
 SRC += $(LIB)/hw/uc_hw/gpio_stm32f10x.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
 
 include $(LIB)/hw/system/uc_build.mk

@@ -15,12 +15,9 @@ int main(void)
     AFIO->MAPR |= AFIO_MAPR_TIM1_REMAP_PARTIALREMAP;
     AFIO->MAPR |= AFIO_MAPR_TIM3_REMAP_PARTIALREMAP;
 
-    struct hw_pclk hw_pclk_gpio = {
-        .bus = PCLK_BUS_APB2,
-        .mask = RCC_APB2ENR_IOPCEN,
-    };
-
-    hw_rcc_pclk_ctrl(&hw_pclk_gpio, 1);
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
+    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
+    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
 
     gpio_cfg_t led_pin_cfg = {
         .mode = GPIO_MODE_OUTPUT,
@@ -30,12 +27,16 @@ int main(void)
     };
 
     gpio_pin_t led_pin = {
-        .port = 2,
+        .port = GPIO_PORT_C,
         .pin = 13,
     };
 
     gpio_set_cfg(&led_pin, &led_pin_cfg);
-    gpio_set_state(&led_pin, 1);
+    gpio_set_state(&led_pin, 0);
+
+    usart_set_cfg(&debug_usart);
+
+    usart_tx(&debug_usart, "Hello, World!\n", 14);
 
     while (1) {};
 
