@@ -32,7 +32,9 @@ enum pclk_bus {
     PCLK_BUS_APB1,
     PCLK_BUS_APB2,
 
-    PCLK_BUS_NUM
+    PCLK_BUS_AHB,
+
+    PCLK_APB_BUS_NUM = PCLK_BUS_APB2 + 1
 };
 
 struct hw_rcc_cfg {
@@ -45,7 +47,7 @@ struct hw_rcc_cfg {
     uint8_t pll_prediv;
     uint8_t pll_mul;
     hclk_div_t hclk_div;
-    apb_div_t apb_div[PCLK_BUS_NUM];
+    apb_div_t apb_div[PCLK_APB_BUS_NUM];
 };
 
 struct hw_pclk {
