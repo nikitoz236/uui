@@ -1,8 +1,19 @@
+#pragma once
 #include "gpio.h"
 #include <stdint.h>
 
+enum gpio_port {
+    GPIO_PORT_A,
+    GPIO_PORT_B,
+    GPIO_PORT_C,
+    GPIO_PORT_D,
+    GPIO_PORT_E,
+    GPIO_PORT_F,
+    GPIO_PORT_G,
+};
+
 struct gpio_pin {
-    uint8_t port : 4;
+    enum gpio_port port : 4;
     uint8_t pin : 4;
 };
 

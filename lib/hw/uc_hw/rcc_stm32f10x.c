@@ -77,7 +77,7 @@ static void rcc_set_pll_src_prediv(unsigned prediv)
     RCC->CFGR |= RCC_CFGR_PLLXTPRE_HSE_Div2 * (prediv - 1);
 }
 
-static struct hw_rcc_cfg * clock_cfg;
+static hw_rcc_cfg_t * clock_cfg;
 static unsigned f_sysclk = 8000000;     // HSI
 static unsigned f_hclk = 8000000;
 
@@ -100,7 +100,7 @@ static unsigned f_apb_calc(apb_div_t div)
     return f_hclk / d;
 }
 
-void hw_rcc_apply_cfg(struct hw_rcc_cfg * cfg)
+void hw_rcc_apply_cfg(hw_rcc_cfg_t * cfg)
 {
     clock_cfg = cfg;
     if (clock_cfg->sysclk_src == SYSCLK_SRC_PLL) {
@@ -139,15 +139,15 @@ void hw_rcc_apply_cfg(struct hw_rcc_cfg * cfg)
     }
 }
 
-void hw_rcc_pclk_ctrl(struct hw_pclk * pclk, unsigned state)
+void hw_rcc_pclk_ctrl(hw_pclk_t * pclk, unsigned state)
 {
-    static const __IO uint32_t * rcc_enr[] = {
+    static __IO uint32_t * const rcc_enr[] = {
         &RCC->APB1ENR,
         &RCC->APB2ENR,
         &RCC->AHBENR
     };
 
-    __IO uint32_t * rcc_enr_reg = rcc_enr[pclk->bus];
+    __IO uint32_t * const rcc_enr_reg = rcc_enr[pclk->bus];
 
     if (state) {
         *rcc_enr_reg |= pclk->mask;
