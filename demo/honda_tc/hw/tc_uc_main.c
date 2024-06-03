@@ -36,7 +36,7 @@ int main(void)
 
     usart_set_cfg(&debug_usart);
 
-    usart_tx(&debug_usart, "Hello, World!\n", 14);
+    usart_tx(&debug_usart, "Hey bitch!\r\n", 12);
 
     while (1) {};
 

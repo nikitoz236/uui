@@ -1,6 +1,6 @@
 #include "stm32f10x.h"
-#include "rcc_stm32f10x.h"
-#include "gpio_stm32f10x.h"
+#include "stm32f10x_rcc.h"
+#include "stm32f10x_gpio.h"
 #include "stm32f10x_usart.h"
 
 extern const hw_rcc_cfg_t hw_rcc_cfg;
