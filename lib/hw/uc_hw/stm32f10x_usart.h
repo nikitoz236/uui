@@ -1,9 +1,9 @@
 #pragma once
 #include <stdint.h>
 #include "api_usart.h"
-#include "gpio_stm32f10x.h"
-#include "rcc_stm32f10x.h"
 #include "stm32f10x.h"
+#include "stm32f10x_gpio.h"
+#include "stm32f10x_rcc.h"
 
 struct usart_cfg {
     USART_TypeDef * usart;
@@ -15,5 +15,4 @@ struct usart_cfg {
     // uint8_t dma_tx_ch;
     // void (*rx_byte_handler)(uint8_t c);
     // void (* handler)(void);
-
 };

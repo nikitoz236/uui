@@ -13,10 +13,10 @@ struct hw_pclk;
 typedef struct hw_pclk hw_pclk_t;
 
 // применение конфига блока rcc
-void hw_rcc_apply_cfg(hw_rcc_cfg_t * cfg);
+void hw_rcc_apply_cfg(const hw_rcc_cfg_t * cfg);
 
 // управление тактированием периферии
-void hw_rcc_pclk_ctrl(hw_pclk_t * pclk, unsigned state);
+void hw_rcc_pclk_ctrl(const hw_pclk_t * pclk, unsigned state);
 
 // функции для получения частоты
 unsigned hw_rcc_f_hclk(void);                   // hclk - ядро

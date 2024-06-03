@@ -1,5 +1,5 @@
 #include "stm32f10x.h"
-#include "rcc_stm32f10x.h"
+#include "stm32f10x_rcc.h"
 
 static void rcc_run_hsi(void)
 {
@@ -77,7 +77,7 @@ static void rcc_set_pll_src_prediv(unsigned prediv)
     RCC->CFGR |= RCC_CFGR_PLLXTPRE_HSE_Div2 * (prediv - 1);
 }
 
-static hw_rcc_cfg_t * clock_cfg;
+static const hw_rcc_cfg_t * clock_cfg;
 static unsigned f_sysclk = 8000000;     // HSI
 static unsigned f_hclk = 8000000;
 
@@ -100,7 +100,7 @@ static unsigned f_apb_calc(apb_div_t div)
     return f_hclk / d;
 }
 
-void hw_rcc_apply_cfg(hw_rcc_cfg_t * cfg)
+void hw_rcc_apply_cfg(const hw_rcc_cfg_t * cfg)
 {
     clock_cfg = cfg;
     if (clock_cfg->sysclk_src == SYSCLK_SRC_PLL) {
@@ -139,7 +139,7 @@ void hw_rcc_apply_cfg(hw_rcc_cfg_t * cfg)
     }
 }
 
-void hw_rcc_pclk_ctrl(hw_pclk_t * pclk, unsigned state)
+void hw_rcc_pclk_ctrl(const hw_pclk_t * pclk, unsigned state)
 {
     static __IO uint32_t * const rcc_enr[] = {
         &RCC->APB1ENR,

@@ -1,5 +1,5 @@
-#include "gpio_stm32f10x.h"
 #include "stm32f10x.h"
+#include "stm32f10x_gpio.h"
 
 static GPIO_TypeDef * gpio_ports[] = {
     GPIOA,
@@ -11,7 +11,7 @@ static GPIO_TypeDef * gpio_ports[] = {
     GPIOG,
 };
 
-void gpio_set_cfg(gpio_pin_t * pin, gpio_cfg_t * cfg)
+void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg)
 {
     union cr_field {
         struct {
@@ -63,7 +63,7 @@ void gpio_set_cfg(gpio_pin_t * pin, gpio_cfg_t * cfg)
     }
 }
 
-void gpio_set_state(gpio_pin_t * pin, unsigned state)
+void gpio_set_state(const gpio_pin_t * pin, unsigned state)
 {
     GPIO_TypeDef * port = gpio_ports[pin->port];
     if (state) {
@@ -73,7 +73,7 @@ void gpio_set_state(gpio_pin_t * pin, unsigned state)
     }
 }
 
-unsigned gpio_get_state(gpio_pin_t * pin)
+unsigned gpio_get_state(const gpio_pin_t * pin)
 {
     GPIO_TypeDef * port = gpio_ports[pin->port];
     if (port->IDR & (1 << pin->pin)) {
