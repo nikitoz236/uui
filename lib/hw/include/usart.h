@@ -1,3 +1,4 @@
+#pragma once
 
 struct usart_cfg;
 
