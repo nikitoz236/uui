@@ -13,11 +13,25 @@ const hw_rcc_cfg_t hw_rcc_cfg = {
     }
 };
 
+#define DEBUG_USART_TX_BUF_SIZE 64
+
+struct {
+    struct dma_tx_ctx ctx;
+    uint8_t data[DEBUG_USART_TX_BUF_SIZE];
+} debug_usart_dma_tx_ctx;
+
+
 const usart_cfg_t debug_usart = {
     .usart = USART1,
     .default_baud = 115200,
-    .rx = {GPIO_PORT_A, 10},
-    .tx = {GPIO_PORT_A, 9},
+    .rx_pin = {GPIO_PORT_A, 10},
+    .tx_pin = {GPIO_PORT_A, 9},
+    .tx_dma = {
+        .dma_ch = 3, // Channel 4
+        .size = DEBUG_USART_TX_BUF_SIZE,
+        .ctx = &debug_usart_dma_tx_ctx.ctx
+
+    },
     .pclk = {PCLK_BUS_APB2, RCC_APB2ENR_USART1EN},
     .irqn = USART1_IRQn
 };

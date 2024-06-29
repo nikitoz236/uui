@@ -1,4 +1,12 @@
 #include "config.h"
+#include "rtc.h"
+#include "str_val.h"
+#include "dp.h"
+
+void __debug_usart_tx_data(const char * s, unsigned len)
+{
+    usart_tx(&debug_usart, s, len);
+}
 
 int main(void)
 {
@@ -38,7 +46,41 @@ int main(void)
 
     usart_tx(&debug_usart, "Hey bitch!\r\n", 12);
 
-    while (1) {};
+    init_rtc();
+    /*
+    
+    надо проверить ходят ли они ? сбрасываются ли без питания ? читать время - показывать.
+
+    потом ставить время
+
+    надо логгинг
+
+    надо чтобы в уарте было дма
+
+    надо уметь отправить на отправку в буффер асинхронно ченить еще, можно по буквам. можно прям блоком
+
+        надо рингбуффер на дма. циркулярный режим все дела. 
+
+    dp()
+    dpn
+    dpdn
+    dpwdwn
+    
+    db(str, "rtc time:", dec, 6, rtc_s, rn );
+
+    */
+
+    unsigned rtc_last = 0;
+
+    while (1) {
+        unsigned rtc_s = rtc_get_time_s();
+        if (rtc_last != rtc_s) {
+            rtc_last = rtc_s;
+            dp("rtc time: ");
+            dpdz(rtc_s, 10);
+            dn("\r\n");
+        }
+    }
 
     return 0;
 }
