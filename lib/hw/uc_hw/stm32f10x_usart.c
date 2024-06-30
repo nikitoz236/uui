@@ -3,6 +3,13 @@
 #include "dma.h"
 #include "irq_vectors.h"
 
+extern gpio_pin_t debug_gpio_list[];
+
+#define __DBGPIO_USART_WAIT_AVAILABLE(x)        gpio_set_state(&debug_gpio_list[0], x);
+#define __DBGPIO_DMA_IRQ(x)                     gpio_set_state(&debug_gpio_list[1], x);
+#define __DBGPIO_DMA_IRQ_END_BUF(x)             gpio_set_state(&debug_gpio_list[2], x);
+#define __DBGPIO_USART_START_DMA(x)             gpio_set_state(&debug_gpio_list[2], x);
+
 const gpio_cfg_t rx_pin_cfg = {
     .mode = GPIO_MODE_INPUT,
     .pull = GPIO_PULL_NONE,
@@ -35,11 +42,16 @@ void usart_set_cfg(const usart_cfg_t * usart)
         usart->usart->CR1 |= USART_CR1_TE;
 
         if (usart->tx_dma.size != 0) {
+            usart->tx_dma.ctx->data_pos = 0;
+            usart->tx_dma.ctx->next_tx = 0;
             usart1_cfg = usart;
             dma_channel(usart->tx_dma.dma_ch)->CCR = 0;
             dma_channel(usart->tx_dma.dma_ch)->CCR |= DMA_CCR1_MINC;
+            dma_channel(usart->tx_dma.dma_ch)->CCR |= DMA_CCR1_TCIE;
             dma_set_periph_tx(usart->tx_dma.dma_ch, (void *)&usart->usart->DR);
+            NVIC_EnableIRQ(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch);
             NVIC_SetHandler(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch, dma_usart1_tx_handler);
+            usart->usart->CR3 |= USART_CR3_DMAT;
         }
     // }
 
@@ -67,10 +79,12 @@ static inline void usart_tx_blocking(const usart_cfg_t * usart, const void * dat
     }
 }
 
+void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned len);
+
 void usart_tx(const usart_cfg_t * usart, const void * data, unsigned len)
 {
-
-    usart_tx_blocking(usart, data, len);
+    usart_tx_dma_ringbuf(usart, data, len);
+    // usart_tx_blocking(usart, data, len);
 }
 
 unsigned usart_is_tx_in_progress(const usart_cfg_t * usart);
@@ -81,21 +95,31 @@ void usart_rx(const usart_cfg_t * usart, void * data, unsigned len);
 
 void usart_dma_tx_end(const usart_cfg_t * usart)
 {
+    __DBGPIO_DMA_IRQ(1);
+    dma_clear_irq_full(usart->tx_dma.dma_ch);
+
     dma_stop(usart->tx_dma.dma_ch);
 
     const unsigned buf_size = usart->tx_dma.size;
-    void * tx_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx];
-    unsigned tx_len = 0;
     if (usart->tx_dma.ctx->next_tx == buf_size) {
+        __DBGPIO_DMA_IRQ_END_BUF(1);
         usart->tx_dma.ctx->next_tx = 0;
     }
+
+    void * tx_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx];
+    unsigned tx_len = 0;
+
     if (usart->tx_dma.ctx->data_pos > usart->tx_dma.ctx->next_tx) {
         tx_len = usart->tx_dma.ctx->data_pos - usart->tx_dma.ctx->next_tx;
     } else if (usart->tx_dma.ctx->data_pos < usart->tx_dma.ctx->next_tx) {
         tx_len = buf_size - usart->tx_dma.ctx->next_tx;
     }
-    dma_start(usart->tx_dma.dma_ch, tx_ptr, tx_len);
-    usart->tx_dma.ctx->next_tx += tx_len;
+    if (tx_len) {
+        dma_start(usart->tx_dma.dma_ch, tx_ptr, tx_len);
+        usart->tx_dma.ctx->next_tx += tx_len;
+    }
+    __DBGPIO_DMA_IRQ_END_BUF(0);
+    __DBGPIO_DMA_IRQ(0);
 }
 
 void dma_usart1_tx_handler(void)
@@ -118,50 +142,61 @@ void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned
 {
     const unsigned buf_size = usart->tx_dma.size;
     while (len) {
+        unsigned len_for_load = len;
+        if (len_for_load > buf_size) {
+            len_for_load = buf_size;
+        }
+
+        __DBGPIO_USART_WAIT_AVAILABLE(1);
         unsigned dma_cnt = dma_get_cnt(usart->tx_dma.dma_ch);
 
         // по сути нужно вычислить 2 значения:
-        //  available - сколько мы сейчас данных переложим в буфер
+        //  available - сколько мы сейчас данных можем переложить в буфер
         //  cp_len_end - какая часть из этого копируется в конец до переполнения индекса
 
         unsigned available = usart->tx_dma.ctx->next_tx;
-        if (available < usart->tx_dma.ctx->data_pos) {
+        if (available <= usart->tx_dma.ctx->data_pos) {
             available += buf_size;
         }
-        available -= usart->tx_dma.ctx->data_pos - dma_cnt;
+        available -= usart->tx_dma.ctx->data_pos;
+        available -= dma_cnt;
 
-        if (available == 0) {
+        if (available < len_for_load) {
             // блокируемся
             continue;
         }
 
+        __DBGPIO_USART_WAIT_AVAILABLE(0);
+
         unsigned cp_len_end = buf_size - usart->tx_dma.ctx->data_pos;
-        if (cp_len_end > available) {
-            cp_len_end = available;
+        if (cp_len_end > len_for_load) {
+            cp_len_end = len_for_load;
         }
 
         uint8_t * cp_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->data_pos];
         str_cp(cp_ptr, data, cp_len_end);
 
-        if (cp_len_end < available) {
-            unsigned cp_len = available - cp_len_end;
+        if (cp_len_end < len_for_load) {
+            unsigned cp_len = len_for_load - cp_len_end;
             str_cp(usart->tx_dma.ctx->data, &(((uint8_t *)data)[cp_len_end]), cp_len);
         }
 
-        unsigned new_data_pos = usart->tx_dma.ctx->data_pos + available;
+        unsigned new_data_pos = usart->tx_dma.ctx->data_pos + len_for_load;
         if (new_data_pos >= buf_size) {
             new_data_pos -= buf_size;
         }
 
-        data += available;
-        len -= available;
+        data += len_for_load;
+        len -= len_for_load;
 
         dma_disable_irq_full(usart->tx_dma.dma_ch);
         usart->tx_dma.ctx->data_pos = new_data_pos;
         if (!dma_is_active(usart->tx_dma.dma_ch)) {
+            __DBGPIO_USART_START_DMA(1);
             dma_start(usart->tx_dma.dma_ch, &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx], cp_len_end);
             usart->tx_dma.ctx->next_tx += cp_len_end;
             // обработка переполнения next_tx производится в прерывании
+            __DBGPIO_USART_START_DMA(0);
         }
         dma_clear_irq_full(usart->tx_dma.dma_ch);
         dma_enable_irq_full(usart->tx_dma.dma_ch);
