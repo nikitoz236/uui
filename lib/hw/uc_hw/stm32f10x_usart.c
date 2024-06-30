@@ -3,12 +3,10 @@
 #include "dma.h"
 #include "irq_vectors.h"
 
-extern gpio_pin_t debug_gpio_list[];
-
-#define __DBGPIO_USART_WAIT_AVAILABLE(x)        gpio_set_state(&debug_gpio_list[0], x);
-#define __DBGPIO_DMA_IRQ(x)                     gpio_set_state(&debug_gpio_list[1], x);
-#define __DBGPIO_DMA_IRQ_END_BUF(x)             gpio_set_state(&debug_gpio_list[2], x);
-#define __DBGPIO_USART_START_DMA(x)             gpio_set_state(&debug_gpio_list[2], x);
+#define __DBGPIO_USART_WAIT_AVAILABLE(x)
+#define __DBGPIO_DMA_IRQ(x)
+#define __DBGPIO_DMA_IRQ_END_BUF(x)
+#define __DBGPIO_USART_START_DMA(x)
 
 const gpio_cfg_t rx_pin_cfg = {
     .mode = GPIO_MODE_INPUT,
