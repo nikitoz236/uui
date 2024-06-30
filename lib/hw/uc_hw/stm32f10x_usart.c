@@ -144,7 +144,12 @@ void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned
     while (len) {
         unsigned len_for_load = len;
         if (len_for_load > buf_size) {
-            len_for_load = buf_size;
+            // небольшая оптимизация. нам важно чтобы ядро освободилось как можно раньше,
+            // значит нужно оставить на потом кратное размеру буфера количество данных
+            len_for_load %= buf_size;
+            if (len_for_load == 0) {
+                len_for_load = buf_size;
+            }
         }
 
         __DBGPIO_USART_WAIT_AVAILABLE(1);
@@ -152,6 +157,7 @@ void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned
 
         // по сути нужно вычислить 2 значения:
         //  available - сколько мы сейчас данных можем переложить в буфер
+        //  len_for_load - сколько данных мы будем перекладывать
         //  cp_len_end - какая часть из этого копируется в конец до переполнения индекса
 
         unsigned available = usart->tx_dma.ctx->next_tx;
@@ -202,137 +208,3 @@ void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned
         dma_enable_irq_full(usart->tx_dma.dma_ch);
     }
 }
-
-// void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned len)
-// {
-//     /*
-//     что тут происходит ? 
-
-//     у нас 2 варианта. либо передача уже идет, либо нет
-
-//         если не идет то мы кладем в начало и запускаем транзакцию
-//         если идет то мы из контекста знаем в какое место буффера положить новые данные
-//         может быть вариант когда буффер переполнен, тогда блокируемся
-
-//         самая быстрая стратегия - оставить максимальное количество данных  но не больше чем размер буффера на последнюю транзакцию.
-
-//     соответственно у нас есть прерывание по завершению транзакции
-//     в результате может быть 3 состояния
-
-//         если данных больше нет то просто останавливаемся
-//         есть еще данные - нужно продолжить отправку начиная с промежуточного положения в буффере - нужно отправлять не больше чем до конца буффера
-//         если это конец буффера - проверяем есть ли данные и перезапускаемся
-
-//     пример:
-//     буффер 64 байта
-//     next_tx = 0
-//     data_pos = 0
-
-//     прилетело 50 байт
-//     сдвинули data_pos на 50
-//     в буффере свободного места 64 - 50 = 14 байт
-//     потом запустили транзакцию на 50 байт. начиная с next_tx, стало быть после запуска next_tx = 50
-
-//     потом прилетело еще 4 байта
-//     сдвинули data_pos на 4 = 54
-//     */
-
-//     unsigned cp_availabe = usart->tx_dma.size - usart->tx_dma.ctx->data_pos;
-
-//     while (len) {
-
-//         unsigned cp_len = cp_availabe;
-//         if (cp_len > len) {
-//             cp_len = len;
-//         }
-
-//         uint8_t * cp_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->data_pos];
-//         str_cp(cp_ptr, data, cp_len);
-//         usart->tx_dma.ctx->data_pos += cp_len;
-//         if (usart->tx_dma.ctx->data_pos == usart->tx_dma.size) {
-//             usart->tx_dma.ctx->data_pos = 0;
-//         }
-//         len -= cp_len;
-//         data += cp_len;
-
-//         // нужен ли здесь атомик ???
-
-
-//         if (!dma_active()) {
-//             dma_start(&usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx], usart->tx_dma.ctx->data_pos - usart->tx_dma.ctx->next_tx);
-//             usart->tx_dma.ctx->next_tx = usart->tx_dma.ctx->data_pos;
-//         }
-
-//         if (len) {
-//             unsigned data_remain = len;
-//             if (data_remain > usart->tx_dma.size) {
-//                 data_remain %= usart->tx_dma.size;
-//             }
-
-//             unsigned dma_cnt_wait = usart->tx_dma.ctx->next_tx - data_remain;
-//             while (dma_get_cnt() > dma_cnt_wait) {};
-
-//             usart->tx_dma.ctx->data_pos = 0;
-//         }
-
-
-
-//     while (dma_active()) {};
-
-
-
-//     if (dma_remaining == 0) {
-
-
-//         dma_start(usart->tx_dma.ctx->data, cp_len);
-//         usart->tx_dma.ctx->next_tx = cp_len;
-//     } else {
-//         unsigned cp_len = usart->tx_dma.size - usart->tx_dma.ctx->data_pos; // осталось до конца буффера
-//         if (cp_len > len) {
-//             cp_len = len;
-//         }
-
-//         str_cp(&usart->tx_dma.ctx->data[usart->tx_dma.ctx->data_pos], data, cp_len);
-//         usart->tx_dma.ctx->data_pos = cp_len;
-//         len -= cp_len;
-//         data += cp_len;
-
-//     }
-
-//     if (len) {
-//         // блокируемся
-//     }
-
-//     if (dma_active()) {
-
-//         unsigned free_space = usart->tx_dma.size + usart->tx_dma.ctx->next_tx - usart->tx_dma.ctx->data_pos - dma_remaining;
-
-//         // next_tx - место откуда будет запускаться следующая транзакиця (хвост буффера)
-//         // data_pos - место куда мы можем класть новые данные
-//         unsigned free_space = usart->tx_dma.ctx->size - usart->tx_dma.ctx->data_pos + usart->tx_dma.ctx->next_tx;
-
-
-//     } 
-
-
-
-
-//     uint8_t * wr_ptr = usart->tx_dma.ctx->data;
-
-//     if (dma_active()) {
-//         wr_ptr += usart->tx_dma.ctx->tx_pos;
-//     } 
-
-
-//     if (dma_active()) {
-//         wr_ptr += 
-//         str_cp(wr_ptr, data, len);
-        
-//     }
-//         str_cp();
-//         start_dma();
-//     }
-// }
-
-
-
