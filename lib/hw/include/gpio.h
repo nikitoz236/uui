@@ -1,8 +1,26 @@
+#pragma once
+#include <stdint.h>
 
-struct gpio_pin;
-struct gpio_cfg;
+enum gpio_port {
+    GPIO_EMPTY = 0,
+    GPIO_PORT_A,
+    GPIO_PORT_B,
+    GPIO_PORT_C,
+    GPIO_PORT_D,
+    GPIO_PORT_E,
+    GPIO_PORT_F,
+    GPIO_PORT_G,
+};
+
+// TODO check sizeof
+struct gpio_pin {
+    enum gpio_port port : 4;
+    uint8_t pin : 4;
+};
 
 typedef struct gpio_pin gpio_pin_t;
+
+struct gpio_cfg;
 typedef struct gpio_cfg gpio_cfg_t;
 
 void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg);
