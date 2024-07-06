@@ -2,11 +2,36 @@
 #include "rtc.h"
 #include "str_val.h"
 #include "dp.h"
+#include "array_size.h"
+#include "systick.h"
+#include "mstimer.h"
+#include "delay_blocking.h"
+#include "lcd_spi.h"
 
 void __debug_usart_tx_data(const char * s, unsigned len)
 {
     usart_tx(&debug_usart, s, len);
 }
+
+const gpio_pin_t debug_gpio_list[] = {
+    { GPIO_PORT_C, 13 },
+    { GPIO_PORT_B, 8 },
+    { GPIO_PORT_B, 9 }
+};
+
+void test_delay_ms(unsigned time)
+{
+    time_moment_t start;
+    time_moment_t t;
+    time_moment_save(&start);
+    while (1) {
+        time_moment_save(&t);
+        if (time_moment_interval_ms(&start, &t) >= time) {
+            break;
+        }
+    }
+}
+
 
 int main(void)
 {
@@ -39,38 +64,72 @@ int main(void)
         .pin = 13,
     };
 
+    const hw_pclk_t dma_pclk = {
+        .mask = RCC_AHBENR_DMA1EN,
+        .bus = PCLK_BUS_AHB
+    };
+
+    hw_rcc_pclk_ctrl(&dma_pclk, 1);
+
     gpio_set_cfg(&led_pin, &led_pin_cfg);
     gpio_set_state(&led_pin, 0);
 
+    init_systick();
+    __enable_irq();
+
+    for (unsigned i = 0; i < ARRAY_SIZE(debug_gpio_list); i++) {
+        const gpio_cfg_t cfg = {
+            .mode = GPIO_MODE_OUTPUT,
+            .speed = GPIO_SPEED_HIGH,
+            .type = GPIO_TYPE_PP,
+            .pull = GPIO_PULL_NONE,
+        };
+        gpio_set_cfg(&debug_gpio_list[i], &cfg);
+        gpio_set_state(&debug_gpio_list[i], 0);
+    }
+
+    for (unsigned i = 0; i < 4; i++) {
+        gpio_set_state(&debug_gpio_list[0], 1);
+        test_delay_ms(100);
+        gpio_set_state(&debug_gpio_list[0], 0);
+        test_delay_ms(100);
+    }
+
     usart_set_cfg(&debug_usart);
 
-    usart_tx(&debug_usart, "Hey bitch!\r\n", 12);
+    dpn("Hey bitch!");
+    dpn("Another str");
+    //                                         0                       !
+    dp("Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light.");
+
+    // while (1) {};
+
+    init_lcd_hw(&lcd_cfg);
 
     init_rtc();
+
+
     /*
-    
+
     надо проверить ходят ли они ? сбрасываются ли без питания ? читать время - показывать.
 
     потом ставить время
 
     надо логгинг
 
-    надо чтобы в уарте было дма
-
-    надо уметь отправить на отправку в буффер асинхронно ченить еще, можно по буквам. можно прям блоком
-
-        надо рингбуффер на дма. циркулярный режим все дела. 
-
     dp()
     dpn
     dpdn
     dpwdwn
-    
+
     db(str, "rtc time:", dec, 6, rtc_s, rn );
 
     */
 
     unsigned rtc_last = 0;
+
+    mstimer_t led_flash_timer = mstimer_with_timeout(500);
+    unsigned led_state = 0;
 
     while (1) {
         unsigned rtc_s = rtc_get_time_s();
@@ -79,6 +138,12 @@ int main(void)
             dp("rtc time: ");
             dpdz(rtc_s, 10);
             dn("\r\n");
+        }
+
+        if (mstimer_do_period(&led_flash_timer)) {
+            led_state++;
+            led_state &= 1;
+            gpio_set_state(&led_pin, led_state);
         }
     }
 

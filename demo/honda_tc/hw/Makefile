@@ -14,6 +14,7 @@ DEF += STM32F10X_MD
 
 INC += .
 INC += $(LIB)/common
+INC += $(LIB)/hw/drivers
 
 SRC += tc_uc_main.c
 SRC += hw_cfg.c
@@ -22,6 +23,10 @@ SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_rtc.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_pwm.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_spi.c
+SRC += $(LIB)/hw/drivers/lcd_spi.c
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_utils.c
 

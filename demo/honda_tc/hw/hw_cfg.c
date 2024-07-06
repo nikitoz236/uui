@@ -35,3 +35,40 @@ const usart_cfg_t debug_usart = {
     .pclk = {PCLK_BUS_APB2, RCC_APB2ENR_USART1EN},
     .irqn = USART1_IRQn
 };
+
+const lcd_cfg_t lcd_cfg = {
+    .dc = {GPIO_PORT_A, 11},
+    .rst = {GPIO_PORT_A, 12},
+    .spi_slave = {
+        .cs_pin = {GPIO_PORT_A, 4},
+        .cs_pin_cfg = &(gpio_cfg_t){ .mode = GPIO_MODE_OUTPUT, .type = GPIO_TYPE_PP, .speed = GPIO_SPEED_HIGH },
+        .spi = &(const spi_cfg_t){
+            .spi = SPI1,
+            .pclk = {
+                .mask = RCC_APB2ENR_SPI1EN,
+                .bus = PCLK_BUS_APB2
+            },
+            .pin_list = {
+                [SPI_PIN_SCK] = {GPIO_PORT_A, 5},
+                [SPI_PIN_MISO] = {GPIO_PORT_A, 6},
+                [SPI_PIN_MOSI] = {GPIO_PORT_A, 7}
+            },
+            .pin_cfg = {
+                [SPI_PIN_SCK] = { .mode = GPIO_MODE_AF, .type = GPIO_TYPE_PP, .speed = GPIO_SPEED_HIGH },
+                [SPI_PIN_MISO] = { .mode = GPIO_MODE_AF, .pull = GPIO_PULL_NONE },
+                [SPI_PIN_MOSI] = { .mode = GPIO_MODE_AF, .type = GPIO_TYPE_PP, .speed = GPIO_SPEED_HIGH }
+            },
+        }
+    },
+    .bl = {
+        .freq = 40000,
+        .max_val = 10,
+        .ch = 2 - 1,
+        .tim = TIM3,
+        .tim_pclk = {
+            .mask = RCC_APB1ENR_TIM3EN,
+            .bus = PCLK_BUS_APB1
+        },
+        .gpio = { GPIO_PORT_B, 5 },
+    }
+};
