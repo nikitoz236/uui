@@ -106,8 +106,9 @@ int main(void)
 
     init_lcd_hw(&lcd_cfg);
 
-    init_rtc();
+    lcd_bl(4);
 
+    init_rtc();
 
     /*
 
@@ -130,6 +131,7 @@ int main(void)
 
     mstimer_t led_flash_timer = mstimer_with_timeout(500);
     unsigned led_state = 0;
+
 
     while (1) {
         unsigned rtc_s = rtc_get_time_s();

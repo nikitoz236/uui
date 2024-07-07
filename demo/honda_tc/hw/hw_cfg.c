@@ -60,7 +60,7 @@ const lcd_cfg_t lcd_cfg = {
             },
         }
     },
-    .bl = {
+    .bl = &(pwm_cfg_t){
         .freq = 40000,
         .max_val = 10,
         .ch = 2 - 1,
