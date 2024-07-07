@@ -11,10 +11,13 @@ LDSCRIPT += sections.ld
 LD_FILES += $(BUILD_DIR)/stack_size.ld
 LD_FILES += $(addprefix $(LD_DIR)/, $(LDSCRIPT))
 
+GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
+
 PREFIX = arm-none-eabi-
 CC = $(GCC_PATH)$(PREFIX)gcc
 CP = $(GCC_PATH)$(PREFIX)objcopy
 SZ = $(GCC_PATH)$(PREFIX)size
+OD = $(GCC_PATH)$(PREFIX)objdump
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
 
@@ -44,6 +47,9 @@ size: $(BUILD_DIR)/$(TARGET).elf
 
 clean:
 	-rm -rf $(BUILD_DIR)
+
+asm:
+	$(OD) -D $(BUILD_DIR)/$(TARGET).elf | less
 
 flash_reset: $(FLASH_TARGET)
 	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
