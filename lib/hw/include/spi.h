@@ -26,6 +26,14 @@ enum spi_gpio_list {
 
 void init_spi(const spi_cfg_t * cfg);
 unsigned spi_is_busy(const spi_cfg_t * cfg);
+void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len);
+
+
+void spi_write_8(const spi_cfg_t * cfg, uint8_t c);
+void spi_write_16(const spi_cfg_t * cfg, uint16_t c);
+
+
+
 void spi_tx16_blocking(const spi_cfg_t * cfg, uint16_t data);
 
 void spi_tx16_dma_buf(const spi_slave_cfg_t * cfg, uint16_t * txdata, unsigned len);
