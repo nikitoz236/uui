@@ -7,7 +7,7 @@ struct lcd_cfg {
     spi_slave_cfg_t spi_slave;
     gpio_pin_t dc;
     gpio_pin_t rst;
-    pwm_cfg_t bl;
+    pwm_cfg_t * bl;
 };
 
 typedef struct lcd_cfg lcd_cfg_t;

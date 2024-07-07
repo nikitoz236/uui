@@ -19,10 +19,10 @@ void init_lcd_hw(const lcd_cfg_t * cfg)
     }
 
     init_spi(cfg->spi_slave.spi);
-    init_pwm(&cfg->bl);
+    init_pwm(cfg->bl);
 }
 
 void lcd_bl(unsigned val)
 {
-    pwm_set_ccr(&lcd_hw_cfg->bl, val);
+    pwm_set_ccr(lcd_hw_cfg->bl, val);
 }
