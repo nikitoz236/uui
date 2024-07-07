@@ -2,6 +2,7 @@
 #include "stm32f10x_gpio.h"
 
 static GPIO_TypeDef * gpio_ports[] = {
+    0,
     GPIOA,
     GPIOB,
     GPIOC,
