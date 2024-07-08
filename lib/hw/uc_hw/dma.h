@@ -3,8 +3,11 @@
 
 static inline DMA_Channel_TypeDef * dma_channel(unsigned ch)
 {
+    if (ch == 0) {
+        return 0;
+    }
     const unsigned dma_step = DMA1_Channel2_BASE - DMA1_Channel1_BASE;
-    return (DMA_Channel_TypeDef *)(DMA1_Channel1_BASE + (dma_step * ch));
+    return (DMA_Channel_TypeDef *)(DMA1_Channel1_BASE + (dma_step * (ch - 1)));
 }
 
 static inline void dma_set_periph_rx(unsigned ch, void * periph)
@@ -21,12 +24,25 @@ static inline void dma_set_periph_tx(unsigned ch, void * periph)
     dma->CPAR = (__IO uint32_t)periph;
 }
 
-static inline void dma_start(unsigned ch, void * ptr, unsigned len)
+static inline void dma_start(unsigned ch, const void * ptr, unsigned len)
 {
     DMA_Channel_TypeDef * dma = dma_channel(ch);
     dma->CMAR = (__IO uint32_t)ptr;
     dma->CNDTR = len;
     dma->CCR |= DMA_CCR1_EN;
+}
+
+enum dma_size {
+    DMA_SIZE_8 = 0,
+    DMA_SIZE_16 = 1,
+    DMA_SIZE_32 = 2,
+};
+
+static inline void dma_set_size(unsigned ch, enum dma_size size)
+{
+    DMA_Channel_TypeDef * dma = dma_channel(ch);
+    dma->CCR &= ~(DMA_CCR1_PSIZE + DMA_CCR1_MSIZE + DMA_CCR1_EN);
+    dma->CCR |= (size * DMA_CCR1_PSIZE_0) + (size * DMA_CCR1_MSIZE_0);
 }
 
 static inline void dma_stop(unsigned ch)
@@ -51,7 +67,7 @@ void dma_set_handler(unsigned ch, void (*handler)(void));
 
 static inline unsigned dma_is_irq_full(unsigned ch)
 {
-    if (DMA1->ISR & (DMA_ISR_TCIF1 << (4 * ch))) {
+    if (DMA1->ISR & (DMA_ISR_TCIF1 << (4 * (ch - 1)))) {
         return 1;
     }
     return 0;
@@ -59,7 +75,7 @@ static inline unsigned dma_is_irq_full(unsigned ch)
 
 static inline void dma_clear_irq_full(unsigned ch)
 {
-    DMA1->IFCR |= DMA_IFCR_CTCIF1 << (4 * ch);
+    DMA1->IFCR |= DMA_IFCR_CTCIF1 << (4 * (ch - 1));
 }
 
 static inline void dma_enable_irq_full(unsigned ch)

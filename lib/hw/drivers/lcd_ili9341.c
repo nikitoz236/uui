@@ -17,20 +17,20 @@ void lcd_send_cmd_with_data(const lcd_cmd_t * cmd)
 {
     // cmd
     spi_set_frame_len(lcd_cfg->spi_slave.spi, 8);
-    while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
-
     gpio_set_state(&lcd_cfg->dc, 0);
     spi_write_8(lcd_cfg->spi_slave.spi, cmd->cmd);
 
     if (cmd->len == 0) {
         return;
     }
+
     while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
     gpio_set_state(&lcd_cfg->dc, 1);
+    spi_dma_tx_buf(lcd_cfg->spi_slave.spi, cmd->data, cmd->len);
 
-    for (unsigned i = 0; i < cmd->len; i++) {
-        spi_write_8(lcd_cfg->spi_slave.spi, cmd->data[i]);
-    }
+    // for (unsigned i = 0; i < cmd->len; i++) {
+    //     spi_write_8(lcd_cfg->spi_slave.spi, cmd->data[i]);
+    // }
 }
 
 
@@ -123,12 +123,11 @@ void init_lcd(const lcd_cfg_t * cfg)
     // lcd_clear();
 
     lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x2C,});
-    while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
     spi_set_frame_len(lcd_cfg->spi_slave.spi, 16);
     gpio_set_state(&lcd_cfg->dc, 1);
-    for (unsigned i = 0; i < 320 * 240; i++) {
-        spi_write_16(lcd_cfg->spi_slave.spi, 0xAACC);
-    }
 
+    static const uint16_t bg[] = { 0xAACC, 0xDDEE };
+    spi_dma_tx_repeat(lcd_cfg->spi_slave.spi, &bg[0], 320 * 120);
 
+    spi_dma_tx_repeat(lcd_cfg->spi_slave.spi, &bg[1], 320 * 120);
 }

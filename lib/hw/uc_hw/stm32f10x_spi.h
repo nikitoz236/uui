@@ -21,6 +21,8 @@ struct spi_cfg {
     SPI_TypeDef * spi;
     hw_pclk_t pclk;
     spi_clk_div_t clock_div;
+    uint8_t dma_tx_ch;
+    uint8_t dma_rx_ch;
     gpio_pin_t pin_list[SPI_PIN_NUM];
     gpio_cfg_t pin_cfg[SPI_PIN_NUM];
 };

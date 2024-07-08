@@ -1,5 +1,6 @@
 #include "stm32f10x.h"
 #include "stm32f10x_spi.h"
+#include "dma.h"
 
 void init_spi(const spi_cfg_t * cfg)
 {
@@ -24,17 +25,19 @@ void init_spi(const spi_cfg_t * cfg)
     cfg->spi->CR1 |= SPI_CR1_BR_0 * cfg->clock_div;
 
     // cfg->spi->CR2 |= SPI_CR2_FRXTH;
-/*
     if (cfg->dma_tx_ch) {
         cfg->spi->CR2 |= SPI_CR2_TXDMAEN;
-        dma_ch_regs(cfg->dma_tx_ch)->CPAR = (uint32_t)&cfg->spi->DR;
+        dma_channel(cfg->dma_tx_ch)->CCR = 0;
+        dma_set_periph_tx(cfg->dma_tx_ch, (void *)&cfg->spi->DR);
     }
 
     if (cfg->dma_rx_ch) {
         cfg->spi->CR2 |= SPI_CR2_RXDMAEN;
-        dma_ch_regs(cfg->dma_tx_ch)->CPAR = (uint32_t)&cfg->spi->DR;
+        dma_channel(cfg->dma_rx_ch)->CCR = 0;
+        dma_set_periph_rx(cfg->dma_rx_ch, (void *)&cfg->spi->DR);
     }
 
+/*
     if (cfg->size) {
         spi_set_frame_len(hw, cfg->size);
     }
@@ -64,10 +67,15 @@ void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len)
     while (spi_is_busy(cfg)) {};
 
     cfg->spi->CR1 &= ~(SPI_CR1_SPE + SPI_CR1_DFF);
+    enum dma_size dma_size = DMA_SIZE_8;
     if (len == 16) {
+        dma_size = DMA_SIZE_16;
         cfg->spi->CR1 |= SPI_CR1_DFF;
     }
     cfg->spi->CR1 |= SPI_CR1_SPE;
+    if (cfg->dma_tx_ch) {
+        dma_set_size(cfg->dma_tx_ch, dma_size);
+    }
 }
 
 void spi_write_8(const spi_cfg_t * cfg, uint8_t c)
@@ -82,6 +90,18 @@ void spi_write_16(const spi_cfg_t * cfg, uint16_t c)
     cfg->spi->DR = c;
 }
 
+void spi_dma_tx_buf(const spi_cfg_t * cfg, void * txdata, unsigned len)
+{
+    while (dma_get_cnt(cfg->dma_tx_ch) != 0) {};
+    dma_stop(cfg->dma_tx_ch);
+    dma_channel(cfg->dma_tx_ch)->CCR |= DMA_CCR1_MINC;
+    dma_start(cfg->dma_tx_ch, txdata, len);
+}
 
-void spi_tx16_dma_buf(const spi_slave_cfg_t * cfg, uint16_t * txdata, unsigned len);
-void spi_tx16_dma_repeat(const spi_slave_cfg_t * cfg, uint16_t val, unsigned repeat);
+void spi_dma_tx_repeat(const spi_cfg_t * cfg, void * txdata, unsigned len)
+{
+    while (dma_get_cnt(cfg->dma_tx_ch) != 0) {};
+    dma_stop(cfg->dma_tx_ch);
+    dma_channel(cfg->dma_tx_ch)->CCR &= ~DMA_CCR1_MINC;
+    dma_start(cfg->dma_tx_ch, txdata, len);
+}
