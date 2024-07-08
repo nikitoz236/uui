@@ -30,12 +30,12 @@ void usart_set_cfg(const usart_cfg_t * usart)
     usart->usart->CR2 = 0;
     usart->usart->CR3 = 0;
 
-    // if (usart->rx.port != 0) {
+    if (usart->rx_pin.port != GPIO_EMPTY) {
         gpio_set_cfg(&usart->rx_pin, &rx_pin_cfg);
         usart->usart->CR1 |= USART_CR1_RE;
-    // }
+    }
 
-    // if (usart->tx.port != 0) {
+    if (usart->tx_pin.port != GPIO_EMPTY) {
         gpio_set_cfg(&usart->tx_pin, &tx_pin_cfg);
         usart->usart->CR1 |= USART_CR1_TE;
 
@@ -51,7 +51,7 @@ void usart_set_cfg(const usart_cfg_t * usart)
             NVIC_EnableIRQ(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch);
             usart->usart->CR3 |= USART_CR3_DMAT;
         }
-    // }
+    }
 
     usart_set_baud(usart, usart->default_baud);
 
