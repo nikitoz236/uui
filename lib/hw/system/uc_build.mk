@@ -11,8 +11,6 @@ LDSCRIPT += sections.ld
 LD_FILES += $(BUILD_DIR)/stack_size.ld
 LD_FILES += $(addprefix $(LD_DIR)/, $(LDSCRIPT))
 
-GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
-
 PREFIX = arm-none-eabi-
 CC = $(GCC_PATH)$(PREFIX)gcc
 CP = $(GCC_PATH)$(PREFIX)objcopy
