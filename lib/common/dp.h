@@ -47,7 +47,7 @@ static inline void dpn(const char * s)
     __debug_is_str_started = 0;
 }
 
-static inline void dn(const char * s)
+static inline void dn(void)
 {
     if (__debug_start()) {
         return;
@@ -75,6 +75,34 @@ static inline void dpdz(unsigned d, unsigned w)
     char ds[16];
     dec_to_str_right_aligned(d, ds, w, 1);
     __debug_usart_tx_data(ds, w);
+}
+
+static inline void dpx(unsigned x, unsigned size)
+{
+    if (__debug_start()) {
+        return;
+    }
+    char xs[8];
+    hex_to_str(&x, xs, size);
+    __debug_usart_tx_data(xs, size * 2);
+}
+
+static inline void dpxd(void * x, unsigned size, unsigned count)
+{
+    if (__debug_start()) {
+        return;
+    }
+    char xs[12];
+    while (count--) {
+        hex_to_str(x, xs, size);
+        x += size;
+        unsigned plen = size * 2;
+        if (count) {
+            xs[plen] = ' ';
+            plen++;
+        }
+        __debug_usart_tx_data(xs, plen);
+    }
 }
 
 #define db dp
