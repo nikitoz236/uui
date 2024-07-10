@@ -41,7 +41,8 @@ enum dma_size {
 static inline void dma_set_size(unsigned ch, enum dma_size size)
 {
     DMA_Channel_TypeDef * dma = dma_channel(ch);
-    dma->CCR &= ~(DMA_CCR1_PSIZE + DMA_CCR1_MSIZE + DMA_CCR1_EN);
+    dma->CCR &= ~DMA_CCR1_EN;
+    dma->CCR &= ~(DMA_CCR1_PSIZE + DMA_CCR1_MSIZE);
     dma->CCR |= (size * DMA_CCR1_PSIZE_0) + (size * DMA_CCR1_MSIZE_0);
 }
 

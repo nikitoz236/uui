@@ -33,5 +33,5 @@ void spi_write_8(const spi_cfg_t * cfg, uint8_t c);
 void spi_write_16(const spi_cfg_t * cfg, uint16_t c);
 
 
-void spi_dma_tx_buf(const spi_cfg_t * cfg, void * txdata, unsigned len);
-void spi_dma_tx_repeat(const spi_cfg_t * cfg, void * txdata, unsigned len);
+void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len);
+void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len);

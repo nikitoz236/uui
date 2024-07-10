@@ -1,11 +1,10 @@
 #include "lcd_spi.h"
 #include "array_size.h"
-// #include "api_lcd_color.h"
-
+#include "api_lcd_color.h"
 #include "delay_blocking.h"
+#include "buf_endian.h"
 
 static const lcd_cfg_t * lcd_cfg;
-
 
 typedef struct {
     uint8_t cmd;
@@ -27,12 +26,7 @@ void lcd_send_cmd_with_data(const lcd_cmd_t * cmd)
     while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
     gpio_set_state(&lcd_cfg->dc, 1);
     spi_dma_tx_buf(lcd_cfg->spi_slave.spi, cmd->data, cmd->len);
-
-    // for (unsigned i = 0; i < cmd->len; i++) {
-    //     spi_write_8(lcd_cfg->spi_slave.spi, cmd->data[i]);
-    // }
 }
-
 
 const uint8_t lcd_init_cmd_list[] = {
 //  cmd   len       data
@@ -102,6 +96,62 @@ void lcd_pwr(unsigned val)
     }
 }
 
+static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
+{
+    static struct {
+        lcd_cmd_t cmd;
+        uint8_t start[2];
+        uint8_t end[2];
+    } tmp;
+
+    tmp.cmd.len = 4;
+
+    u16_to_be_buf8(tmp.start, x);
+    u16_to_be_buf8(tmp.end, x + w - 1);
+    tmp.cmd.cmd = 0x2B;
+
+    lcd_send_cmd_with_data(&tmp.cmd);
+    while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
+
+    u16_to_be_buf8(tmp.start, y);
+    u16_to_be_buf8(tmp.end, y + h - 1);
+    tmp.cmd.cmd = 0x2A;
+
+    lcd_send_cmd_with_data(&tmp.cmd);
+    while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
+}
+
+void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, unsigned color)
+{
+    extern const gpio_pin_t debug_gpio_list[];
+    gpio_set_state(&debug_gpio_list[0], 1);
+    static unsigned color_static;
+    lcd_set_area(x, y, w, h);
+    lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x2C,});
+    spi_set_frame_len(lcd_cfg->spi_slave.spi, 16);
+    gpio_set_state(&lcd_cfg->dc, 1);
+    unsigned len = w * h;
+    color_static = color;
+    while (len) {
+        unsigned chunk = len;
+        if (chunk > UINT16_MAX) {
+            chunk %= UINT16_MAX;
+            if (chunk == 0) {
+                chunk = UINT16_MAX;
+            }
+        }
+        spi_dma_tx_repeat(lcd_cfg->spi_slave.spi, &color_static, chunk);
+        len -= chunk;
+    }
+    gpio_set_state(&debug_gpio_list[0], 0);
+}
+
+static inline void lcd_clear(void)
+{
+    const lcd_color_t clear_color = 0xACEF;
+    lcd_rect(0, 0, 320, 240, clear_color);
+}
+
 void init_lcd(const lcd_cfg_t * cfg)
 {
     lcd_cfg = cfg;
@@ -120,14 +170,5 @@ void init_lcd(const lcd_cfg_t * cfg)
     }
 
     lcd_pwr(1);
-    // lcd_clear();
-
-    lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x2C,});
-    spi_set_frame_len(lcd_cfg->spi_slave.spi, 16);
-    gpio_set_state(&lcd_cfg->dc, 1);
-
-    static const uint16_t bg[] = { 0xAACC, 0xDDEE };
-    spi_dma_tx_repeat(lcd_cfg->spi_slave.spi, &bg[0], 320 * 120);
-
-    spi_dma_tx_repeat(lcd_cfg->spi_slave.spi, &bg[1], 320 * 120);
+    lcd_clear();
 }

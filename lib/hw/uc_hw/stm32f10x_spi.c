@@ -90,7 +90,7 @@ void spi_write_16(const spi_cfg_t * cfg, uint16_t c)
     cfg->spi->DR = c;
 }
 
-void spi_dma_tx_buf(const spi_cfg_t * cfg, void * txdata, unsigned len)
+void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 {
     while (dma_get_cnt(cfg->dma_tx_ch) != 0) {};
     dma_stop(cfg->dma_tx_ch);
@@ -98,7 +98,7 @@ void spi_dma_tx_buf(const spi_cfg_t * cfg, void * txdata, unsigned len)
     dma_start(cfg->dma_tx_ch, txdata, len);
 }
 
-void spi_dma_tx_repeat(const spi_cfg_t * cfg, void * txdata, unsigned len)
+void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 {
     while (dma_get_cnt(cfg->dma_tx_ch) != 0) {};
     dma_stop(cfg->dma_tx_ch);
