@@ -47,8 +47,8 @@ void usart_set_cfg(const usart_cfg_t * usart)
             dma_channel(usart->tx_dma.dma_ch)->CCR |= DMA_CCR1_MINC;
             dma_channel(usart->tx_dma.dma_ch)->CCR |= DMA_CCR1_TCIE;
             dma_set_periph_tx(usart->tx_dma.dma_ch, (void *)&usart->usart->DR);
-            NVIC_SetHandler(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch, dma_usart1_tx_handler);
-            NVIC_EnableIRQ(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch);
+            NVIC_SetHandler(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch - 1, dma_usart1_tx_handler);
+            NVIC_EnableIRQ(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch - 1);
             usart->usart->CR3 |= USART_CR3_DMAT;
         }
     }
