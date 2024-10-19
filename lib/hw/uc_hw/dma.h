@@ -1,4 +1,5 @@
 #include "stm32f10x.h"
+#include "irq_vectors.h"
 #include "bit_fields.h"
 
 // Каналы нумерются от 1 как в даташите
@@ -66,7 +67,15 @@ static inline unsigned dma_is_active(unsigned ch)
     return 0;
 }
 
-void dma_set_handler(unsigned ch, void (*handler)(void));
+void dma_enable_nvic_irq(unsigned ch)
+{
+    NVIC_EnableIRQ(DMA1_Channel1_IRQn + ch - 1);
+}
+
+void dma_set_handler(unsigned ch, void (*handler)(void))
+{
+    NVIC_SetHandler(DMA1_Channel1_IRQn + ch - 1, handler);
+}
 
 static inline unsigned dma_is_irq_full(unsigned ch)
 {
