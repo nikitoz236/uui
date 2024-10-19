@@ -67,12 +67,12 @@ static inline unsigned dma_is_active(unsigned ch)
     return 0;
 }
 
-void dma_enable_nvic_irq(unsigned ch)
+static inline void dma_enable_nvic_irq(unsigned ch)
 {
     NVIC_EnableIRQ(DMA1_Channel1_IRQn + ch - 1);
 }
 
-void dma_set_handler(unsigned ch, void (*handler)(void))
+static inline void dma_set_handler(unsigned ch, void (*handler)(void))
 {
     NVIC_SetHandler(DMA1_Channel1_IRQn + ch - 1, handler);
 }
