@@ -7,61 +7,8 @@
 #define __DBGPIO_DMA_IRQ(x)
 #define __DBGPIO_DMA_IRQ_END_BUF(x)
 #define __DBGPIO_USART_START_DMA(x)
-
-const gpio_cfg_t rx_pin_cfg = {
-    .mode = GPIO_MODE_INPUT,
-    .pull = GPIO_PULL_NONE,
-};
-
-const gpio_cfg_t tx_pin_cfg = {
-    .mode = GPIO_MODE_AF,
-    .speed = GPIO_SPEED_HIGH,
-    .type = GPIO_TYPE_PP,
-};
-
-void dma_usart1_tx_handler(void);
-const usart_cfg_t * usart1_cfg;
-
-void usart_set_cfg(const usart_cfg_t * usart)
-{
-    hw_rcc_pclk_ctrl(&usart->pclk, 1);
-
-    usart->usart->CR1 = 0;
-    usart->usart->CR2 = 0;
-    usart->usart->CR3 = 0;
-
-    if (usart->rx_pin.port != GPIO_EMPTY) {
-        gpio_set_cfg(&usart->rx_pin, &rx_pin_cfg);
-        usart->usart->CR1 |= USART_CR1_RE;
-    }
-
-    if (usart->tx_pin.port != GPIO_EMPTY) {
-        gpio_set_cfg(&usart->tx_pin, &tx_pin_cfg);
-        usart->usart->CR1 |= USART_CR1_TE;
-
-        if (usart->tx_dma.size != 0) {
-            usart->tx_dma.ctx->data_pos = 0;
-            usart->tx_dma.ctx->next_tx = 0;
-            usart1_cfg = usart;
-            dma_channel(usart->tx_dma.dma_ch)->CCR = 0;
-            dma_channel(usart->tx_dma.dma_ch)->CCR |= DMA_CCR1_MINC;
-            dma_channel(usart->tx_dma.dma_ch)->CCR |= DMA_CCR1_TCIE;
-            dma_set_periph_tx(usart->tx_dma.dma_ch, (void *)&usart->usart->DR);
-            NVIC_SetHandler(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch - 1, dma_usart1_tx_handler);
-            NVIC_EnableIRQ(DMA1_Channel1_IRQn + usart->tx_dma.dma_ch - 1);
-            usart->usart->CR3 |= USART_CR3_DMAT;
-        }
-    }
-
-    usart_set_baud(usart, usart->default_baud);
-
-    usart->usart->CR1 |= USART_CR1_UE;
-}
-
-void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
-{
-    usart->usart->BRR = hw_rcc_f_pclk(usart->pclk.bus) / baud;
-}
+#define __DBGPIO_USART_TX_FUNC(x)
+#define __DBGPIO_USART_TX_DMA_WAIT_PREV(x)
 
 static inline void usart_tx_byte(const usart_cfg_t * usart, char c)
 {
@@ -77,12 +24,16 @@ static inline void usart_tx_blocking(const usart_cfg_t * usart, const void * dat
     }
 }
 
-void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned len);
-
-void usart_tx(const usart_cfg_t * usart, const void * data, unsigned len)
+static inline void usart_tx_dma(const usart_cfg_t * usart, const void * data, unsigned len)
 {
-    usart_tx_dma_ringbuf(usart, data, len);
-    // usart_tx_blocking(usart, data, len);
+    unsigned dma_ch = usart->tx_dma.dma_ch;
+    if (dma_is_active(dma_ch)) {
+        __DBGPIO_USART_TX_DMA_WAIT_PREV(1);
+        while (dma_get_cnt(dma_ch) != 0) {};
+        __DBGPIO_USART_TX_DMA_WAIT_PREV(0);
+        dma_stop(dma_ch);
+    }
+    dma_start(dma_ch, data, len);
 }
 
 unsigned usart_is_tx_in_progress(const usart_cfg_t * usart);
@@ -91,52 +42,7 @@ unsigned usart_is_rx_available(const usart_cfg_t * usart);
 void usart_rx(const usart_cfg_t * usart, void * data, unsigned len);
 
 
-void usart_dma_tx_end(const usart_cfg_t * usart)
-{
-    __DBGPIO_DMA_IRQ(1);
-    dma_clear_irq_full(usart->tx_dma.dma_ch);
-
-    dma_stop(usart->tx_dma.dma_ch);
-
-    const unsigned buf_size = usart->tx_dma.size;
-    if (usart->tx_dma.ctx->next_tx == buf_size) {
-        __DBGPIO_DMA_IRQ_END_BUF(1);
-        usart->tx_dma.ctx->next_tx = 0;
-    }
-
-    void * tx_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx];
-    unsigned tx_len = 0;
-
-    if (usart->tx_dma.ctx->data_pos > usart->tx_dma.ctx->next_tx) {
-        tx_len = usart->tx_dma.ctx->data_pos - usart->tx_dma.ctx->next_tx;
-    } else if (usart->tx_dma.ctx->data_pos < usart->tx_dma.ctx->next_tx) {
-        tx_len = buf_size - usart->tx_dma.ctx->next_tx;
-    }
-    if (tx_len) {
-        dma_start(usart->tx_dma.dma_ch, tx_ptr, tx_len);
-        usart->tx_dma.ctx->next_tx += tx_len;
-    }
-    __DBGPIO_DMA_IRQ_END_BUF(0);
-    __DBGPIO_DMA_IRQ(0);
-}
-
-void dma_usart1_tx_handler(void)
-{
-    // проблема. нам нужны здесь некие универсальные хэндлеры которые могут для нескольких усартов подтягивать контекст.
-    usart_dma_tx_end(usart1_cfg);
-}
-
-static inline unsigned calc_availabe(unsigned size, unsigned next_tx, unsigned data_pos, unsigned dma_cnt)
-{
-    unsigned available = next_tx;
-    if (available < data_pos) {
-        available += size;
-    }
-    available -= data_pos - dma_cnt;
-    return available;
-}
-
-void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned len)
+void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
 {
     const unsigned buf_size = usart->tx_dma.size;
     while (len) {
@@ -205,4 +111,121 @@ void usart_tx_dma_ringbuf(const usart_cfg_t * usart, const void * data, unsigned
         dma_clear_irq_full(usart->tx_dma.dma_ch);
         dma_enable_irq_full(usart->tx_dma.dma_ch);
     }
+}
+
+void usart_dma_tx_end(const usart_cfg_t * usart)
+{
+    __DBGPIO_DMA_IRQ(1);
+    dma_clear_irq_full(usart->tx_dma.dma_ch);
+
+    dma_stop(usart->tx_dma.dma_ch);
+
+    const unsigned buf_size = usart->tx_dma.size;
+    if (usart->tx_dma.ctx->next_tx == buf_size) {
+        __DBGPIO_DMA_IRQ_END_BUF(1);
+        usart->tx_dma.ctx->next_tx = 0;
+    }
+
+    void * tx_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx];
+    unsigned tx_len = 0;
+
+    if (usart->tx_dma.ctx->data_pos > usart->tx_dma.ctx->next_tx) {
+        tx_len = usart->tx_dma.ctx->data_pos - usart->tx_dma.ctx->next_tx;
+    } else if (usart->tx_dma.ctx->data_pos < usart->tx_dma.ctx->next_tx) {
+        tx_len = buf_size - usart->tx_dma.ctx->next_tx;
+    }
+
+    if (tx_len) {
+        dma_start(usart->tx_dma.dma_ch, tx_ptr, tx_len);
+        usart->tx_dma.ctx->next_tx += tx_len;
+    }
+    __DBGPIO_DMA_IRQ_END_BUF(0);
+    __DBGPIO_DMA_IRQ(0);
+}
+
+
+const usart_cfg_t * usart1_cfg;
+void dma_usart1_tx_handler(void)
+{
+    // проблема. нам нужны здесь некие универсальные хэндлеры которые могут для нескольких усартов подтягивать контекст.
+    usart_dma_tx_end(usart1_cfg);
+}
+
+void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
+{
+    usart->usart->BRR = hw_rcc_f_pclk(usart->pclk.bus) / baud;
+}
+
+void usart_set_cfg(const usart_cfg_t * usart)
+{
+    const gpio_cfg_t rx_pin_cfg = {
+        .mode = GPIO_MODE_INPUT,
+        .pull = GPIO_PULL_NONE,
+    };
+
+    const gpio_cfg_t tx_pin_cfg = {
+        .mode = GPIO_MODE_AF,
+        .speed = GPIO_SPEED_HIGH,
+        .type = GPIO_TYPE_PP,
+    };
+
+    hw_rcc_pclk_ctrl(&usart->pclk, 1);
+
+    usart->usart->CR1 = 0;
+    usart->usart->CR2 = 0;
+    usart->usart->CR3 = 0;
+
+    if (usart->rx_pin.port != GPIO_EMPTY) {
+        gpio_set_cfg(&usart->rx_pin, &rx_pin_cfg);
+        usart->usart->CR1 |= USART_CR1_RE;
+
+        if (usart->rx_dma.dma_ch != 0) {
+            unsigned dma_rx_ch = usart->rx_dma.dma_ch;
+            dma_channel(dma_rx_ch)->CCR = 0;
+            dma_channel(dma_rx_ch)->CCR |= DMA_CCR1_MINC;
+            dma_set_periph_rx(dma_rx_ch, (void *)&usart->usart->DR);
+            usart->usart->CR3 |= USART_CR3_DMAR;
+        }
+    }
+
+    if (usart->tx_pin.port != GPIO_EMPTY) {
+        gpio_set_cfg(&usart->tx_pin, &tx_pin_cfg);
+        usart->usart->CR1 |= USART_CR1_TE;
+
+        if (usart->tx_dma.dma_ch != 0) {
+            unsigned dma_tx_ch = usart->tx_dma.dma_ch;
+            dma_channel(dma_tx_ch)->CCR = 0;
+            dma_channel(dma_tx_ch)->CCR |= DMA_CCR1_MINC;
+            dma_set_periph_tx(dma_tx_ch, (void *)&usart->usart->DR);
+            usart->usart->CR3 |= USART_CR3_DMAT;
+
+            if (usart->tx_dma.size != 0) {
+                usart1_cfg = usart;
+                usart->tx_dma.ctx->data_pos = 0;
+                usart->tx_dma.ctx->next_tx = 0;
+                dma_channel(dma_tx_ch)->CCR |= DMA_CCR1_TCIE;
+                dma_set_handler(dma_tx_ch, dma_usart1_tx_handler);
+                dma_enable_nvic_irq(dma_tx_ch);
+            }
+        }
+    }
+
+    usart_set_baud(usart, usart->default_baud);
+
+    usart->usart->CR1 |= USART_CR1_UE;
+}
+
+void usart_tx(const usart_cfg_t * usart, const void * data, unsigned len)
+{
+    __DBGPIO_USART_TX_FUNC(1);
+    if (usart->tx_dma.dma_ch != 0) {
+        if (usart->tx_dma.size != 0) {
+            usart_tx_dma_rb(usart, data, len);
+        } else {
+            usart_tx_dma(usart, data, len);
+        }
+    } else {
+        usart_tx_blocking(usart, data, len);
+    }
+    __DBGPIO_USART_TX_FUNC(0);
 }
