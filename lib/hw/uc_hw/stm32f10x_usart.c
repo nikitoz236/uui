@@ -38,8 +38,6 @@ static inline void usart_tx_dma(const usart_cfg_t * usart, const void * data, un
 
 unsigned usart_is_tx_in_progress(const usart_cfg_t * usart);
 
-unsigned usart_is_rx_available(const usart_cfg_t * usart);
-void usart_rx(const usart_cfg_t * usart, void * data, unsigned len);
 
 
 void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
@@ -185,6 +183,9 @@ void usart_set_cfg(const usart_cfg_t * usart)
             dma_channel(dma_rx_ch)->CCR |= DMA_CCR1_MINC;
             dma_set_periph_rx(dma_rx_ch, (void *)&usart->usart->DR);
             usart->usart->CR3 |= USART_CR3_DMAR;
+            if (usart->rx_dma.size != 0) {
+
+            }
         }
     }
 
@@ -228,4 +229,19 @@ void usart_tx(const usart_cfg_t * usart, const void * data, unsigned len)
         usart_tx_blocking(usart, data, len);
     }
     __DBGPIO_USART_TX_FUNC(0);
+}
+
+void usart_rx(const usart_cfg_t * usart, void * data, unsigned len)
+{
+    unsigned dma_rx_ch = usart->rx_dma.dma_ch;
+    dma_stop(dma_rx_ch);
+    dma_start(dma_rx_ch, data, len);
+}
+
+unsigned usart_is_rx_available(const usart_cfg_t * usart)
+{
+    if (dma_get_cnt(usart->rx_dma.dma_ch)) {
+        return 0;
+    }
+    return 1;
 }
