@@ -60,6 +60,16 @@ flash: $(FLASH_TARGET)
 	-f target/$(OPENOCD_TARGET).cfg \
 	-c "program $(FLASH_TARGET) verify 0x8000000; reset run; exit"
 
+dump:
+	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	-f target/$(OPENOCD_TARGET).cfg \
+	-c "init" \
+	-c "reset halt" \
+	-c "flash banks" \
+	-c "dump_image $(shell date +"flash_dump_%y%m%d_%H%M%S.bin") 0x08000000 0x10000" \
+	-c "poll" \
+	-c "exit"
+
 erase:
 	@echo ERASE
 	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
