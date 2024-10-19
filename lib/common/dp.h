@@ -92,7 +92,10 @@ static inline void dpxd(void * x, unsigned size, unsigned count)
     if (__debug_start()) {
         return;
     }
+    // массив расположен на стеке. если использовать
+    // dma_tx без буффера то массив очевидно портится
     char xs[12];
+
     while (count--) {
         hex_to_str(x, xs, size);
         x += size;
