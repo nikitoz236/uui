@@ -76,6 +76,7 @@ void dump_unit(uint8_t unit_addr, uint8_t frames)
             dp(" !!! Timeout");
         }
         dn();
+        delay_ms(100);
     }
 }
 
