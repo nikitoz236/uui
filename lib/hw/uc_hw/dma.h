@@ -1,6 +1,8 @@
 #include "stm32f10x.h"
 #include "bit_fields.h"
 
+// Каналы нумерются от 1 как в даташите
+
 static inline DMA_Channel_TypeDef * dma_channel(unsigned ch)
 {
     if (ch == 0) {
