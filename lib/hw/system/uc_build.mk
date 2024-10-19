@@ -68,6 +68,7 @@ dump:
 	-c "flash banks" \
 	-c "dump_image $(shell date +"flash_dump_%y%m%d_%H%M%S.bin") 0x08000000 0x10000" \
 	-c "poll" \
+	-c "reset run" \
 	-c "exit"
 
 erase:
