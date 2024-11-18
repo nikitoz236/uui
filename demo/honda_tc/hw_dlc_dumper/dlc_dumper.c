@@ -26,6 +26,18 @@ void __debug_usart_tx_data(const char * s, unsigned len)
     CH8 - LCD_SDI   PA7
 */
 
+
+const gpio_pin_t debug_gpio_list[] = {
+    { GPIO_PORT_C, 13 },
+    { GPIO_PORT_B, 8 },
+    { GPIO_PORT_B, 9 }
+};
+
+gpio_pin_t led_pin = {
+    .port = GPIO_PORT_C,
+    .pin = 13,
+};
+
 typedef struct {
     uint8_t cmd;
     uint8_t frame_len;
@@ -35,6 +47,11 @@ typedef struct {
 } kline_request_t;
 
 static kline_request_t kline_request = {};
+
+void __attribute__((weak)) __default_handler(void)
+{
+    dpn(" --!! DEFAULT HANDLER !!--");
+}
 
 static uint8_t calc_cs(uint8_t * data, unsigned len)
 {
@@ -68,15 +85,22 @@ void dump_unit(uint8_t unit_addr, uint8_t frames)
             }
         }
 
+        gpio_set_state(&led_pin, 0);
+
         unsigned remain = dma_get_cnt(kline_usart.rx_dma.dma_ch);
 
+        dp("["); dpx(remain, 4); dp("]");
+        // delay_ms(100);
+
+        gpio_set_state(&led_pin, 1);
         dpx(i * 16, 1); dp(": ");
         dpxd(dlc_rx, 1, recieved - remain);
         if (remain) {
             dp(" !!! Timeout");
         }
         dn();
-        delay_ms(100);
+        gpio_set_state(&led_pin, 1);
+        // delay_ms(100);
     }
 }
 
@@ -112,6 +136,20 @@ void dumper(void)
     }
 }
 
+void print_debug_vectors(void)
+{
+    extern void (*vector_table[])(void);
+    dpn("Debug vectors:");
+    for (volatile unsigned n = 0; n < (VECTOR_PERIPH_NUM + 16); n++) {
+        unsigned vec = (unsigned)vector_table[n];
+
+        dp("Vector: "); dpd(n, 2); dp(" : "); dpx(vec, 4);
+        // dp("Vector: "); dpx(n, 2); dp(" : "); dpx(vec, 4);
+
+        dn();
+    }
+}
+
 int main(void)
 {
     //  000 Zero wait state, if 0 < SYSCLK≤ 24 MHz
@@ -138,20 +176,19 @@ int main(void)
         .pull = GPIO_PULL_NONE,
     };
 
-    gpio_pin_t led_pin = {
-        .port = GPIO_PORT_C,
-        .pin = 13,
-    };
-
     const hw_pclk_t dma_pclk = {
         .mask = RCC_AHBENR_DMA1EN,
         .bus = PCLK_BUS_AHB
     };
 
+    for (unsigned i = 0; i < ARRAY_SIZE(debug_gpio_list); i++) {
+        gpio_set_cfg(&debug_gpio_list[i], &led_pin_cfg);
+        gpio_set_state(&debug_gpio_list[i], 0);
+    }
+
     hw_rcc_pclk_ctrl(&dma_pclk, 1);
 
-    gpio_set_cfg(&led_pin, &led_pin_cfg);
-    gpio_set_state(&led_pin, 1);
+    // gpio_set_state(&led_pin, 1);
 
     usart_set_cfg(&debug_usart);
     usart_set_cfg(&kline_usart);
@@ -160,6 +197,42 @@ int main(void)
     __enable_irq();
 
     dumper();
+
+
+    while (1);
+
+
+
+
+    // print_debug_vectors();
+
+    unsigned a = 3;
+    unsigned b = 0;
+
+    char xs[8];
+    hex_to_str(&a, xs, 4); __debug_usart_tx_data(xs, 8);
+
+
+
+
+    // dpx(a, 4); dn();
+    dn();
+
+
+    // dpx(3, 4); dn();
+    // dpd(b, 3); dn();
+
+
+    uint8_t dstr[10];
+    unsigned l = 0x3;
+    hex_to_str(&l, xs, 4); __debug_usart_tx_data(xs, 8);
+    dec_to_str_right_aligned(b, dstr, l, 3);
+
+
+
+
+
+
 
     while (1) {};
 
