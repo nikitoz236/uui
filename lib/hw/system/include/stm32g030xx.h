@@ -98,6 +98,9 @@ typedef enum
   SPI2_IRQn                   = 26,     /*!< SPI2 Interrupt                                                    */
   USART1_IRQn                 = 27,     /*!< USART1 Interrupt                                                  */
   USART2_IRQn                 = 28,     /*!< USART2 Interrupt                                                  */
+
+  VECTOR_PERIPH_NUM
+
 } IRQn_Type;
 
 /**
@@ -105,7 +108,6 @@ typedef enum
   */
 
 #include "core_cm0plus.h"               /* Cortex-M0+ processor and core peripherals */
-#include "system_stm32g0xx.h"
 #include <stdint.h>
 
 /** @addtogroup Peripheral_registers_structures
