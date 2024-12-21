@@ -2,14 +2,13 @@
 #include "stm32f10x_gpio.h"
 
 static GPIO_TypeDef * gpio_ports[] = {
-    0,
-    GPIOA,
-    GPIOB,
-    GPIOC,
-    GPIOD,
-    GPIOE,
-    GPIOF,
-    GPIOG,
+    [GPIO_PORT_A] = GPIOA,
+    [GPIO_PORT_B] = GPIOB,
+    [GPIO_PORT_C] = GPIOC,
+    [GPIO_PORT_D] = GPIOD,
+    [GPIO_PORT_E] = GPIOE,
+    [GPIO_PORT_F] = GPIOF,
+    [GPIO_PORT_G] = GPIOG,
 };
 
 void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg)
@@ -81,4 +80,9 @@ unsigned gpio_get_state(const gpio_pin_t * pin)
         return 1;
     }
     return 0;
+}
+
+void gpio_configure(const gpio_pin_cfg_t * pin_cfg)
+{
+    gpio_set_cfg(&pin_cfg->gpio, &pin_cfg->cfg);
 }

@@ -161,15 +161,15 @@ unsigned hw_rcc_f_hclk(void)
     return f_hclk;
 }
 
-unsigned hw_rcc_f_pclk(enum pclk_bus bus)
+unsigned hw_rcc_f_pclk(hw_pclk_t * pclk)
 {
-    return f_apb_calc(clock_cfg->apb_div[bus]);
+    return f_apb_calc(clock_cfg->apb_div[pclk->bus]);
 }
 
-unsigned hw_rcc_f_timer(enum pclk_bus bus)
+unsigned hw_rcc_f_timer(hw_pclk_t * pclk)
 {
-    unsigned f_timer = hw_rcc_f_pclk(bus);
-    if (clock_cfg->apb_div[bus] != APB_DIV1) {
+    unsigned f_timer = hw_rcc_f_pclk(pclk);
+    if (clock_cfg->apb_div[pclk->bus] != APB_DIV1) {
         f_timer *= 2;
     }
     return f_timer;

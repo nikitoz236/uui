@@ -24,3 +24,8 @@ struct gpio_cfg {
         GPIO_PULL_DOWN,
     } pull : 2;
 };
+
+struct gpio_pin_cfg {
+    gpio_pin_t gpio;
+    gpio_cfg_t cfg;
+};

@@ -156,18 +156,18 @@ void dma_usart1_tx_handler(void)
 
 void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
 {
-    usart->usart->BRR = hw_rcc_f_pclk(usart->pclk.bus) / baud;
+    usart->usart->BRR = hw_rcc_f_pclk(usart->pclk) / baud;
 }
 
 void usart_set_cfg(const usart_cfg_t * usart)
 {
-    hw_rcc_pclk_ctrl(&usart->pclk, 1);
+    hw_rcc_pclk_ctrl(usart->pclk, 1);
 
     usart->usart->CR1 = 0;
     usart->usart->CR2 = 0;
     usart->usart->CR3 = 0;
 
-    if (usart->rx_pin.gpio.port != GPIO_EMPTY) {
+    if (usart->rx_pin != 0) {
         gpio_configure(&usart->rx_pin);
         usart->usart->CR1 |= USART_CR1_RE;
 
@@ -183,8 +183,8 @@ void usart_set_cfg(const usart_cfg_t * usart)
         }
     }
 
-    if (usart->tx_pin.gpio.port != GPIO_EMPTY) {
-        gpio_configure(&usart->tx_pin);
+    if (usart->tx_pin != 0) {
+        gpio_configure(usart->tx_pin);
         usart->usart->CR1 |= USART_CR1_TE;
 
         if (usart->tx_dma.dma_ch != 0) {
