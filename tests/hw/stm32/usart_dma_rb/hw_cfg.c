@@ -2,8 +2,8 @@
 
 #define DEBUG_USART_TX_BUF_SIZE 64
 
-struct {
-    struct dma_tx_ctx ctx;
+struct {    // TODO тоже в библиотеку
+    rb_t rb;
     uint8_t data[DEBUG_USART_TX_BUF_SIZE];
 } debug_usart_dma_tx_ctx;
 
@@ -28,7 +28,7 @@ const usart_cfg_t debug_usart = {
     .tx_dma = {
         .dma_ch = 4,
         .size = DEBUG_USART_TX_BUF_SIZE,
-        .ctx = &debug_usart_dma_tx_ctx.ctx
+        .rb = &debug_usart_dma_tx_ctx.rb
     },
     .pclk = & (hw_pclk_t) {PCLK_BUS_APB2, RCC_APB2ENR_USART1EN},
     .irqn = USART1_IRQn

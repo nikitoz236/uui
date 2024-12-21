@@ -67,11 +67,11 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
         //  len_for_load - сколько данных мы будем перекладывать
         //  cp_len_end - какая часть из этого копируется в конец до переполнения индекса
 
-        unsigned available = usart->tx_dma.ctx->next_tx;
-        if (available <= usart->tx_dma.ctx->data_pos) {
+        unsigned available = usart->tx_dma.rb->tail;
+        if (available <= usart->tx_dma.rb->head) {
             available += buf_size;
         }
-        available -= usart->tx_dma.ctx->data_pos;
+        available -= usart->tx_dma.rb->head;
         available -= dma_cnt;
 
         if (available < len_for_load) {
@@ -81,20 +81,20 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
 
         __DBGPIO_USART_WAIT_AVAILABLE(0);
 
-        unsigned cp_len_end = buf_size - usart->tx_dma.ctx->data_pos;
+        unsigned cp_len_end = buf_size - usart->tx_dma.rb->head;
         if (cp_len_end > len_for_load) {
             cp_len_end = len_for_load;
         }
 
-        uint8_t * cp_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->data_pos];
+        uint8_t * cp_ptr = &usart->tx_dma.rb->data[usart->tx_dma.rb->head];
         str_cp(cp_ptr, data, cp_len_end);
 
         if (cp_len_end < len_for_load) {
             unsigned cp_len = len_for_load - cp_len_end;
-            str_cp(usart->tx_dma.ctx->data, &(((uint8_t *)data)[cp_len_end]), cp_len);
+            str_cp(usart->tx_dma.rb->data, &(((uint8_t *)data)[cp_len_end]), cp_len);
         }
 
-        unsigned new_data_pos = usart->tx_dma.ctx->data_pos + len_for_load;
+        unsigned new_data_pos = usart->tx_dma.rb->head + len_for_load;
         if (new_data_pos >= buf_size) {
             new_data_pos -= buf_size;
         }
@@ -103,12 +103,12 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
         len -= len_for_load;
 
         dma_disable_irq_full(usart->tx_dma.dma_ch);
-        usart->tx_dma.ctx->data_pos = new_data_pos;
+        usart->tx_dma.rb->head = new_data_pos;
         if (!dma_is_active(usart->tx_dma.dma_ch)) {
             __DBGPIO_USART_START_DMA(1);
-            dma_start(usart->tx_dma.dma_ch, &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx], cp_len_end);
-            usart->tx_dma.ctx->next_tx += cp_len_end;
-            // обработка переполнения next_tx производится в прерывании
+            dma_start(usart->tx_dma.dma_ch, &usart->tx_dma.rb->data[usart->tx_dma.rb->tail], cp_len_end);
+            usart->tx_dma.rb->tail += cp_len_end;
+            // обработка переполнения tail производится в прерывании
             __DBGPIO_USART_START_DMA(0);
         }
         dma_clear_irq_full(usart->tx_dma.dma_ch);
@@ -124,23 +124,23 @@ void usart_dma_tx_end(const usart_cfg_t * usart)
     dma_stop(usart->tx_dma.dma_ch);
 
     const unsigned buf_size = usart->tx_dma.size;
-    if (usart->tx_dma.ctx->next_tx == buf_size) {
+    if (usart->tx_dma.rb->tail == buf_size) {
         __DBGPIO_DMA_IRQ_END_BUF(1);
-        usart->tx_dma.ctx->next_tx = 0;
+        usart->tx_dma.rb->tail = 0;
     }
 
-    void * tx_ptr = &usart->tx_dma.ctx->data[usart->tx_dma.ctx->next_tx];
+    void * tx_ptr = &usart->tx_dma.rb->data[usart->tx_dma.rb->tail];
     unsigned tx_len = 0;
 
-    if (usart->tx_dma.ctx->data_pos > usart->tx_dma.ctx->next_tx) {
-        tx_len = usart->tx_dma.ctx->data_pos - usart->tx_dma.ctx->next_tx;
-    } else if (usart->tx_dma.ctx->data_pos < usart->tx_dma.ctx->next_tx) {
-        tx_len = buf_size - usart->tx_dma.ctx->next_tx;
+    if (usart->tx_dma.rb->head > usart->tx_dma.rb->tail) {
+        tx_len = usart->tx_dma.rb->head - usart->tx_dma.rb->tail;
+    } else if (usart->tx_dma.rb->head < usart->tx_dma.rb->tail) {
+        tx_len = buf_size - usart->tx_dma.rb->tail;
     }
 
     if (tx_len) {
         dma_start(usart->tx_dma.dma_ch, tx_ptr, tx_len);
-        usart->tx_dma.ctx->next_tx += tx_len;
+        usart->tx_dma.rb->tail += tx_len;
     }
     __DBGPIO_DMA_IRQ_END_BUF(0);
     __DBGPIO_DMA_IRQ(0);
@@ -196,8 +196,8 @@ void usart_set_cfg(const usart_cfg_t * usart)
 
             if (usart->tx_dma.size != 0) {
                 usart1_cfg = usart;
-                usart->tx_dma.ctx->data_pos = 0;
-                usart->tx_dma.ctx->next_tx = 0;
+                usart->tx_dma.rb->head = 0;
+                usart->tx_dma.rb->tail = 0;
                 dma_channel(dma_tx_ch)->CCR |= DMA_CCR1_TCIE;
                 dma_set_handler(dma_tx_ch, dma_usart1_tx_handler);
                 dma_enable_nvic_irq(dma_tx_ch);
