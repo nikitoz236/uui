@@ -168,7 +168,7 @@ void usart_set_cfg(const usart_cfg_t * usart)
     usart->usart->CR3 = 0;
 
     if (usart->rx_pin != 0) {
-        gpio_configure(&usart->rx_pin);
+        gpio_configure(usart->rx_pin);
         usart->usart->CR1 |= USART_CR1_RE;
 
         if (usart->rx_dma.dma_ch != 0) {
