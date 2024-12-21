@@ -3,7 +3,12 @@
 #include "dma.h"
 #include "irq_vectors.h"
 
-#define __DBGPIO_USART_WAIT_AVAILABLE(x)
+// #define __DBGPIO_USART(n, x);
+
+extern gpio_pin_t debug_gpio_list[];
+#define __DBGPIO_USART(n, x)                gpio_set_state(&debug_gpio_list[n], x)
+
+#define __DBGPIO_USART_WAIT_AVAILABLE(x)    __DBGPIO_USART(0, x)
 #define __DBGPIO_DMA_IRQ(x)
 #define __DBGPIO_DMA_IRQ_END_BUF(x)
 #define __DBGPIO_USART_START_DMA(x)
@@ -156,25 +161,14 @@ void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
 
 void usart_set_cfg(const usart_cfg_t * usart)
 {
-    const gpio_cfg_t rx_pin_cfg = {
-        .mode = GPIO_MODE_INPUT,
-        .pull = GPIO_PULL_NONE,
-    };
-
-    const gpio_cfg_t tx_pin_cfg = {
-        .mode = GPIO_MODE_AF,
-        .speed = GPIO_SPEED_HIGH,
-        .type = GPIO_TYPE_PP,
-    };
-
     hw_rcc_pclk_ctrl(&usart->pclk, 1);
 
     usart->usart->CR1 = 0;
     usart->usart->CR2 = 0;
     usart->usart->CR3 = 0;
 
-    if (usart->rx_pin.port != GPIO_EMPTY) {
-        gpio_set_cfg(&usart->rx_pin, &rx_pin_cfg);
+    if (usart->rx_pin.gpio.port != GPIO_EMPTY) {
+        gpio_configure(&usart->rx_pin);
         usart->usart->CR1 |= USART_CR1_RE;
 
         if (usart->rx_dma.dma_ch != 0) {
@@ -189,8 +183,8 @@ void usart_set_cfg(const usart_cfg_t * usart)
         }
     }
 
-    if (usart->tx_pin.port != GPIO_EMPTY) {
-        gpio_set_cfg(&usart->tx_pin, &tx_pin_cfg);
+    if (usart->tx_pin.gpio.port != GPIO_EMPTY) {
+        gpio_configure(&usart->tx_pin);
         usart->usart->CR1 |= USART_CR1_TE;
 
         if (usart->tx_dma.dma_ch != 0) {

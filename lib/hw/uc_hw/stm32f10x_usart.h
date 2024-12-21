@@ -1,8 +1,8 @@
 #pragma once
 #include <stdint.h>
-#include "usart.h"
 #include "stm32f10x.h"
-#include "stm32f10x_gpio.h"
+#include "usart.h"
+#include "gpio.h"
 #include "stm32f10x_rcc.h"
 
 // TODO: ringbuf ?
@@ -36,8 +36,8 @@ struct usart_cfg {
     uint32_t default_baud;
     struct dma_tx_desc tx_dma;
     struct dma_rb_desc rx_dma;
-    gpio_pin_t rx_pin;
-    gpio_pin_t tx_pin;
+    gpio_pin_cfg_t rx_pin;
+    gpio_pin_cfg_t tx_pin;
     hw_pclk_t pclk;
     uint8_t irqn;
 

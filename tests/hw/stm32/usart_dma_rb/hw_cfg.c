@@ -10,13 +10,25 @@ struct {
 const usart_cfg_t debug_usart = {
     .usart = USART1,
     .default_baud = 115200,
-    .rx_pin = {GPIO_PORT_A, 10},
-    .tx_pin = {GPIO_PORT_A, 9},
+    .rx_pin = {
+        .gpio = {GPIO_PORT_A, 10},
+        .cfg = &(gpio_cfg_t) {
+            .mode = GPIO_MODE_INPUT,
+            .pull = GPIO_PULL_NONE,
+        }
+    },
+    .tx_pin = {
+        .gpio = {GPIO_PORT_A, 9},
+        .cfg = &(gpio_cfg_t) {
+            .mode = GPIO_MODE_AF,
+            .speed = GPIO_SPEED_HIGH,
+            .type = GPIO_TYPE_PP,
+        }
+    },
     .tx_dma = {
         .dma_ch = 4,
         .size = DEBUG_USART_TX_BUF_SIZE,
         .ctx = &debug_usart_dma_tx_ctx.ctx
-
     },
     .pclk = {PCLK_BUS_APB2, RCC_APB2ENR_USART1EN},
     .irqn = USART1_IRQn
