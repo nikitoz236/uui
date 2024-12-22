@@ -105,6 +105,8 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
             plen++;
         }
         __debug_usart_tx_data(__xs, plen);
+        // здесь есть проблема, если мы передаем через DMA без промежуточного буфера, то следующий цикл изменит __xs
+        // до его полной отправки предыдущим циклом, так как __debug_usart_tx_data возвращает управление до полной отправки
     }
 }
 

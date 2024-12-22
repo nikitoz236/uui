@@ -80,6 +80,13 @@ int main(void)
     dpn("this is stm32 usart test project!");
 
 
+    // ну тут мы напарываемся на то что у нас dpxd странно работает, так как отправка дма без промежуточного буфера
+
+    char ta[] = "012345";
+
+    dp("test array str: "); dp(ta); dp(" dump: "); dpxd(ta, 1, 8); dn();
+
+
     while (1) {
         usart_rx(&debug_usart, rx_data, 6);
         dpn("recieve 6 bytes:");
@@ -88,8 +95,6 @@ int main(void)
 
         dp("data recieved! : "), dpxd(rx_data, 1, 6); dn();
     }
-
-    while (1) {};
 
     return 0;
 }
