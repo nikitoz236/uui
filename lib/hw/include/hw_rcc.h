@@ -17,5 +17,5 @@ void hw_rcc_pclk_ctrl(const hw_pclk_t * pclk, unsigned state);
 
 // функции для получения частоты
 unsigned hw_rcc_f_hclk(void);                       // hclk - ядро
-unsigned hw_rcc_f_pclk(hw_pclk_t * pclk);           // периферия
-unsigned hw_rcc_f_timer(hw_pclk_t * pclk);          // таймеры
+unsigned hw_rcc_f_pclk(const hw_pclk_t * pclk);           // периферия
+unsigned hw_rcc_f_timer(const hw_pclk_t * pclk);          // таймеры

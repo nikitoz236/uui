@@ -18,7 +18,7 @@ static void timer_configure_output(TIM_TypeDef * timer, unsigned ch, unsigned mo
 
 void pwm_set_freq(const pwm_cfg_t * cfg, unsigned f)
 {
-    unsigned t_psc = hw_rcc_f_timer(cfg->tim_pclk.bus) / (cfg->max_val * 2 * f);
+    unsigned t_psc = hw_rcc_f_timer(&cfg->tim_pclk) / (cfg->max_val * 2 * f);
     cfg->tim->PSC = t_psc - 1;
 }
 

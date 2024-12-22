@@ -161,12 +161,12 @@ unsigned hw_rcc_f_hclk(void)
     return f_hclk;
 }
 
-unsigned hw_rcc_f_pclk(hw_pclk_t * pclk)
+unsigned hw_rcc_f_pclk(const hw_pclk_t * pclk)
 {
     return f_apb_calc(clock_cfg->apb_div[pclk->bus]);
 }
 
-unsigned hw_rcc_f_timer(hw_pclk_t * pclk)
+unsigned hw_rcc_f_timer(const hw_pclk_t * pclk)
 {
     unsigned f_timer = hw_rcc_f_pclk(pclk);
     if (clock_cfg->apb_div[pclk->bus] != APB_DIV1) {
