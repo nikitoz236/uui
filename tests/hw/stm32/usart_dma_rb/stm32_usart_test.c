@@ -89,7 +89,17 @@ int main(void)
 
     dp("test hex dump: wf ptr: "); dpx((unsigned)wf, 4); dp(" ptr of next char: "); dpx((unsigned)(&wf[1]), 4); dp(" dump: "); dpxd(wf, 1, 16); dn();
 
-    while (1) {};
+    mstimer_t print_timer = mstimer_with_timeout(100);
+    unsigned counter = 0;
+
+    while (1) {
+        if (mstimer_do_period(&print_timer)) {
+            dp("counter: ");
+            dpd(counter, 10);
+            dn();
+            counter++;
+        }
+    };
 
     return 0;
 }
