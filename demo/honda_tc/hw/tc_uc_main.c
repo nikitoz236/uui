@@ -14,24 +14,10 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 }
 
 const gpio_pin_t debug_gpio_list[] = {
-    { GPIO_PORT_C, 13 },
     { GPIO_PORT_B, 8 },
-    { GPIO_PORT_B, 9 }
+    { GPIO_PORT_B, 9 },
+    { GPIO_PORT_C, 13 },
 };
-
-void test_delay_ms(unsigned time)
-{
-    time_moment_t start;
-    time_moment_t t;
-    time_moment_save(&start);
-    while (1) {
-        time_moment_save(&t);
-        if (time_moment_interval_ms(&start, &t) >= time) {
-            break;
-        }
-    }
-}
-
 
 int main(void)
 {
@@ -89,10 +75,10 @@ int main(void)
     }
 
     for (unsigned i = 0; i < 4; i++) {
-        gpio_set_state(&debug_gpio_list[0], 1);
-        test_delay_ms(100);
-        gpio_set_state(&debug_gpio_list[0], 0);
-        test_delay_ms(100);
+        gpio_set_state(&debug_gpio_list[2], 1);
+        delay_ms(100);
+        gpio_set_state(&debug_gpio_list[2], 0);
+        delay_ms(100);
     }
 
     usart_set_cfg(&debug_usart);
@@ -100,13 +86,12 @@ int main(void)
     dpn("Hey bitch!");
     dpn("Another str");
     //                                         0                       !
-    dp("Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light.");
+    dpn("Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light.");
 
     // while (1) {};
 
-    init_lcd_hw(&lcd_cfg);
-
-    lcd_bl(4);
+    // init_lcd_hw(&lcd_cfg);
+    // lcd_bl(4);
 
     init_rtc();
 
@@ -138,8 +123,8 @@ int main(void)
         if (rtc_last != rtc_s) {
             rtc_last = rtc_s;
             dp("rtc time: ");
-            dpdz(rtc_s, 10);
-            dn("\r\n");
+            dpd(rtc_s, 10);
+            dn();
         }
 
         if (mstimer_do_period(&led_flash_timer)) {
