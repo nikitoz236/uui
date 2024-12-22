@@ -1,6 +1,6 @@
 #pragma once
 
-extern unsigned uptime_ms;
+extern volatile unsigned uptime_ms;
 
 typedef struct {
     unsigned timeout;
