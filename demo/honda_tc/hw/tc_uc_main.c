@@ -14,9 +14,9 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 }
 
 const gpio_pin_t debug_gpio_list[] = {
+    { GPIO_PORT_C, 13 },
     { GPIO_PORT_B, 8 },
     { GPIO_PORT_B, 9 },
-    { GPIO_PORT_C, 13 },
 };
 
 int main(void)
@@ -75,9 +75,9 @@ int main(void)
     }
 
     for (unsigned i = 0; i < 4; i++) {
-        gpio_set_state(&debug_gpio_list[2], 1);
+        gpio_set_state(&debug_gpio_list[0], 1);
         delay_ms(100);
-        gpio_set_state(&debug_gpio_list[2], 0);
+        gpio_set_state(&debug_gpio_list[0], 0);
         delay_ms(100);
     }
 
@@ -87,8 +87,6 @@ int main(void)
     dpn("Another str");
     //                                         0                       !
     dpn("Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light.");
-
-    // while (1) {};
 
     // init_lcd_hw(&lcd_cfg);
     // lcd_bl(4);
@@ -102,19 +100,20 @@ int main(void)
 
 
     while (1) {
-        unsigned rtc_s = rtc_get_time_s();
-        if (rtc_last != rtc_s) {
-            rtc_last = rtc_s;
-            dp("rtc time: ");
-            dpd(rtc_s, 10);
-            dn();
-        }
+        // unsigned rtc_s = rtc_get_time_s();
+        // if (rtc_last != rtc_s) {
+        //     rtc_last = rtc_s;
+        //     dp("rtc time: ");
+        //     dpd(rtc_s, 10);
+        //     dn();
+        // }
 
-        if (mstimer_do_period(&led_flash_timer)) {
-            led_state++;
-            led_state &= 1;
-            gpio_set_state(&led_pin, led_state);
-        }
+
+        // if (mstimer_do_period(&led_flash_timer)) {
+        //     led_state++;
+        //     led_state &= 1;
+        //     gpio_set_state(&led_pin, led_state);
+        // }
     }
 
     return 0;
