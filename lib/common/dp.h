@@ -16,6 +16,8 @@ static inline void __debug_print_str(const char * s)
     __debug_usart_tx_data(s, str_len(s, -1));
 }
 
+// функция проверят нужно ли выводить сообщения из модуля, если нужно то возвращает 0
+// также печатает название модуля
 static inline unsigned __debug_start(void)
 {
     // if (__debug_is_module_silent()) {
@@ -72,9 +74,9 @@ static inline void dpdz(unsigned d, unsigned w)
     if (__debug_start()) {
         return;
     }
-    char ds[16];
-    dec_to_str_right_aligned(d, ds, w, 1);
-    __debug_usart_tx_data(ds, w);
+    extern char __xs[];
+    dec_to_str_right_aligned(d, __xs, w, 1);
+    __debug_usart_tx_data(__xs, w);
 }
 
 static inline void dpx(unsigned x, unsigned size)
@@ -82,9 +84,9 @@ static inline void dpx(unsigned x, unsigned size)
     if (__debug_start()) {
         return;
     }
-    char xs[8];
-    hex_to_str(&x, xs, size);
-    __debug_usart_tx_data(xs, size * 2);
+    extern char __xs[];
+    hex_to_str(&x, __xs, size);
+    __debug_usart_tx_data(__xs, size * 2);
 }
 
 static inline void dpxd(void * x, unsigned size, unsigned count)
@@ -92,19 +94,17 @@ static inline void dpxd(void * x, unsigned size, unsigned count)
     if (__debug_start()) {
         return;
     }
-    // массив расположен на стеке. если использовать
-    // dma_tx без буффера то массив очевидно портится
-    char xs[12];
 
+    extern char __xs[];
     while (count--) {
-        hex_to_str(x, xs, size);
+        hex_to_str(x, __xs, size);
         x += size;
         unsigned plen = size * 2;
         if (count) {
-            xs[plen] = ' ';
+            __xs[plen] = ' ';
             plen++;
         }
-        __debug_usart_tx_data(xs, plen);
+        __debug_usart_tx_data(__xs, plen);
     }
 }
 
