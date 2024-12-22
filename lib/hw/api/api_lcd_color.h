@@ -10,5 +10,5 @@
     внутри могут быть как угодно оптимизированы, использовать dma итд
 */
 
-void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, unsigned color);
+void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, lcd_color_t color);
 void lcd_image(unsigned x, unsigned y, unsigned w, unsigned h, unsigned scale, lcd_color_t * buf);
