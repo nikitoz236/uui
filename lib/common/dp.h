@@ -89,7 +89,7 @@ static inline void dpx(unsigned x, unsigned size)
     __debug_usart_tx_data(__xs, size * 2);
 }
 
-static inline void dpxd(void * x, unsigned size, unsigned count)
+static inline void dpxd(const void * x, unsigned size, unsigned count)
 {
     if (__debug_start()) {
         return;

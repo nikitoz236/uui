@@ -31,7 +31,7 @@ void dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned l
     }
 }
 
-void hex_to_str(void * val, char * str, unsigned size)
+void hex_to_str(const void * val, char * str, unsigned size)
 {
     static const char hex[] = "0123456789ABCDEF";
     str[size * 2] = 0;
