@@ -1,18 +1,16 @@
 LIB = ../../../lib
 
-# INC += $(PROJECT)/widgets
-# SRC += $(PROJECT)/widgets/widget_metric_list_item.c
-# SRC += $(PROJECT)/widgets/widget_metric_list.c
+# fonts.h
+INC += $(LIB)/graphic/fonts
+SRC += $(LIB)/graphic/fonts/*.c
 
-# INC += ./$(LIB)/hw/include/
+# lcd_text_color.h
+INC += $(LIB)/graphic/lcd_color
+SRC += $(LIB)/graphic/lcd_color/*.c
 
-# SRC += ./$(LIB)/emu/hw/systick.c
-
-# INC += $(PROJECT)/logic
-# SRC += $(PROJECT)/logic/metrics_view.c
-# SRC += $(PROJECT)/logic/metrics_ecu.c
-# SRC += $(PROJECT)/logic/trip_integrate.c
+# misc.h
+INC += $(LIB)/common
 
 lcd_text_color_print_test_run:
 
-include $(LIB)/emu/test_graphic_color.mk
+include $(LIB)/emu/graphic/emu_graphic.mk
