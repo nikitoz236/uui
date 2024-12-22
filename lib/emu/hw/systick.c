@@ -37,3 +37,12 @@ unsigned time_manager_interval_us(time_moment_t * old, time_moment_t * new)
 {
     return 0;
 }
+
+unsigned time_moment_interval_ms(time_moment_t * start, time_moment_t * end)
+{
+    unsigned ms = end->ms - start->ms;
+    if (end->systick < start->systick) {
+        ms -= 1;
+    }
+    return ms;
+}
