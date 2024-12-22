@@ -10,8 +10,8 @@ void dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned l
 {
     str[len] = 0;
     if (val == 0) {
-        str[len - 1] = '0';
-        return;
+        len--;
+        str[len] = '0';
     }
     while (len) {
         len--;
