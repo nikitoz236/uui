@@ -9,7 +9,7 @@ static void draw(ui_element_t * el)
     unsigned cidx = 0;
     for (unsigned y = 0; y < cfg->size_list[selected_layout].h; y++) {
         for (unsigned x = 0; x < cfg->size_list[selected_layout].w; x++) {
-            ui_element_t * ce = ui_tree_add(el, &cfg->node_list[cidx]);
+            ui_element_t * ce = ui_tree_add(el, &cfg->node_list[cidx], cidx);
             printf("layout mode %d add cidx: %d x %d, y %d, ", selected_layout, cidx, x, y);
             form_grid(&el->f, &ce->f, &cfg->borders, &cfg->gaps, &cfg->size_list[selected_layout], x, y);
             printf("form p (%d %d) s (%d %d)\n", ce->f.p.x, ce->f.p.y, ce->f.s.w, ce->f.s.h);
