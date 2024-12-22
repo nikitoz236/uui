@@ -8,10 +8,10 @@
 extern gpio_pin_t debug_gpio_list[];
 #define __DBGPIO_USART(n, x)                gpio_set_state(&debug_gpio_list[n], x)
 
-#define __DBGPIO_USART_WAIT_AVAILABLE(x)    __DBGPIO_USART(0, x)
-#define __DBGPIO_DMA_IRQ(x)
-#define __DBGPIO_DMA_IRQ_END_BUF(x)
-#define __DBGPIO_USART_START_DMA(x)
+#define __DBGPIO_USART_WAIT_AVAILABLE(x)    __DBGPIO_USART(1, x)
+#define __DBGPIO_DMA_IRQ(x)                 __DBGPIO_USART(2, x)
+#define __DBGPIO_DMA_IRQ_END_BUF(x)         __DBGPIO_USART(0, x)
+#define __DBGPIO_USART_START_DMA(x)         __DBGPIO_USART(0, x)
 #define __DBGPIO_USART_TX_FUNC(x)
 #define __DBGPIO_USART_TX_DMA_WAIT_PREV(x)
 
@@ -106,18 +106,33 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
         usart->tx_dma.rb->head = new_data_pos;
         if (!dma_is_active(usart->tx_dma.dma_ch)) {
             __DBGPIO_USART_START_DMA(1);
+
+            // !!! исправлена ошибка !!!
+            // непонял зачем я стираю флаг висящего прерывания после зпуска дма ?
+            // возникала ситуация когда cp_len_end = 1 ( ну видимо tail был равен buf_size - 1)
+            // соответственно прерывание мгновенно взводилось и тут же сбрасывалось до разрешения. обработчик не вызывался.
+            // в обработчике должен вызываться dma_stop чтобы можно было снова попасть сюла через dma_is_active
+            // и так транзакции дма больше не начинались. буфер забивался и в какойто момент мы блокировались на проверке available
+            // перенес сброс флагов до фактического запуска дма
+
+            dma_clear_irq_full(usart->tx_dma.dma_ch);
             dma_start(usart->tx_dma.dma_ch, &usart->tx_dma.rb->data[usart->tx_dma.rb->tail], cp_len_end);
             usart->tx_dma.rb->tail += cp_len_end;
             // обработка переполнения tail производится в прерывании
             __DBGPIO_USART_START_DMA(0);
         }
-        dma_clear_irq_full(usart->tx_dma.dma_ch);
+
+
         dma_enable_irq_full(usart->tx_dma.dma_ch);
     }
 }
 
 void usart_dma_tx_end(const usart_cfg_t * usart)
 {
+    // в прерывании мы оказываемся когда dma досчитает до 0
+    // в такой момент нужно либо запустить новую транзакцию если накидали еще данных
+    // либо остановиться
+    // также здесь происходит обработка перехода через конец буффера в начало
     __DBGPIO_DMA_IRQ(1);
     dma_clear_irq_full(usart->tx_dma.dma_ch);
 
