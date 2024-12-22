@@ -106,6 +106,7 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
 
     tmp.cmd.len = 4;
 
+    // TODO, костыли потомучто ты не хочешь тратить время на переключение SPI ?
     u16_to_be_buf8(tmp.start, x);
     u16_to_be_buf8(tmp.end, x + w - 1);
     tmp.cmd.cmd = 0x2B;
@@ -121,13 +122,21 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
     while (spi_is_busy(lcd_cfg->spi_slave.spi)) {};
 }
 
+// extern const gpio_pin_t debug_gpio_list[];
+// #define __DBGPIO_LCD(n, x)   gpio_set_state(&debug_gpio_list[n], x);
+
+#define __DBGPIO_LCD(n, x)
+
+#define __DBGPIO_LCD_RECT(x)            __DBGPIO_LCD(0, x)
+#define __DBGPIO_LCD_DMA_SEND(x)        __DBGPIO_LCD(1, x)
+#define __DBGPIO_LCD_IMAGE(x)           __DBGPIO_LCD(0, x)
+
 void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, unsigned color)
 {
-    extern const gpio_pin_t debug_gpio_list[];
-    gpio_set_state(&debug_gpio_list[0], 1);
+    __DBGPIO_LCD_RECT(1);
     static unsigned color_static;
     lcd_set_area(x, y, w, h);
-    lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x2C,});
+    lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x2C, .len = 0 });
     spi_set_frame_len(lcd_cfg->spi_slave.spi, 16);
     gpio_set_state(&lcd_cfg->dc, 1);
     unsigned len = w * h;
@@ -140,10 +149,21 @@ void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, unsigned color)
                 chunk = UINT16_MAX;
             }
         }
+        __DBGPIO_LCD_DMA_SEND(1);
         spi_dma_tx_repeat(lcd_cfg->spi_slave.spi, &color_static, chunk);
+        __DBGPIO_LCD_DMA_SEND(0);
         len -= chunk;
     }
-    gpio_set_state(&debug_gpio_list[0], 0);
+    __DBGPIO_LCD_RECT(0);
+}
+
+void lcd_image(unsigned x, unsigned y, unsigned w, unsigned h, unsigned scale, lcd_color_t * buf)
+{
+    for (unsigned i = 0; i < h; i++) {
+        for (unsigned j = 0; j < w; j++) {
+            lcd_rect(x + j * scale, y + i * scale, scale, scale, buf[i * w + j]);
+        }
+    }
 }
 
 static inline void lcd_clear(void)
