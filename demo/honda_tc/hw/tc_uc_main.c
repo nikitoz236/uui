@@ -95,23 +95,6 @@ int main(void)
 
     init_rtc();
 
-    /*
-
-    надо проверить ходят ли они ? сбрасываются ли без питания ? читать время - показывать.
-
-    потом ставить время
-
-    надо логгинг
-
-    dp()
-    dpn
-    dpdn
-    dpwdwn
-
-    db(str, "rtc time:", dec, 6, rtc_s, rn );
-
-    */
-
     unsigned rtc_last = 0;
 
     mstimer_t led_flash_timer = mstimer_with_timeout(500);

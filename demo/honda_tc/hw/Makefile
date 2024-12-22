@@ -31,6 +31,7 @@ SRC += $(LIB)/hw/drivers/lcd_spi.c
 SRC += $(LIB)/hw/drivers/lcd_ili9341.c
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_utils.c
+SRC += $(LIB)/common/dp.c
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 
