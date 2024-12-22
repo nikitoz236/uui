@@ -6,7 +6,9 @@ INC += $(LIB)/hw/api
 # forms.h
 INC += $(LIB)/graphic
 
+# emu_lcd.h
 INC += $(LIB)/emu/graphic/
+
 SRC += $(LIB)/emu/graphic/gfx.c
 SRC += $(LIB)/emu/graphic/emu_lcd.c
 
