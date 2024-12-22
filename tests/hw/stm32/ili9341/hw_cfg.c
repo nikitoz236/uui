@@ -36,7 +36,8 @@ const lcd_cfg_t lcd_cfg = {
                 [SPI_PIN_MISO] = { .mode = GPIO_MODE_AF, .pull = GPIO_PULL_NONE },
                 [SPI_PIN_MOSI] = { .mode = GPIO_MODE_AF, .type = GPIO_TYPE_PP, .speed = GPIO_SPEED_HIGH }
             },
-            .clock_div = SPI_DIV_16
+            // .clock_div = SPI_DIV_16
+            .clock_div = SPI_DIV_2
         }
     },
     .bl = &(pwm_cfg_t){

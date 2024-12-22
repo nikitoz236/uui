@@ -1,5 +1,5 @@
 #include "config.h"
-#include "rtc.h"
+// #include "rtc.h"
 #include "str_val.h"
 #include "array_size.h"
 #include "systick.h"
@@ -66,68 +66,19 @@ int main(void)
     lcd_rect(34, 25, 45, 28, 0x4567);
 
     extern font_t font_5x7;
-    lcd_text_color_print("Hey bitch!", &(xy_t){ 50, 60 }, &(lcd_text_cfg_t){.font = &font_5x7, .gaps = {2, 2}, .scale = 2, .text_size = {16, 1}}, &(color_scheme_t){ .bg = 0xABCD, .fg = 0x5432}, 0, 0, 0 );
+    lcd_text_color_print(
+        "Hey bitch!",
+        &(xy_t){.x = 50, .y = 60 },
+        &(lcd_text_cfg_t){
+            .font = &font_5x7,
+            .gaps = { .x = 2, .y = 2 },
+            .scale = 2,
+            .text_size = { .w = 16, .h = 1 }
+        },
+        &(color_scheme_t){ .bg = 0xABCD, .fg = 0x166D},
+        0, 0, 0 );
 
     while (1) {};
-
-
-/*
-    while (1) {};
-    for (unsigned i = 0; i < ARRAY_SIZE(debug_gpio_list); i++) {
-        const gpio_cfg_t cfg = {
-            .mode = GPIO_MODE_OUTPUT,
-            .speed = GPIO_SPEED_HIGH,
-            .type = GPIO_TYPE_PP,
-            .pull = GPIO_PULL_NONE,
-        };
-        gpio_set_cfg(&debug_gpio_list[i], &cfg);
-        gpio_set_state(&debug_gpio_list[i], 0);
-    }
-
-    for (unsigned i = 0; i < 4; i++) {
-        gpio_set_state(&debug_gpio_list[0], 1);
-        test_delay_ms(100);
-        gpio_set_state(&debug_gpio_list[0], 0);
-        test_delay_ms(100);
-    }
-
-*/
-
-    // init_rtc();
-
-    /*
-
-    надо проверить ходят ли они ? сбрасываются ли без питания ? читать время - показывать.
-
-    потом ставить время
-
-    надо логгинг
-
-    dp()
-    dpn
-    dpdn
-    dpwdwn
-
-    db(str, "rtc time:", dec, 6, rtc_s, rn );
-
-    */
-
-    unsigned rtc_last = 0;
-
-    mstimer_t led_flash_timer = mstimer_with_timeout(500);
-    unsigned led_state = 0;
-
-
-    while (1) {
-        unsigned rtc_s = rtc_get_time_s();
-        if (rtc_last != rtc_s) {
-            rtc_last = rtc_s;
-            dp("rtc time: ");
-            dpdz(rtc_s, 10);
-            dn();
-        }
-
-    }
 
     return 0;
 }

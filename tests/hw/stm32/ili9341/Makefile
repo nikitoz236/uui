@@ -19,7 +19,7 @@ SRC += hw_cfg.c
 
 SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
+# SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
 # SRC += $(LIB)/hw/uc_hw/stm32f10x_rtc.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_pwm.c
@@ -31,8 +31,8 @@ SRC += $(LIB)/hw/drivers/lcd_spi.c
 SRC += $(LIB)/hw/drivers/lcd_ili9341.c
 
 INC += $(LIB)/common
-SRC += $(LIB)/common/str_val.c
-SRC += $(LIB)/common/str_utils.c
+# SRC += $(LIB)/common/str_val.c
+# SRC += $(LIB)/common/str_utils.c
 
 INC += $(LIB)/graphic/fonts
 SRC += $(LIB)/graphic/fonts/fonts.c
