@@ -4,6 +4,7 @@
 INC += $(LIB)/hw/api
 
 # forms.h
+# lcd_text.h
 INC += $(LIB)/graphic
 
 # emu_lcd.h

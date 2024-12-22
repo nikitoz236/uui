@@ -1,4 +1,5 @@
 #include "widget_test_rect_with_text.h"
+#include "api_lcd_color.h"
 
 #include "color_scheme_type.h"
 #include "lcd_text_color.h"
