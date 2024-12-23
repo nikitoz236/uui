@@ -4,7 +4,7 @@
 #include "color_scheme_type.h"
 #include "lcd_text_color.h"
 #include "str_utils.h"
-
+#include "align_forms.h"
 
 extern font_t font_5x7;
 

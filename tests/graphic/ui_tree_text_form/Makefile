@@ -26,8 +26,7 @@ SRC += $(LIB)/emu/graphic/widgets/widget_test_rect_with_text.c
 
 SRC += $(LIB)/graphic/lcd_text.c
 SRC += $(LIB)/common/str_utils.c
-
-SRC += $(LIB)/graphic/forms.c
+SRC += $(LIB)/graphic/align_forms.c
 
 ui_tree_text_form_test_run:
 
