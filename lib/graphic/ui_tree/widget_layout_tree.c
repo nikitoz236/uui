@@ -8,7 +8,7 @@ static void draw(ui_element_t * el)
     __widget_layout_tree_cfg_t * cfg = (__widget_layout_tree_cfg_t *)el->ui_node->cfg;
     unsigned selected_layout = *cfg->selected_layout;
 
-    draw_color_form(&el->f, 0x000000);
+    draw_color_form(&el->f, cfg->bg);
 
     unsigned cidx = 0;
     for (unsigned y = 0; y < cfg->size_list[selected_layout].h; y++) {

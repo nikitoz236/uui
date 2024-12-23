@@ -63,6 +63,7 @@ int main()
                 { .widget = &__widget_test_rect_with_text, .cfg = &(__widget_test_rect_with_text_cfg_t){ .text = "eight" } }
             },
             .node_list_len = 8,
+            .bg = 0xEEEEEE,
             .gaps = { .x = 2, .y = 2 },
             .borders = { .x = 4, .y = 4 },
         }
