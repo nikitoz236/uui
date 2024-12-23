@@ -1,8 +1,8 @@
 LIB = ../../../lib
 
 # widget_test_rect_with_text.h
-INC += $(LIB)/emu/graphic/widgets
-SRC += $(LIB)/emu/graphic/widgets/widget_test_rect_with_text.c
+INC += $(LIB)/graphic/ui_tree/widgets
+SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
 
 ui_tree_text_form_test_run:
 
