@@ -1,5 +1,5 @@
 
-LIB = ../../lib
+LIB = ../../../lib
 
 # widget_test_rect_with_text.h
 INC += $(LIB)/emu/graphic/widgets
