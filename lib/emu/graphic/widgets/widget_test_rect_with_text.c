@@ -5,18 +5,14 @@
 #include "lcd_text_color.h"
 #include "str_utils.h"
 #include "align_forms.h"
+#include "draw_color.h"
 
 extern font_t font_5x7;
-
-static inline void form_fill(form_t * f, lcd_color_t color)
-{
-    lcd_rect(f->p.x, f->p.y, f->s.w, f->s.h, color);
-}
 
 static void draw(ui_element_t * el)
 {
     __widget_test_rect_with_text_cfg_t * cfg = (__widget_test_rect_with_text_cfg_t *)el->ui_node->cfg;
-    form_fill(&el->f, cfg->cs.bg);
+    draw_color_form(&el->f, cfg->cs.bg);
     lcd_text_cfg_t text_cfg = {
         .font = &font_5x7,
         .text_size = {str_len(cfg->text, 20), 1},

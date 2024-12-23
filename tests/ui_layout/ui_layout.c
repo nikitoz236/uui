@@ -1,4 +1,10 @@
+#include <stdio.h>
+#include <stdint.h>
+
 #include "emu_lcd.h"
+#include "emu_graphic.h"
+
+#include "ui_tree.h"
 
 #include "widget_test_rect_with_text.h"
 #include "widget_layout_tree.h"
@@ -17,17 +23,21 @@ void view_process(char key)
 
 int main()
 {
-    printf("test widget test\r\n");
+    printf("test widget_layout_tree\r\n");
 
-    __widget_emu_lcd_cfg_t emu_lcd_cfg = {
+    emu_lcd_cfg_t lcd_cfg = {
         .size = { .w = 320, .h = 240 },
-        .bg_color = 0x202020,
-        .border = 10,
+        .scale = 3,
         .px_gap = 0,
-        .scale = 3
+        .border = 10,
+        .bg_color = 0x202020
     };
 
-    emu_lcd_init(&emu_lcd_cfg);
+    form_t lcd_form = {};
+
+    emu_lcd_init(&lcd_cfg, &lcd_form);
+    emu_graphic_init(lcd_form.s.w, lcd_form.s.h);
+    emu_lcd_clear();
 
     uint8_t layout_selector = 2;
 
@@ -67,9 +77,10 @@ int main()
     }
 
     uint8_t ui_ctx[1024];
-    ui_tree_init(ui_ctx, 1024, &ui, &emu_lcd_cfg.size);
+    ui_tree_init(ui_ctx, 1024, &ui, &lcd_cfg.size);
     ui_tree_draw();
-    emu_lcd_loop(view_process);
+
+    emu_graphic_loop(view_process);
 
     return 0;
 }
