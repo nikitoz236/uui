@@ -9,6 +9,11 @@ static void * ui_tree_ptr = 0;
 static unsigned ui_tree_size = 0;
 static unsigned ui_tree_top = 0;
 
+unsigned ui_tree_len(void)
+{
+    return ui_tree_top;
+}
+
 static inline ui_element_t * ui_tree_element(uint16_t element_offset)
 {
     return (ui_element_t *)((void *)ui_tree_ptr + element_offset);

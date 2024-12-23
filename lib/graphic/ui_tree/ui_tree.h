@@ -31,6 +31,7 @@ struct __ui_node_desc {
 };
 
 void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, const xy_t * display_size);
+unsigned ui_tree_len(void);
 
 ui_element_t * ui_tree_owner(ui_element_t * element);
 ui_element_t * ui_tree_child(ui_element_t * element);
