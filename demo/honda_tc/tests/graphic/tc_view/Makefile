@@ -1,8 +1,8 @@
 PROJECT = ../../..
 LIB = $(PROJECT)/../../lib
 
-INC += ./$(LIB)/../tests/ui_layout
-SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
+INC += ./$(LIB)/graphic/ui_tree/widgets
+SRC += ./$(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
 
 INC += $(PROJECT)/view
 SRC += $(PROJECT)/view/view.c
@@ -27,4 +27,4 @@ SRC += $(PROJECT)/logic/trip_integrate.c
 
 tc_view_test_run:
 
-include $(LIB)/emu/test_graphic_color.mk
+include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk

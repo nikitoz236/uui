@@ -5,6 +5,7 @@
 
 #include "fonts.h"
 #include "str_utils.h"
+#include "align_forms.h"
 
 extern font_t font_5x7;
 

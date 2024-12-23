@@ -1,7 +1,9 @@
 #include <stdio.h>
-#include "ui_tree.h"
+#include "emu_graphic.h"
 #include "emu_lcd.h"
 #include "tc_events.h"
+#include "ui_tree.h"
+
 #include "view.h"
 
 void emu_view_process(char key)
@@ -18,6 +20,7 @@ void emu_view_process(char key)
     } else if (key == 'l') {
         event = EVENT_BTN_RIGHT;
     }
+
     view_process(event);
 }
 
@@ -25,7 +28,8 @@ int main()
 {
     printf("test widget titled screen\r\n");
 
-    __widget_emu_lcd_cfg_t emu_lcd_cfg = {
+
+    emu_lcd_cfg_t lcd_cfg = {
         .size = { .w = 320, .h = 240 },
         .bg_color = 0x202020,
         .border = 10,
@@ -33,10 +37,14 @@ int main()
         .scale = 3
     };
 
-    emu_lcd_init(&emu_lcd_cfg);
+    form_t lcd_form = {};
+    emu_lcd_init(&lcd_cfg, &lcd_form);
+    emu_graphic_init(lcd_form.s.w, lcd_form.s.h);
+    emu_lcd_clear();
+
     view_screen_on();
 
-    emu_lcd_loop(emu_view_process);
+    emu_graphic_loop(emu_view_process);
 
     return 0;
 }
