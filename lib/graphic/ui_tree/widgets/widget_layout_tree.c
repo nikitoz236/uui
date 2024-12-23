@@ -44,6 +44,7 @@ static unsigned process_event(ui_element_t * el, unsigned event)
         printf("new val %d\n", *cfg->selected_layout);
         ui_tree_delete_childs(el);
         ui_tree_element_draw(el);
+        printf("element redraw, ui tree len: %d\n", ui_tree_len());
         return 1;
     }
     return 0;
