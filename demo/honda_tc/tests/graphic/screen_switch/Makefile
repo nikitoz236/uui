@@ -1,17 +1,21 @@
 PROJECT = ../../..
 LIB = $(PROJECT)/../../lib
 
-
 # INC += $(PROJECT)/widgets
 # SRC += $(PROJECT)/widgets/*.c
+
+INC += $(PROJECT)/widgets/common
+SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+
+INC += ./$(LIB)/graphic/ui_tree/widgets
+SRC += ./$(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
+
+INC += $(PROJECT)/view
 
 # INC += ./$(LIB)/hw/include/
 
 INC += ./
 SRC += ./*.c
-
-INC += ./$(LIB)/../tests/ui_layout
-SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
 
 # SRC += ./$(LIB)/emu/hw/systick.c
 
@@ -23,4 +27,4 @@ SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
 
 screen_switch_test_run:
 
-include $(LIB)/emu/test_graphic_color.mk
+include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
