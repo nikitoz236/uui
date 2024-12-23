@@ -1,5 +1,6 @@
 #include "widget_selectable.h"
 #include "widget_test_rect_with_text.h"
+#include "tc_events.h"
 
 typedef struct {
     uint8_t selected;
@@ -50,7 +51,7 @@ static unsigned process(ui_element_t * el, unsigned event)
 {
     __widget_selectable_ctx_t * ctx = (__widget_selectable_ctx_t *)el->ctx;
 
-    if (event == 10) {
+    if (event == EVENT_BTN_OK) {
         if (ctx->selected == 0) {
             ctx->selected = 1;
         } else {
@@ -61,7 +62,7 @@ static unsigned process(ui_element_t * el, unsigned event)
     }
 
     if (ctx->selected == 1) {
-        if (event == 1) {
+        if (event == EVENT_BTN_DOWN) {
             ctx->n++;
             if (ctx->n == 10) {
                 ctx->n = 0;
@@ -69,7 +70,7 @@ static unsigned process(ui_element_t * el, unsigned event)
             update(el);
             return 1;
         }
-        if (event == 2) {
+        if (event == EVENT_BTN_UP) {
             if (ctx->n == 0) {
                 ctx->n = 10;
             }

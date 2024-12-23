@@ -1,29 +1,26 @@
 PROJECT = ../../..
 LIB = $(PROJECT)/../../lib
 
+INC += $(PROJECT)/widgets/common
+SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
 
-# INC += $(PROJECT)/widgets
-# SRC += $(PROJECT)/widgets/*.c
+INC += ./$(LIB)/graphic/ui_tree/widgets
+SRC += ./$(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
 
-# INC += ./$(LIB)/hw/include/
+INC += ./$(LIB)/hw/include/
 
 INC += ./
 SRC += ./*.c
 
-INC += ../screen_switch/
-SRC += ../screen_switch/widget_screen_switch.c
+SRC += ./$(LIB)/emu/hw/systick.c
 
-INC += ./$(LIB)/../tests/ui_layout
-SRC += ./$(LIB)/../tests/ui_layout/widget_test_rect_with_text.c
+INC += $(PROJECT)/view
 
-# SRC += ./$(LIB)/emu/hw/systick.c
-
-# INC += $(PROJECT)/logic
-# SRC += $(PROJECT)/logic/metrics_view.c
-# SRC += $(PROJECT)/logic/metrics_ecu.c
-# SRC += $(PROJECT)/logic/trip_integrate.c
-
+INC += $(PROJECT)/logic
+SRC += $(PROJECT)/logic/metrics_view.c
+SRC += $(PROJECT)/logic/metrics_ecu.c
+SRC += $(PROJECT)/logic/trip_integrate.c
 
 selector_test_run:
 
-include $(LIB)/emu/test_graphic_color.mk
+include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
