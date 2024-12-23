@@ -1,7 +1,7 @@
 #include "widget_metric_list.h"
 #include "draw_color.h"
 #include "tc_events.h"
-// extern font_t font_5x7;
+#include "align_forms.h"
 
 typedef struct {
     uint8_t pos;

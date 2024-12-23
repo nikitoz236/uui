@@ -1,18 +1,20 @@
 #include <stdio.h>
-#include "ui_tree.h"
-
+#include "emu_graphic.h"
 #include "emu_lcd.h"
+
+#include "ui_tree.h"
 #include "widget_metric_list.h"
 #include "widget_metric_list_item.h"
-#include "metrics_view.h"
+#include "tc_events.h"
+// #include "metrics_view.h"
 
 void view_process(char key)
 {
-    unsigned event = 0;
+    unsigned event = EVENT_NONE;
     if (key == 'k') {
-        event = 1;
+        event = EVENT_BTN_UP;
     } else if (key == 'j') {
-        event = 2;
+        event = EVENT_BTN_DOWN;
     }
 
     ui_tree_process_event(event);
@@ -22,15 +24,19 @@ int main()
 {
     printf("test honda widget metrics list\r\n");
 
-    __widget_emu_lcd_cfg_t emu_lcd_cfg = {
+    emu_lcd_cfg_t lcd_cfg = {
         .size = { .w = 320, .h = 240 },
-        .bg_color = 0x202020,
-        .border = 10,
+        .scale = 3,
         .px_gap = 0,
-        .scale = 3
+        .border = 10,
+        .bg_color = 0x202020
     };
 
-    emu_lcd_init(&emu_lcd_cfg);
+    form_t lcd_form = {};
+
+    emu_lcd_init(&lcd_cfg, &lcd_form);
+    emu_graphic_init(lcd_form.s.w, lcd_form.s.h);
+    emu_lcd_clear();
 
     ui_node_desc_t ui = {
         .widget = &__widget_metric_list,
@@ -50,14 +56,14 @@ int main()
             .color_bg = 0,
             .num = METRIC_VAR_ID_NUM
         }
-
     };
 
     uint8_t ui_ctx[1024];
-    ui_tree_init(ui_ctx, 1024, &ui, &emu_lcd_cfg.size);
+    ui_tree_init(ui_ctx, 1024, &ui, &lcd_cfg.size);
 
     ui_tree_draw();
-    emu_lcd_loop(view_process);
+
+    emu_graphic_loop(view_process);
 
     return 0;
 }
