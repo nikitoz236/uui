@@ -1,5 +1,5 @@
 
-
+#define TEXT_LEN(str) (sizeof(str) - 1)
 
 void dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned lzero);
 void hex_to_str(const void * val, char * str, unsigned size);
