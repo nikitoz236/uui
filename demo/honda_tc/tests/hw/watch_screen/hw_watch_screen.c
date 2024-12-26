@@ -7,7 +7,7 @@
 
 #include "ui_tree.h"
 
-#include "widget_test_rect_with_text.h"
+#include "widget_watch_screen.h"
 
 /*
     конфигурация логанализатора
@@ -59,6 +59,7 @@ int main(void)
 
     hw_rcc_pclk_ctrl(&dma_pclk, 1);
     init_systick();
+    init_rtc();
     __enable_irq();
 
     init_lcd_hw(&lcd_cfg);
@@ -67,14 +68,7 @@ int main(void)
 
 
     ui_node_desc_t ui = {
-        .widget = &__widget_test_rect_with_text,
-        .cfg = &(__widget_test_rect_with_text_cfg_t){
-            .text = "first",
-            .cs = {
-                .bg = 0xaabc,
-                .fg = 0x3321
-            }
-        }
+        .widget = &__widget_watch_screen
     };
 
     ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});

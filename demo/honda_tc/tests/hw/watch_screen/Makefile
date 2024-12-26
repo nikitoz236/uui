@@ -41,10 +41,6 @@ SRC += $(LIB)/common/date_time.c
 # rtc.h
 INC += $(LIB)/hw/include/
 
-# widget_test_rect_with_text.h
-INC += $(LIB)/graphic/ui_tree/widgets
-SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
-
 # ui_tree.h
 INC += $(LIB)/graphic/ui_tree
 SRC += $(LIB)/graphic/ui_tree/ui_tree.c
@@ -56,6 +52,7 @@ INC += $(LIB)/emu
 INC += $(LIB)/graphic/fonts
 SRC += $(LIB)/graphic/fonts/fonts.c
 SRC += $(LIB)/graphic/fonts/font_5x7.c
+SRC += $(LIB)/graphic/fonts/font_3x5.c
 
 # lcd_text_color.h
 INC += $(LIB)/graphic/lcd_color
@@ -63,13 +60,17 @@ INC += $(LIB)/graphic/lcd_color
 SRC += $(LIB)/graphic/lcd_color/lcd_text_color.c
 
 # forms_edge.h
+# forms_split.h
 INC += $(LIB)/graphic/forms
-
+SRC += $(LIB)/graphic/forms/forms_split.c
 
 INC += $(LIB)/graphic
 SRC += $(LIB)/graphic/lcd_text.c
 SRC += $(LIB)/graphic/align_forms.c
 
+# widgets
+INC += ../../../widgets
+SRC += ../../../widgets/widget_watch_screen.c
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 

@@ -91,7 +91,7 @@ void update(ui_element_t * el)
 
         date_dd_mname_yyyy_to_str(&d, str);
 
-        printf("date: %s\n", str);
+        // printf("date: %s\n", str);
 
         lcd_text_color_print(str, &ctx->forms[O_DATE].p, &text_cfg[O_DATE], &cs, 0, 0, DATE_TEXT_LEN);
     }
