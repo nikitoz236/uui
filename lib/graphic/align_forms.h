@@ -1,13 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "forms.h"
-
-typedef enum {
-    EDGE_U,
-    EDGE_D,
-    EDGE_L = EDGE_U,
-    EDGE_R = EDGE_D
-} form_edge_t;
+#include "forms_edge.h"
 
 enum align {
     ALIGN_LEFT_OUTSIDE,
@@ -59,7 +53,7 @@ void form_align(form_t * pf, form_t * af, align_mode_t * mode);
 void form_union_calc_size(form_t * f1, form_t * f2, align_mode_t * mode, form_t * rf);
 void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * mode);
 
-void form_split(form_t * pf, form_t * sf, xy_t * offsets, unsigned x_index, unsigned y_index);
+// void form_split(form_t * pf, form_t * sf, xy_t * offsets, unsigned x_index, unsigned y_index);
 void form_grid(form_t * pf, form_t * af, xy_t * borders, xy_t * gaps, xy_t * grid_size, unsigned x_index, unsigned y_index);
 
-void form_cut(form_t * f, unsigned offset, dimension_t d, form_edge_t edge);
+// void form_cut(form_t * f, unsigned offset, dimension_t d, form_edge_t edge);

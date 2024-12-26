@@ -17,6 +17,10 @@ SRC += $(LIB)/graphic/fonts/*.c
 INC += $(LIB)/graphic/lcd_color
 SRC += $(LIB)/graphic/lcd_color/*.c
 
+# forms_edge.h
+INC += $(LIB)/graphic/forms
+
+
 SRC += $(LIB)/graphic/lcd_text.c
 SRC += $(LIB)/common/str_utils.c
 SRC += $(LIB)/graphic/align_forms.c

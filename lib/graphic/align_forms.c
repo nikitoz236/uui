@@ -106,35 +106,25 @@ void form_union_calc_pos(form_t * of, form_t * f1, form_t * f2, align_mode_t * m
     }
 }
 
-// в аргументе указываем что отрезаем а не что останется
-void form_cut(form_t * f, unsigned offset, dimension_t d, form_edge_t cut_edge)
-{
-    if (cut_edge == EDGE_U) {
-        f->p.ca[d] += offset;
-        f->s.ca[d] -= offset;
-    } else {
-        f->s.ca[d] = offset;
-    }
-}
 
-void form_split(form_t * pf, form_t * sf, xy_t * offsets, unsigned x_index, unsigned y_index)
-{
-    unsigned index[] = {x_index, y_index};
-    for (unsigned i = 0; i < 2; i++) {
-        if (offsets->ca[i]) {
-            if (index[i] == 0) {
-                sf->p.ca[i] = pf->p.ca[i];
-                sf->s.ca[i] = offsets->ca[i];
-            } else {
-                sf->p.ca[i] = pf->p.ca[i] + offsets->ca[i];
-                sf->s.ca[i] = pf->s.ca[i] - offsets->ca[i];
-            }
-        } else {
-            sf->p.ca[i] = pf->p.ca[i];
-            sf->s.ca[i] = pf->s.ca[i];
-        }
-    }
-}
+// void form_split(form_t * pf, form_t * sf, xy_t * offsets, unsigned x_index, unsigned y_index)
+// {
+//     unsigned index[] = {x_index, y_index};
+//     for (unsigned i = 0; i < DIMENSION_COUNT; i++) {
+//         if (offsets->ca[i]) {
+//             if (index[i] == 0) {
+//                 sf->p.ca[i] = pf->p.ca[i];
+//                 sf->s.ca[i] = offsets->ca[i];
+//             } else {
+//                 sf->p.ca[i] = pf->p.ca[i] + offsets->ca[i];
+//                 sf->s.ca[i] = pf->s.ca[i] - offsets->ca[i];
+//             }
+//         } else {
+//             sf->p.ca[i] = pf->p.ca[i];
+//             sf->s.ca[i] = pf->s.ca[i];
+//         }
+//     }
+// }
 
 void form_grid(form_t * pf, form_t * af, xy_t * borders, xy_t * gaps, xy_t * grid_size, unsigned x_index, unsigned y_index)
 {
