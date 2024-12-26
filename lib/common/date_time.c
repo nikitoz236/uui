@@ -136,6 +136,11 @@ void time_from_s(time_t * t, unsigned s)
     t->h = s % HOURS_IN_DAY;
 }
 
+unsigned time_to_s(time_t * t)
+{
+    return t->s + t->m * SEC_IN_MIN + t->h * SEC_IN_HOUR;
+}
+
 void date_yy_to_str(date_t * d, char * c);
 void date_yyyy_to_str(date_t * d, char * c);
 

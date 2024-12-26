@@ -58,6 +58,7 @@ unsigned days_from_date(date_t * d);
 void date_from_days(date_t * d, unsigned days);
 void date_from_s(date_t * d, unsigned s);
 void time_from_s(time_t * t, unsigned s);
+unsigned time_to_s(time_t * t);
 
 void date_yy_to_str(date_t * d, char * c);
 void date_yyyy_to_str(date_t * d, char * c);
