@@ -13,6 +13,8 @@ volatile unsigned uptime_ms = 0;
 
 void view_process(char key)
 {
+    ui_tree_update();
+
     unsigned event = 0;
     if (key == 'j') {
         event = EVENT_BTN_DOWN;
@@ -24,6 +26,16 @@ void view_process(char key)
         event = EVENT_BTN_LEFT;
     } else if (key == 'l') {
         event = EVENT_BTN_RIGHT;
+    } else if (key == 'J') {
+        event = EVENT_LONG_BTN_DOWN;
+    } else if (key == 'K') {
+        event = EVENT_LONG_BTN_UP;
+    } else if (key == '\n') {
+        event = EVENT_LONG_BTN_OK;
+    } else if (key == 'H') {
+        event = EVENT_LONG_BTN_LEFT;
+    } else if (key == 'L') {
+        event = EVENT_LONG_BTN_RIGHT;
     }
 
     uptime_ms = systick_get_uptime_ms();
@@ -34,7 +46,9 @@ void view_process(char key)
     //     printf("uptime: %d\n", uptime_ms);
     // }
 
-    ui_tree_process_event(event);
+    if (event) {
+        ui_tree_process_event(event);
+    }
 }
 
 void emu_ui_node(ui_node_desc_t * node)
