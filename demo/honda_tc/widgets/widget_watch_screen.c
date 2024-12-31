@@ -26,7 +26,7 @@ lcd_text_cfg_t text_cfg[] = {
     [O_TIME] = {
         .font = &font_3x5,
         .text_size = {5, 1},
-        .gaps = { .x = 16 },
+        .gaps = { .x = 8 },
         .scale = 16
     },
     [O_DATE] = {
@@ -90,9 +90,6 @@ void update(ui_element_t * el)
         date_from_days(&d, days);
 
         date_dd_mname_yyyy_to_str(&d, str);
-
-        // printf("date: %s\n", str);
-
         lcd_text_color_print(str, &ctx->forms[O_DATE].p, &text_cfg[O_DATE], &cs, 0, 0, DATE_TEXT_LEN);
     }
 
@@ -108,8 +105,9 @@ void calc_form_for_text(form_t * pf, form_t * f, lcd_text_cfg_t * cfg)
 
 void draw(ui_element_t * el)
 {
-
     watch_screen_ctx_t * ctx = (watch_screen_ctx_t *)el->ctx;
+    ctx->last_day = -1;
+    ctx->last_time_s = -1;
 
     form_t tmp;
 
