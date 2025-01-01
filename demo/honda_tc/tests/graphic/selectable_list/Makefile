@@ -5,6 +5,7 @@ INC += $(PROJECT)/widgets
 INC += $(PROJECT)/widgets/common
 
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
+SRC += $(PROJECT)/widgets/common/widget_text.c
 
 # str_val.h
 INC += $(LIB)/common/
