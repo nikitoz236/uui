@@ -49,6 +49,7 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     ui_tree_ptr = ptr;
     ui_tree_size = size;
     ui_element_t * el = add_node(ui_node, 0, 0);
+    ui_tree_element_calc(el);
     if (display_size) {
         el->f.s = *display_size;
     }
@@ -345,6 +346,13 @@ void ui_tree_element_draw(ui_element_t * element)
     // }
 }
 
+void ui_tree_element_select(ui_element_t * element, unsigned select)
+{
+    if (element->ui_node->widget->select) {
+        element->ui_node->widget->select(element, select);
+    }
+}
+
 unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
 {
     unsigned result = 0;
@@ -367,6 +375,12 @@ void ui_tree_draw(void)
 {
     ui_element_t * element = ui_tree_element(0);
     ui_tree_element_draw(element);
+}
+
+void ui_tree_update(void)
+{
+    ui_element_t * element = ui_tree_element(0);
+    ui_tree_element_update(element);
 }
 
 void ui_tree_process_event(unsigned event)
