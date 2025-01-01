@@ -131,7 +131,7 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
 #define __DBGPIO_LCD_DMA_SEND(x)        __DBGPIO_LCD(1, x)
 #define __DBGPIO_LCD_IMAGE(x)           __DBGPIO_LCD(0, x)
 
-void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, unsigned color)
+void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, lcd_color_t color)
 {
     __DBGPIO_LCD_RECT(1);
     static unsigned color_static;
