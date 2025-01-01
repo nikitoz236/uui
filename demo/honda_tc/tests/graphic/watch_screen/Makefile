@@ -12,6 +12,8 @@ SRC += $(PROJECT)/widgets/widget_time_settings.c
 
 INC += $(PROJECT)/widgets/common
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
+SRC += $(PROJECT)/widgets/common/widget_text.c
 
 INC += $(LIB)/graphic/ui_tree/widgets
 SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c

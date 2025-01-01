@@ -11,7 +11,7 @@ static void draw(ui_element_t * el)
     ui_tree_element_draw(item);
 }
 
-static void update(ui_element_t * el)
+static void update_child(ui_element_t * el)
 {
     __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     ui_tree_delete_childs(el);
@@ -21,6 +21,7 @@ static void update(ui_element_t * el)
 static unsigned process(ui_element_t * el, unsigned event)
 {
     __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
+
     ui_element_t * item = ui_tree_child(el);
 
     if (ui_tree_element_process(item, event)) {
@@ -33,7 +34,7 @@ static unsigned process(ui_element_t * el, unsigned event)
         if (*current_screen == cfg->screens_num) {
             *current_screen = 0;
         }
-        update(el);
+        update_child(el);
         return 1;
     }
     if (event == EVENT_BTN_UP) {
@@ -42,7 +43,15 @@ static unsigned process(ui_element_t * el, unsigned event)
         }
         (*current_screen)--;
 
-        update(el);
+        update_child(el);
+        return 1;
+    }
+    if (event == EVENT_BTN_OK) {
+        ui_tree_element_select(item, 1);
+        return 1;
+    }
+    if (event == EVENT_BTN_LEFT) {
+        ui_tree_element_select(item, 0);
         return 1;
     }
     return 0;
@@ -50,5 +59,6 @@ static unsigned process(ui_element_t * el, unsigned event)
 
 widget_desc_t __widget_screen_switch = {
     .draw = draw,
-    .process_event = process
+    .process_event = process,
+
 };

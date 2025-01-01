@@ -116,6 +116,23 @@ static unsigned process_event(ui_element_t * el, unsigned event)
         return 0;
     }
 
+    /*
+        план перенести в ui_tree
+        если сам активен
+            бежать по всем чайлдам
+                если там есть активные
+                    то у них дернуть рекурсивно обработку
+                        если никто не вернул 1
+                            то дергаем у себя
+
+    */
+
+    ui_element_t * item = ui_get_child(el, ctx->pos);
+
+    if (ui_tree_element_process(item, event)) {
+        return 1;
+    }
+
     if (event == EVENT_BTN_DOWN) {
         unsigned old_pos = ctx->pos;
         if (ctx->pos < ctx->count - 1) {
