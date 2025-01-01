@@ -49,6 +49,7 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     ui_tree_ptr = ptr;
     ui_tree_size = size;
     ui_element_t * el = add_node(ui_node, 0, 0);
+    el->active = 1;
     ui_tree_element_calc(el);
     if (display_size) {
         el->f.s = *display_size;
