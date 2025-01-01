@@ -61,7 +61,7 @@ color_scheme_t cs = {
     .fg = 0xffc400
 };
 
-void update(ui_element_t * el)
+static void update(ui_element_t * el)
 {
     watch_screen_ctx_t * ctx = (watch_screen_ctx_t *)el->ctx;
 
@@ -97,13 +97,13 @@ void update(ui_element_t * el)
     lcd_text_color_print("-12.6 *C", &ctx->forms[O_TEMPERATURE].p, &text_cfg[O_TEMPERATURE], &cs, 0, 0, 0);
 }
 
-void calc_form_for_text(form_t * pf, form_t * f, lcd_text_cfg_t * cfg)
+static void calc_form_for_text(form_t * pf, form_t * f, lcd_text_cfg_t * cfg)
 {
     lcd_text_calc_size(&f->s, cfg);
     form_align(pf, f, &ALIGN_MODE(C, 0, C, 0));
 }
 
-void draw(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
     watch_screen_ctx_t * ctx = (watch_screen_ctx_t *)el->ctx;
     ctx->last_day = -1;
@@ -131,7 +131,7 @@ void draw(ui_element_t * el)
     update(el);
 }
 
-widget_desc_t __widget_watch_screen = {
+const widget_desc_t __widget_watch_screen = {
     .draw = draw,
     .update = update,
     .ctx_size = sizeof(watch_screen_ctx_t)
