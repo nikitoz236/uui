@@ -17,6 +17,12 @@ INC += $(PROJECT)/view
 INC += ./
 SRC += ./*.c
 
+
+# debug_print.h
+INC += $(LIB)/emu
+
+
+
 # SRC += ./$(LIB)/emu/hw/systick.c
 
 # INC += $(PROJECT)/logic
