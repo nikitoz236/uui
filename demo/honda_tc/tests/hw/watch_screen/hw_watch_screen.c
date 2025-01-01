@@ -74,7 +74,9 @@ int main(void)
     ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});
     ui_tree_draw();
 
-    while (1) {};
+    while (1) {
+        ui_tree_update();
+    };
 
     return 0;
 }
