@@ -78,11 +78,6 @@ ui_element_t * ui_tree_next(ui_element_t * element)
     return ui_tree_element(element->next);
 }
 
-void * ui_tree_ctx(ui_element_t * element)
-{
-    return (void *)element->ctx;
-}
-
 static ui_element_t * search_last_child(ui_element_t * owner)
 {
     ui_element_t * last = ui_tree_child(owner);
@@ -111,7 +106,7 @@ ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node,
 }
 
 // следующий элемент в памяти
-ui_element_t * ui_tree_next_linear(ui_element_t * element)
+static ui_element_t * ui_tree_next_linear(ui_element_t * element)
 {
     unsigned offset = element_offset(element);
     offset += element_size(element);
@@ -389,6 +384,11 @@ void ui_tree_process_event(unsigned event)
     ui_element_t * element = ui_tree_element(0);
     ui_tree_element_process(element, event);
 }
+
+
+
+
+// debug prints
 
 void ui_tree_debug_print_linear(void)
 {
