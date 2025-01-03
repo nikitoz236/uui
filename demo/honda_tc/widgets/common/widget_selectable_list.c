@@ -62,23 +62,22 @@ static void redraw_list(ui_element_t * el)
     }
 }
 
-static void draw(ui_element_t * el)
+static void calc(ui_element_t * el)
 {
     __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
 
     ctx->first = 0;
     ctx->pos = 0;
+
     recalc_list(el);
-    redraw_list(el);
 }
 
 static void select(ui_element_t * el)
 {
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
     ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
-    item->active = el->active;
-    ui_tree_element_select(item, select);
+    ui_tree_element_select(item, el->active);
 }
 
 static void change_selected_cild(ui_element_t * el, unsigned unselect, unsigned select)
@@ -165,9 +164,8 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t __widget_selectable_list = {
-    .calc = 0,
-    .draw = draw,
-    .update = 0,
+    .calc = calc,
+    .draw = redraw_list,
     .select = select,
     .process_event = process_event,
     .ctx_size = sizeof(__widget_selectable_list_ctx_t)

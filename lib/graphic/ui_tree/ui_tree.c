@@ -55,6 +55,7 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
         el->f.s = *display_size;
     }
     el->f.p = (xy_t){0, 0};
+    ui_tree_element_extend(el);
 }
 
 ui_element_t * ui_tree_owner(ui_element_t * element)
@@ -337,6 +338,13 @@ void ui_tree_element_calc(ui_element_t * element)
 {
     if (element->ui_node->widget->calc) {
         element->ui_node->widget->calc(element);
+    }
+}
+
+void ui_tree_element_extend(ui_element_t * el)
+{
+    if (el->ui_node->widget->extend) {
+        el->ui_node->widget->extend(el);
     }
 }
 

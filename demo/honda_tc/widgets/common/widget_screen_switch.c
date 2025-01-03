@@ -1,29 +1,29 @@
 #include "widget_screen_switch.h"
 #include "tc_events.h"
 
-/*
-    вообще смотри. есть 2 парадигмы
-
-    виджет задумывался как некоторый конфигурируемый виджет, которых может быть много. и каждый чтото свое из списка показывает. Тоесть все виджеты до последнего думают должны ли они данное событие обрабатывать
-
-    либо мы делаем чтобы каждый виджет имел режим ( контекст ) и понимал выбран он или нет, нужно ли ему передавать события глубже или нет ?
-*/
-
-static void draw(ui_element_t * el)
+static void calc(ui_element_t * el)
 {
     __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     unsigned current_screen = *cfg->selector_ptr;
     ui_node_desc_t * node = &cfg->screens_list[current_screen];
     ui_element_t * item = ui_tree_add(el, node, current_screen);
+    ui_tree_element_calc(item);
+}
+
+static void extend(ui_element_t * el)
+{
+    ui_element_t * item = ui_tree_child(el);
     item->f = el->f;
-    ui_tree_element_draw(item);
+    ui_tree_element_extend(item);
 }
 
 static void draw_new_child(ui_element_t * el)
 {
     __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     ui_tree_delete_childs(el);
-    draw(el);
+    calc(el);
+    extend(el);
+    ui_tree_element_draw(el);
 }
 
 static unsigned process(ui_element_t * el, unsigned event)
@@ -55,14 +55,16 @@ static unsigned process(ui_element_t * el, unsigned event)
         return 1;
     }
     if (event == EVENT_BTN_LEFT) {
-        ui_tree_element_select(item, 0);
-        return 1;
+        if (item->active) {
+            ui_tree_element_select(item, 0);
+            return 1;
+        }
     }
     return 0;
 }
 
 widget_desc_t __widget_screen_switch = {
-    .draw = draw,
+    .calc = calc,
+    .extend = extend,
     .process_event = process,
-
 };

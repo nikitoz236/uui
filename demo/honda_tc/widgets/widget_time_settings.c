@@ -10,7 +10,7 @@
 #include "str_val.h"
 
 /*
-    состояние 1 - отображаем текузее время
+    состояние 1 - отображаем текущее время
         при нажатии вверх вниз выбираются другие виджеты
         при нажатии кнопки ок, выделяются часы, секунды становятся 00, состояние 2
 
@@ -118,12 +118,6 @@ static void redraw_widget(ui_element_t * el)
 
     ctx->current_time_s = -1;
     update(el);
-}
-
-static void select(ui_element_t * el, unsigned selected)
-{
-    el->active = selected;
-    redraw_widget(el);
 }
 
 static void draw(ui_element_t * el)

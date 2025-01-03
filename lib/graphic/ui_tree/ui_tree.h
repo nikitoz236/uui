@@ -119,10 +119,11 @@ void ui_tree_element_update(ui_element_t * element);
 void ui_tree_element_draw(ui_element_t * element);
 void ui_tree_element_calc(ui_element_t * element);
 void ui_tree_element_select(ui_element_t * element, unsigned select);
-
+void ui_tree_element_extend(ui_element_t * el);
 
 void ui_tree_draw(void);
 void ui_tree_update(void);
+
 void ui_tree_process(unsigned event);
 
     // найти хозяина, и следующего, прописать в хозяина след ребенка и схлопнуть весь стек влево на размер удаляемого элемента
