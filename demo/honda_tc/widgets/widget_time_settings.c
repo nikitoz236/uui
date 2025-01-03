@@ -2,6 +2,7 @@
 #include "lcd_text.h"
 #include "lcd_text_color.h"
 #include "tc_events.h"
+#include "tc_colors.h"
 #include "date_time.h"
 #include "rtc.h"
 #include "align_forms.h"
@@ -27,17 +28,6 @@
         кнопка долгое назад тоже выходит из редактирования, состояние 1
 */
 
-// color_scheme_t cs[2] = {
-//     {
-//         .bg = 0x12abcd,
-//         .fg = 0xff3334
-//     },
-//     {
-//         .bg = 0x00ff11,
-//         .fg = 0x113774
-//     }
-// };
-
 typedef struct {
     enum {
         EDIT_NONE,
@@ -48,11 +38,6 @@ typedef struct {
     unsigned current_time_s;
     xy_t text_pos;
 } time_settings_ctx_t;
-
-const lcd_color_t color_bg = 0x12abcd;
-const lcd_color_t color_bg_selected = 0xeeeaad;
-const lcd_color_t color_fg = 0xff3334;
-const lcd_color_t color_change = 0x00ff11;
 
 extern font_t font_5x7;
 
@@ -75,25 +60,25 @@ static void print_time(time_settings_ctx_t * ctx, lcd_color_t bg)
 
     color_scheme_t cs = {
         .bg = bg,
-        .fg = color_fg
+        .fg = tc_colors[TC_COLOR_FG_UNSELECTED]
     };
 
     dec_to_str_right_aligned(ctx->time.s, str, 2, 1);
     lcd_text_color_print(str, &ctx->text_pos, &tcfg, &cs, 6, 0, 2);
 
     if (ctx->state == EDIT_H) {
-        cs.fg = color_change;
+        cs.fg = tc_colors[TC_COLOR_FG_SELECTED];
     } else {
-        cs.fg = color_fg;
+        cs.fg = tc_colors[TC_COLOR_FG_UNSELECTED];
     }
 
     dec_to_str_right_aligned(ctx->time.h, str, 2, 1);
     lcd_text_color_print(str, &ctx->text_pos, &tcfg, &cs, 0, 0, 2);
 
     if (ctx->state == EDIT_M) {
-        cs.fg = color_change;
+        cs.fg = tc_colors[TC_COLOR_FG_SELECTED];
     } else {
-        cs.fg = color_fg;
+        cs.fg = tc_colors[TC_COLOR_FG_UNSELECTED];
     }
 
     dec_to_str_right_aligned(ctx->time.m, str, 2, 1);
@@ -108,9 +93,9 @@ static void update(ui_element_t * el)
         if (ctx->current_time_s != current_time_s) {
             ctx->current_time_s = current_time_s;
             time_from_s(&ctx->time, current_time_s);
-            lcd_color_t bg = color_bg;
+            lcd_color_t bg = tc_colors[TC_COLOR_BG_UNSELECTED];
             if (el->active) {
-                bg = color_bg_selected;
+                bg = tc_colors[TC_COLOR_BG_SELECTED];
             }
             print_time(ctx, bg);
         }
@@ -121,15 +106,15 @@ static void redraw_widget(ui_element_t * el)
 {
     time_settings_ctx_t * ctx = (time_settings_ctx_t *)el->ctx;
 
-    lcd_color_t bg = color_bg;
+    lcd_color_t bg = tc_colors[TC_COLOR_BG_UNSELECTED];
 
     if (el->active) {
-        bg = color_bg_selected;
+        bg = tc_colors[TC_COLOR_BG_SELECTED];
     }
 
     draw_color_form(&el->f, bg);
-    lcd_text_color_print(":", &ctx->text_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = color_fg }, 2, 0, 1);
-    lcd_text_color_print(":", &ctx->text_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = color_fg }, 5, 0, 1);
+    lcd_text_color_print(":", &ctx->text_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = tc_colors[TC_COLOR_FG_UNSELECTED] }, 2, 0, 1);
+    lcd_text_color_print(":", &ctx->text_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = tc_colors[TC_COLOR_FG_UNSELECTED] }, 5, 0, 1);
 
     ctx->current_time_s = -1;
     update(el);
@@ -137,8 +122,6 @@ static void redraw_widget(ui_element_t * el)
 
 static void select(ui_element_t * el, unsigned selected)
 {
-    printf("select time settings %d\r\n", selected);
-
     el->active = selected;
     redraw_widget(el);
 }
@@ -170,14 +153,14 @@ static unsigned process(ui_element_t * el, unsigned event)
         if (event == EVENT_BTN_OK) {
             ctx->state = EDIT_H;
             ctx->time.s = 0;
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         }
         return 0;
     } else if (ctx->state == EDIT_H) {
         if (event == EVENT_BTN_OK) {
             ctx->state = EDIT_M;
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         } else if (event == EVENT_BTN_LEFT) {
             ctx->state = EDIT_NONE;
@@ -188,14 +171,14 @@ static unsigned process(ui_element_t * el, unsigned event)
             if (ctx->time.h == 24) {
                 ctx->time.h = 0;
             }
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         } else if (event == EVENT_BTN_DOWN) {
             if (ctx->time.h == 0) {
                 ctx->time.h += 24;
             }
             ctx->time.h--;
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         }
         return 0;
@@ -207,25 +190,25 @@ static unsigned process(ui_element_t * el, unsigned event)
             time_s = days_to_s(days);
             time_s += time_to_s(&ctx->time);
             rtc_set_time_s(time_s);
-            update(ctx);
+            update(el);
             return 1;
         } else if (event == EVENT_BTN_LEFT) {
             ctx->state = EDIT_H;
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         } else if (event == EVENT_BTN_UP) {
             ctx->time.m++;
             if (ctx->time.m == 60) {
                 ctx->time.m = 0;
             }
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         } else if (event == EVENT_BTN_DOWN) {
             if (ctx->time.m == 0) {
                 ctx->time.m += 60;
             }
             ctx->time.m--;
-            print_time(ctx, color_bg_selected);
+            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         }
         return 0;
@@ -240,12 +223,3 @@ widget_desc_t __widget_time_settings = {
     .update = update,
     .ctx_size = sizeof(time_settings_ctx_t)
 };
-
-/*
-    теперь я хочу чтобы у меня было меню.
-
-
-    вариант 1
-        настройки это просто заставка, при нажатии ок мы проваливаемся в список который можно листать,
-
-*/

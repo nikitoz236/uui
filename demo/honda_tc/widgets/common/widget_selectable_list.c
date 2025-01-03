@@ -45,7 +45,7 @@ static void recalc_list(ui_element_t * el)
     }
 }
 
-void redraw_list(ui_element_t * el)
+static void redraw_list(ui_element_t * el)
 {
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
     draw_color_form(&el->f, 0);
@@ -73,30 +73,19 @@ static void draw(ui_element_t * el)
     redraw_list(el);
 }
 
-static ui_element_t * ui_get_child(ui_element_t * el, unsigned idx)
-{
-    ui_element_t * item = ui_tree_child(el);
-    for (unsigned i = 0; i < idx; i++) {
-        item = ui_tree_next(item);
-    }
-    return item;
-}
-
 static void select(ui_element_t * el, unsigned select)
 {
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
-    // printf("widget_selectable_list select %d\n", select);
-
     el->active = select;
-    ui_element_t * item = ui_get_child(el, ctx->pos);
+    ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
     ui_tree_element_select(item, select);
 }
 
 static void change_selected_cild(ui_element_t * el, unsigned unselect, unsigned select)
 {
-    ui_element_t * item = ui_get_child(el, unselect);
+    ui_element_t * item = ui_tree_child_idx(el, unselect);
     ui_tree_element_select(item, 0);
-    item = ui_get_child(el, select);
+    item = ui_tree_child_idx(el, select);
     ui_tree_element_select(item, 1);
 }
 
@@ -112,26 +101,7 @@ static unsigned process_event(ui_element_t * el, unsigned event)
     __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
 
-    if (el->active == 0) {
-        return 0;
-    }
-
-    /*
-        план перенести в ui_tree
-        если сам активен
-            бежать по всем чайлдам
-                если там есть активные
-                    то у них дернуть рекурсивно обработку
-                        если никто не вернул 1
-                            то дергаем у себя
-
-    */
-
-    ui_element_t * item = ui_get_child(el, ctx->pos);
-
-    if (ui_tree_element_process(item, event)) {
-        return 1;
-    }
+    ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
 
     if (event == EVENT_BTN_DOWN) {
         unsigned old_pos = ctx->pos;
@@ -160,7 +130,9 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 
         }
         return 1;
-    } else if (event == EVENT_BTN_UP) {
+    }
+
+    if (event == EVENT_BTN_UP) {
         unsigned old_pos = ctx->pos;
         if (ctx->pos > 0) {
             // выделение не на самом верхнем элементе, можно поднять не сдвигая список

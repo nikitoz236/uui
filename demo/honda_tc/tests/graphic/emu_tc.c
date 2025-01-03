@@ -4,6 +4,7 @@
 #include "emu_lcd.h"
 
 #include "tc_events.h"
+#include "tc_colors.h"
 
 #include "systick.h"
 #include "mstimer.h"
@@ -46,10 +47,15 @@ void view_process(char key)
     //     printf("uptime: %d\n", uptime_ms);
     // }
 
-    if (event) {
-        ui_tree_process_event(event);
-    }
+    ui_tree_process(event);
 }
+
+const lcd_color_t tc_colors[] = {
+    [TC_COLOR_BG_UNSELECTED] = COLOR_BG_UNSELECTED,
+    [TC_COLOR_FG_UNSELECTED] = COLOR_TEXT,
+    [TC_COLOR_BG_SELECTED] = COLOR_BG_SELECTED,
+    [TC_COLOR_FG_SELECTED] = COLOR_FG_SELECTED
+};
 
 void emu_ui_node(ui_node_desc_t * node)
 {
