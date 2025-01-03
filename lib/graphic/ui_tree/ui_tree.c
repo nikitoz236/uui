@@ -349,24 +349,6 @@ void ui_tree_element_select(ui_element_t * element, unsigned select)
     }
 }
 
-unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
-{
-    unsigned result = 0;
-    if (element->ui_node->widget->process_event) {
-        result = element->ui_node->widget->process_event(element, event);
-    } else {
-        ui_element_t * child = ui_tree_child(element);
-        while (child) {
-            if (ui_tree_element_process(child, event)) {
-                result = 1;
-                // где делаем update ? brake; ?
-            }
-            child = ui_tree_next(child);
-        }
-    }
-    return result;
-}
-
 void ui_tree_draw(void)
 {
     ui_element_t * element = ui_tree_element(0);
@@ -379,7 +361,39 @@ void ui_tree_update(void)
     ui_tree_element_update(element);
 }
 
-void ui_tree_process_event(unsigned event)
+
+
+static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
+{
+    unsigned result = 0;
+    ui_element_t * child = ui_tree_child(element);
+
+    while (child) {
+        if (ui_tree_element_process(child, event)) {
+            result = 1;
+        }
+
+        if (child->ui_node->widget->update) {
+            child->ui_node->widget->update(child);
+        }
+
+        child = ui_tree_next(child);
+    }
+
+    if (event) {
+        if (result == 0) {
+            if (element->active) {
+                if (element->ui_node->widget->process_event) {
+                    result = element->ui_node->widget->process_event(element, event);
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+void ui_tree_process(unsigned event)
 {
     ui_element_t * element = ui_tree_element(0);
     ui_tree_element_process(element, event);

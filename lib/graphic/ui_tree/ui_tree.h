@@ -8,6 +8,8 @@
     -   у элемента есть заголовок и контекст
     -   структура интерфейса описывается деревом структур ui_node_desc_t
 
+    -   деление на виджеты - атомарность и использование отдельно
+
     детали реализации
     -   для экономии памяти вместо указателей хранятся смещения, используются функции приобразующие одно в другое
 
@@ -22,6 +24,8 @@
 
     -   process_event дергается у всех дочерних элементов рекурсивно, если вернулся 1, то родительский элемент игнорироует событие
         таким образом обеспечивается проваливание в меню
+
+
 
     ??  нужен ли select ?? кто устанавливает active ??
     ??  кто дергает update ? - нужно чтобы update проваливался до дочерних элментов, если даже родитель не имеет update
@@ -95,12 +99,11 @@ void ui_tree_element_update(ui_element_t * element);
 void ui_tree_element_draw(ui_element_t * element);
 void ui_tree_element_calc(ui_element_t * element);
 void ui_tree_element_select(ui_element_t * element, unsigned select);
-unsigned ui_tree_element_process(ui_element_t * element, unsigned event);
 
 
 void ui_tree_draw(void);
 void ui_tree_update(void);
-void ui_tree_process_event(unsigned event);
+void ui_tree_process(unsigned event);
 
     // найти хозяина, и следующего, прописать в хозяина след ребенка и схлопнуть весь стек влево на размер удаляемого элемента
     // ui_new_element(owner_offset, ctx_size, ui_node)
