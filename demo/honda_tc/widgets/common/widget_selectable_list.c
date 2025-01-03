@@ -73,11 +73,11 @@ static void draw(ui_element_t * el)
     redraw_list(el);
 }
 
-static void select(ui_element_t * el, unsigned select)
+static void select(ui_element_t * el)
 {
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
-    el->active = select;
     ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
+    item->active = el->active;
     ui_tree_element_select(item, select);
 }
 

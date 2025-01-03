@@ -22,7 +22,7 @@ static void draw(ui_element_t * el)
     widget_template_ctx_t * ctx = (widget_template_ctx_t *)el->ctx;
 }
 
-static void select(ui_element_t * el, unsigned selected)
+static void select(ui_element_t * el)
 {
     widget_template_cfg_t * cfg = (widget_template_cfg_t *)el->ui_node->cfg;
     widget_template_ctx_t * ctx = (widget_template_ctx_t *)el->ctx;

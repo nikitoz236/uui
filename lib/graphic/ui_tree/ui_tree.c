@@ -354,8 +354,9 @@ void ui_tree_element_draw(ui_element_t * element)
 
 void ui_tree_element_select(ui_element_t * element, unsigned select)
 {
+    element->active = select;
     if (element->ui_node->widget->select) {
-        element->ui_node->widget->select(element, select);
+        element->ui_node->widget->select(element);
     }
 }
 

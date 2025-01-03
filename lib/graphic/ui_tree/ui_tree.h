@@ -69,9 +69,6 @@ typedef struct {
     // пока не используется, но смысл чтобы пересчитывать контекст, после выделения места, не использует HW
     void (*extend)(ui_element_t * el);
 
-    // пока не используется, но смысл чтобы здесь была оптимизированная перерисовка, как только у элемента меняется перерисовка
-    void (*update_select)(ui_element_t * el);
-
     // отрисовка всего элемента
     void (*draw)(ui_element_t * el);
 
@@ -79,7 +76,7 @@ typedef struct {
     void (*update)(ui_element_t * el);
 
     // смена статуса выделения элемента, оптимизировано чтобы не дергать draw
-    void (*select)(ui_element_t * el, unsigned selected);
+    void (*select)(ui_element_t * el);
 
     // обработка событий, возвращает 1 если событие обработано, что бы родительский элемент не обрабатывал событие
     unsigned (*process_event)(ui_element_t * el, unsigned event);

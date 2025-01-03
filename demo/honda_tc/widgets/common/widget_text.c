@@ -29,16 +29,6 @@ static void draw_widget_text(ui_element_t * el)
     lcd_text_color_print(cfg->text, &ctx->pos, &ctx->text_cfg, &cs, 0, 0, 0);
 }
 
-static void select(ui_element_t * el, unsigned selected)
-{
-    widget_text_cfg_t * cfg = (widget_text_cfg_t *)el->ui_node->cfg;
-    widget_text_ctx_t * ctx = (widget_text_ctx_t *)el->ctx;
-
-    el->active = selected;
-
-    draw_widget_text(el);
-}
-
 static void calc(ui_element_t * el)
 {
     widget_text_cfg_t * cfg = (widget_text_cfg_t *)el->ui_node->cfg;
@@ -72,6 +62,6 @@ static void draw(ui_element_t * el)
 const widget_desc_t __widget_text = {
     .calc = calc,
     .draw = draw,
-    .select = select,
+    .select = draw_widget_text,
     .ctx_size = sizeof(widget_text_ctx_t)
 };

@@ -218,7 +218,7 @@ static unsigned process(ui_element_t * el, unsigned event)
 widget_desc_t __widget_time_settings = {
     .draw = draw,
     .calc = calc,
-    .select = select,
+    .select = redraw_widget,
     .process_event = process,
     .update = update,
     .ctx_size = sizeof(time_settings_ctx_t)
