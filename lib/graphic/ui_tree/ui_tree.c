@@ -62,6 +62,7 @@ ui_element_t * ui_tree_owner(ui_element_t * element)
     return ui_tree_element(element->owner);
 }
 
+// first child
 ui_element_t * ui_tree_child(ui_element_t * element)
 {
     if (element->child == 0) {
@@ -76,6 +77,15 @@ ui_element_t * ui_tree_next(ui_element_t * element)
         return 0;
     }
     return ui_tree_element(element->next);
+}
+
+ui_element_t * ui_tree_child_idx(ui_element_t * el, unsigned idx)
+{
+    ui_element_t * item = ui_tree_child(el);
+    for (unsigned i = 0; i < idx; i++) {
+        item = ui_tree_next(item);
+    }
+    return item;
 }
 
 static ui_element_t * search_last_child(ui_element_t * owner)

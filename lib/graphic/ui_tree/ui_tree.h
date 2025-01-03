@@ -87,6 +87,7 @@ unsigned ui_tree_len(void);
 ui_element_t * ui_tree_owner(ui_element_t * element);
 ui_element_t * ui_tree_child(ui_element_t * element);
 ui_element_t * ui_tree_next(ui_element_t * element);
+ui_element_t * ui_tree_child_idx(ui_element_t * el, unsigned idx);
 
 // функция создает в стеке дочерний элемент, добавля его в конец всего стека, привязывая к хозяину
 // индекс прописывается в заголовок элемента
