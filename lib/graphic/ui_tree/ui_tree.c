@@ -352,12 +352,13 @@ void ui_tree_element_draw(ui_element_t * element)
 {
     if (element->ui_node->widget->draw) {
         element->ui_node->widget->draw(element);
+    } else {
+        ui_element_t * child = ui_tree_child(element);
+        while (child) {
+            ui_tree_element_draw(child);
+            child = ui_tree_next(child);
+        }
     }
-    // ui_element_t * child = ui_tree_child(element);
-    // while (child) {
-    //     ui_tree_element_draw(child);
-    //     child = ui_tree_next(child);
-    // }
 }
 
 void ui_tree_element_select(ui_element_t * element, unsigned select)
@@ -379,8 +380,6 @@ void ui_tree_update(void)
     ui_element_t * element = ui_tree_element(0);
     ui_tree_element_update(element);
 }
-
-
 
 static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
 {
