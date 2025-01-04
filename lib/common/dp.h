@@ -1,5 +1,6 @@
 #pragma once
 #include "str_val.h"
+#include "str_val_buf.h"
 #include "str_utils.h"
 
 // должно быть обьявлено в проекте
