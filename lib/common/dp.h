@@ -74,9 +74,10 @@ static inline void dpdz(unsigned d, unsigned w)
     if (__debug_start()) {
         return;
     }
-    extern char __xs[];
-    dec_to_str_right_aligned(d, __xs, w, 1);
-    __debug_usart_tx_data(__xs, w);
+    char * str = str_val_buf_get();
+    dec_to_str_right_aligned(d, str, w, 1);
+    str_val_buf_lock();
+    __debug_usart_tx_data(str, w);
 }
 
 static inline void dpx(unsigned x, unsigned size)
@@ -84,9 +85,10 @@ static inline void dpx(unsigned x, unsigned size)
     if (__debug_start()) {
         return;
     }
-    extern char __xs[];
-    hex_to_str(&x, __xs, size);
-    __debug_usart_tx_data(__xs, size * 2);
+    char * str = str_val_buf_get();
+    hex_to_str(&x, str, size);
+    str_val_buf_lock();
+    __debug_usart_tx_data(str, size * 2);
 }
 
 static inline void dpxd(const void * x, unsigned size, unsigned count)
@@ -95,17 +97,18 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
         return;
     }
 
-    extern char __xs[];
+    char * str = str_val_buf_get();
     while (count--) {
-        hex_to_str(x, __xs, size);
+        hex_to_str(x, str, size);
         x += size;
         unsigned plen = size * 2;
         if (count) {
-            __xs[plen] = ' ';
+            str[plen] = ' ';
             plen++;
         }
-        __debug_usart_tx_data(__xs, plen);
-        // здесь есть проблема, если мы передаем через DMA без промежуточного буфера, то следующий цикл изменит __xs
+        str_val_buf_lock();
+        __debug_usart_tx_data(str, plen);
+        // здесь есть проблема, если мы передаем через DMA без промежуточного буфера, то следующий цикл изменит str
         // до его полной отправки предыдущим циклом, так как __debug_usart_tx_data возвращает управление до полной отправки
     }
 }
