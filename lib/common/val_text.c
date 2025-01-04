@@ -1,7 +1,7 @@
 #include "val_text.h"
 #include "str_val.h"
 
-void text_val_to_str(char * str, const void * val, const text_val_t * tv)
+void val_text_to_str(char * str, const void * val, const val_text_t * tv)
 {
     unsigned n = 0;
     if (tv->t == DEC) {

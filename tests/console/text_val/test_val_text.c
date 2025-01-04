@@ -19,7 +19,7 @@ uint32_t tv_u32_1 = 3456;
 uint32_t tv_u32_2 = 4294967290;
 
 struct {
-    text_val_t tv;
+    val_text_t tv;
     void * ptr;
     char * es;
     unsigned el;
@@ -63,7 +63,7 @@ int main()
         unsigned res = 0;
         unsigned exp_len = str_len(tests[i].es, 20);
 
-        text_val_to_str(str, tests[i].ptr, &tests[i].tv);
+        val_text_to_str(str, tests[i].ptr, &tests[i].tv);
 
         unsigned res_len = str_len(str, 20);
         if (res_len != exp_len) {

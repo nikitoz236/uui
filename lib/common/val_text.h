@@ -21,6 +21,6 @@ typedef struct __attribute__((packed)) {
         DEC,
         HEX
     } t : 2;                    // тип печатаемого вывода
-} text_val_t;
+} val_text_t;
 
-void text_val_to_str(char * str, const void * val, const text_val_t * tv);
+void val_text_to_str(char * str, const void * val, const val_text_t * tv);
