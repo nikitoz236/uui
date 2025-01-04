@@ -80,6 +80,7 @@ static void select(ui_element_t * el)
 {
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
     ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
+    // printf("widget_selectable_list select, active %d, pos %d\n", el->active, ctx->pos);
     ui_tree_element_select(item, el->active);
 }
 
@@ -104,6 +105,8 @@ static unsigned process_event(ui_element_t * el, unsigned event)
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
 
     ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
+
+    // printf("widget_selectable_list process_event active %d, event %d\n", el->active, event);
 
     if (event == EVENT_BTN_DOWN) {
         unsigned old_pos = ctx->pos;

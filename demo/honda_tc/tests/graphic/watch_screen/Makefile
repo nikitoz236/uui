@@ -30,6 +30,8 @@ SRC += $(LIB)/emu/hw/rtc.c
 
 INC += $(LIB)/common/
 SRC += $(LIB)/common/str_val.c
+SRC += $(LIB)/common/str_val_buf.c
+SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/date_time.c
 
 watch_screen_test_run:
