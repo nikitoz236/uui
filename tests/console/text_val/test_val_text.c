@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "str_utils.h"
-#include "text_val.h"
+#include "val_text.h"
 #include "array_size.h"
 
 int8_t tv_s8_p = 45;
@@ -54,7 +54,7 @@ struct {
 
 int main()
 {
-    printf("text val convert test\n");
+    printf("val text convert test\n");
     unsigned total_res = 0;
     unsigned bad_cnt = 0;
     const char * res_str[] = { "OK", "FAIL" };

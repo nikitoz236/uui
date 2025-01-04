@@ -2,10 +2,10 @@ LIB = ../../../lib
 
 INC += $(LIB)/common
 
-SRC += $(LIB)/common/text_val.c
+SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_utils.c
 
-test_text_val_run:
+test_val_text_run:
 
 include $(LIB)/emu/test_console.mk
