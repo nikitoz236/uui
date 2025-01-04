@@ -222,12 +222,9 @@ static unsigned process_time(ui_element_t * el, unsigned event)
         return 0;
     } else if (ctx->state == EDIT_M) {
         if (event == EVENT_BTN_OK) {
+            rtc_set_time_s(time_change_in_s(&ctx->time, rtc_get_time_s()));
             ctx->state = EDIT_NONE;
-            unsigned time_s = rtc_get_time_s();
-            unsigned days = days_from_s(time_s);
-            time_s = days_to_s(days);
-            time_s += time_to_s(&ctx->time);
-            rtc_set_time_s(time_s);
+            ctx->current_time_s = -1;
             update_time(el);
             return 1;
         } else if (event == EVENT_BTN_LEFT) {
