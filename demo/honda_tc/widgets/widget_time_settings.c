@@ -9,7 +9,7 @@
 #include "draw_color.h"
 #include "str_val.h"
 #include "val_pack.h"
-
+#include "mod_macro.h"
 
 /*
     состояние 1 - отображаем текущее время
@@ -31,17 +31,29 @@
 */
 
 typedef struct {
-    enum {
-        EDIT_NONE,
-        EDIT_H,
-        EDIT_M,
+    union {
+        enum {
+            VTU_DAY,
+            VTU_MONTH,
+            VTU_YEAR,
+            VTU_DOW,
+            VTU_H,
+            VTU_M,
+            VTU_S,
+            VTU_NONE
+        } vtu;
+        enum {
+            EDIT_NONE,
+            EDIT_H,
+            EDIT_M,
 
-        EDIT_YEAR,
-        EDIT_MONTH,
-        EDIT_DAY,
+            EDIT_YEAR,
+            EDIT_MONTH,
+            EDIT_DAY,
 
-        EDIT_TIMEZONE
-    } state;
+            EDIT_TIMEZONE
+        } state;
+    };
     union {
         struct {
             time_t time;
@@ -257,7 +269,7 @@ static unsigned process_time(ui_element_t * el, unsigned event)
 
 #include "val_text.h"
 #include "str_val_buf.h"
-
+#include "val_mod.h"
 
 typedef struct {
     const lcd_font_cfg_t * fcfg;
@@ -269,21 +281,10 @@ typedef struct {
     const text_field_cfg_t * tfcfg;
     xy_t pos_char;
     val_text_t vt;
+    uint16_t min;
+    uint16_t max;
+    uint8_t ovf : 1;
 } val_text_updatable_t;
-
-// typedef struct {
-//     void * ptr;
-//     uint16_t step;
-//     val_size_t vs : 2;
-//     enum {
-//         VAL_MOD_ADD,
-//         VAL_MOD_SUB
-//     } dir : 1;
-//     enum {
-//         VAL_MOD_LIM,
-//         VAL_MOD_OVF
-//     } type : 1;
-// } val_mod_t;
 
 const text_field_cfg_t tf = {
     .fcfg = &fcfg,
@@ -291,16 +292,24 @@ const text_field_cfg_t tf = {
     .margin = { .x = 0, .y = 0 }
 };
 
-enum {
-    UTV_DAY,
-    UTV_MONTH,
-    UTV_YEAR,
-    UTV_DOW,
-    UTV_H,
-    UTV_M,
-    UTV_S,
-    UTV_NONE
+
+const val_text_updatable_t vtu_list[] = {
+    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .ovf = 0 },
+    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1, .max = 31, .ovf = 1 },
+    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0, .max = 12, .ovf = 1 },
+    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0, .max = 23, .ovf = 1 },
+    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0, .max = 59, .ovf = 1 },
+    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0, .max = 59, .ovf = 1 },
+    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8 }, },
 };
+
+// хочется скомпактить функции process, для этого нам надо меняльные структуры с мин макс значением, шагом итд.
+
+/*
+переписать тоже с временем
+*/
+
+
 
 static void calc_date(ui_element_t * el)
 {
@@ -318,7 +327,7 @@ static void calc_date(ui_element_t * el)
 static void extend_date(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    ctx->state = EDIT_NONE;
+    ctx->vtu = VTU_NONE;
 
     form_t f;
     f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Date set:") }, &fcfg);
@@ -332,24 +341,14 @@ static void extend_date(ui_element_t * el)
     ctx->text_pos = f.p;
 }
 
-const val_text_updatable_t vtu_list[] = {
-    [UTV_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4 }, .vt = { .l = 2, .vs = VAL_SIZE_8 }},
-    [UTV_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7 }, .vt = { .l = 3, .vs = VAL_SIZE_8 }},
-    [UTV_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16 }},
-    [UTV_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0 }, .vt = { .l = 3, .vs = VAL_SIZE_8 }},
-    [UTV_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0 }, .vt = { .l = 2, .vs = VAL_SIZE_8 }},
-    [UTV_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3 }, .vt = { .l = 2, .vs = VAL_SIZE_8 }},
-    [UTV_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6 }, .vt = { .l = 2, .vs = VAL_SIZE_8 }},
-};
-
 static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t * cs)
 {
     const char * str;
     val_text_updatable_t * vtu = &vtu_list[vt_idx];
 
-    if (vt_idx == UTV_DOW) {
+    if (vt_idx == VTU_DOW) {
         str = day_of_week_name(*(week_day_t *)ptr);
-    } else if (vt_idx == UTV_MONTH) {
+    } else if (vt_idx == VTU_MONTH) {
         str = month_name(*(month_t *)ptr);
     } else {
         str = str_val_buf_get();
@@ -367,22 +366,22 @@ static void update_vt_and_dow(xy_t * pos_px, date_t * d, void * ptr, unsigned vt
 {
     update_vt(pos_px, vt_idx, ptr, cs(active, edit));
     week_day_t dow = day_of_week(d);
-    update_vt(pos_px, UTV_DOW, &dow, cs(active, 0));
+    update_vt(pos_px, VTU_DOW, &dow, cs(active, 0));
 }
 
 static void update_date(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    // printf("update date, current day %d state %d\n", ctx->current_day, ctx->state);
-    if (ctx->state == EDIT_NONE) {
+    // printf("update date, current day %d vtu %d\n", ctx->current_day, ctx->vtu);
+    if (ctx->vtu == VTU_NONE) {
         unsigned current_day = days_from_s(rtc_get_time_s());
         if (ctx->current_day != current_day) {
             ctx->current_day = current_day;
             date_from_days(&ctx->date, current_day);
 
-            update_vt(&ctx->text_pos, UTV_DAY, &ctx->date.d, cs(el->active, 0));
-            update_vt(&ctx->text_pos, UTV_MONTH, &ctx->date.m, cs(el->active, 0));
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, UTV_YEAR, el->active, 0);
+            update_vt(&ctx->text_pos, VTU_DAY, &ctx->date.d, cs(el->active, 0));
+            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(el->active, 0));
+            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, VTU_YEAR, el->active, 0);
         }
     }
 }
@@ -392,7 +391,7 @@ static void redraw_date_widget(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, cs(el->active, 0)->bg);
     lcd_color_text_raw_print("Date setup", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
-    printf("redraw date widget, active %d\n", el->active);
+    // printf("redraw date widget, active %d\n", el->active);
     ctx->current_day = -1;
     update_date(el);
 }
@@ -401,98 +400,93 @@ static unsigned process_date(ui_element_t * el, unsigned event)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     // printf("process date %d\n", event);
-    if (ctx->state == EDIT_NONE) {
+
+    enum {
+        MOD_UP = MOD_OP_ADD,
+        MOD_DOWN = MOD_OP_SUB,
+        MOD_NONE
+    } mod = MOD_NONE;
+
+    if (ctx->vtu == VTU_NONE) {
         if (event == EVENT_BTN_OK) {
-            ctx->state = EDIT_YEAR;
-            update_vt(&ctx->text_pos, UTV_YEAR, &ctx->date.y, cs(1, 1));
+            ctx->vtu = VTU_YEAR;
+            update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 1));
             return 1;
         }
-    } else if (ctx->state == EDIT_YEAR) {
+    } else if (ctx->vtu == VTU_YEAR) {
         if (event == EVENT_BTN_OK) {
-            ctx->state = EDIT_MONTH;
-            update_vt(&ctx->text_pos, UTV_YEAR, &ctx->date.y, cs(1, 0));
-            update_vt(&ctx->text_pos, UTV_MONTH, &ctx->date.m, cs(1, 1));
+            ctx->vtu = VTU_MONTH;
+            update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 0));
+            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 1));
             return 1;
         } else if (event == EVENT_BTN_LEFT) {
-            ctx->state = EDIT_NONE;
+            ctx->vtu = VTU_NONE;
             ctx->current_day = -1;
             update_date(el);
             return 1;
         } else if (event == EVENT_BTN_UP) {
-            ctx->date.y++;
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, UTV_YEAR, 1, 1);
-            return 1;
+            mod = MOD_UP;
         } else if (event == EVENT_BTN_DOWN) {
-            if (ctx->date.y != 0) {
-                ctx->date.y--;
-                update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, UTV_YEAR, 1, 1);
+            mod = MOD_DOWN;
+        }
+        if (mod != MOD_NONE) {
+            if (val_mod_unsigned(&ctx->date.y, vtu_list[VTU_YEAR].vt.vs, mod, 0, 2000, 2100, 1)) {
+                update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, VTU_YEAR, 1, 1);
             }
             return 1;
         }
-    } else if (ctx->state == EDIT_MONTH) {
+    } else if (ctx->vtu == VTU_MONTH) {
         if (event == EVENT_BTN_OK) {
-            ctx->state = EDIT_DAY;
-            update_vt(&ctx->text_pos, UTV_MONTH, &ctx->date.m, cs(1, 0));
-            update_vt(&ctx->text_pos, UTV_DAY, &ctx->date.d, cs(1, 1));
+            ctx->vtu = VTU_DAY;
+            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 0));
+            update_vt(&ctx->text_pos, VTU_DAY, &ctx->date.d, cs(1, 1));
             return 1;
         } else if (event == EVENT_BTN_LEFT) {
-            ctx->state = EDIT_YEAR;
-            update_vt(&ctx->text_pos, UTV_MONTH, &ctx->date.m, cs(1, 0));
-            update_vt(&ctx->text_pos, UTV_YEAR, &ctx->date.y, cs(1, 1));
+            ctx->vtu = VTU_YEAR;
+            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 0));
+            update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 1));
             return 1;
         } else if (event == EVENT_BTN_UP) {
             ctx->date.m++;
             if (ctx->date.m == 12) {
                 ctx->date.m = 0;
             }
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.m, UTV_MONTH, 1, 1);
+            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.m, VTU_MONTH, 1, 1);
             return 1;
         } else if (event == EVENT_BTN_DOWN) {
             if (ctx->date.m == 0) {
                 ctx->date.m = 12;
             }
             ctx->date.m--;
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.m, UTV_MONTH, 1, 1);
+            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.m, VTU_MONTH, 1, 1);
             return 1;
         }
-    } else if (ctx->state == EDIT_DAY) {
+    } else if (ctx->vtu == VTU_DAY) {
         if (event == EVENT_BTN_OK) {
-            ctx->state = EDIT_NONE;
+            ctx->vtu = VTU_NONE;
             rtc_set_time_s(date_change_in_s(&ctx->date, rtc_get_time_s()));
             update_date(el);
             return 1;
         } else if (event == EVENT_BTN_LEFT) {
-            ctx->state = EDIT_MONTH;
-            update_vt(&ctx->text_pos, UTV_DAY, &ctx->date.d, cs(1, 0));
-            update_vt(&ctx->text_pos, UTV_MONTH, &ctx->date.m, cs(1, 1));
+            ctx->vtu = VTU_MONTH;
+            update_vt(&ctx->text_pos, VTU_DAY, &ctx->date.d, cs(1, 0));
+            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 1));
             return 1;
         } else if (event == EVENT_BTN_UP) {
-            ctx->date.d++;
-            if (ctx->date.d > days_in_month(ctx->date.m, ctx->date.y)) {
-                ctx->date.d = 1;
-            }
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.d, UTV_DAY, 1, 1);
+            MOD_OVF_ADD(ctx->date.d, 1 + days_in_month(ctx->date.m, ctx->date.y), 1);
+            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.d, VTU_DAY, 1, 1);
             return 1;
         } else if (event == EVENT_BTN_DOWN) {
             if (ctx->date.d == 1) {
                 ctx->date.d = days_in_month(ctx->date.m, ctx->date.y) + 1;
             }
             ctx->date.d--;
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.d, UTV_DAY, 1, 1);
+            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.d, VTU_DAY, 1, 1);
             return 1;
         }
     }
     return 0;
 }
-
-/*
-план на завтра дописать обработку событий
-
-переписать изменения даты чтобы только изменяемая часть перерисовывалась и день недели
-переписать тоже с временем
-
-подумать про конфигурацию текстового поля, положение текста, положение подстроки, как сгенерить текст итд ...
-*/
 
 const widget_desc_t __widget_time_settings = {
     .calc = calc,

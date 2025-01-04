@@ -33,6 +33,7 @@ SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
 SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/date_time.c
+SRC += $(LIB)/common/val_mod.c
 
 watch_screen_test_run:
 
