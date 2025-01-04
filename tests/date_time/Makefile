@@ -4,6 +4,6 @@ INC += $(LIB)/common
 
 SRC += $(LIB)/common/*.c
 
-all: date_time_test_run
+all: test_date_time_run
 
 include $(LIB)/emu/test_console.mk
