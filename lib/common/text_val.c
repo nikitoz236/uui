@@ -1,26 +1,6 @@
 #include "text_val.h"
 #include "str_val.h"
 
-unsigned val_ptr_to_usnigned(const void * ptr, val_size_t size)
-{
-    switch (size) {
-        case VAL_SIZE_8: return *(uint8_t *)ptr;
-        case VAL_SIZE_16: return *(uint16_t *)ptr;
-        case VAL_SIZE_32: return *(uint32_t *)ptr;
-    }
-    return 0;
-}
-
-int val_ptr_to_signed(const void * ptr, val_size_t size)
-{
-    switch (size) {
-        case VAL_SIZE_8: return *(int8_t *)ptr;
-        case VAL_SIZE_16: return *(int16_t *)ptr;
-        case VAL_SIZE_32: return *(int32_t *)ptr;
-    }
-    return 0;
-}
-
 void text_val_to_str(char * str, const void * val, const text_val_t * tv)
 {
     unsigned n = 0;

@@ -1,11 +1,6 @@
 #pragma once
 #include <stdint.h>
-
-typedef enum {
-    VAL_SIZE_8,
-    VAL_SIZE_16,
-    VAL_SIZE_32
-} val_size_t;
+#include "val_pack.h"
 
 typedef enum {
     X_1,
