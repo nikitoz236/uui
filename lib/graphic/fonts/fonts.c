@@ -7,7 +7,7 @@
     если вернет 0 то символ не был найден
 */
 
-const uint8_t * font_char_ptr(char c, const font_t * f, uint8_t * col_step)
+const uint8_t * font_char_ptr(char c, const font_t * f, unsigned * col_step)
 {
     uint8_t hbytes = DIV_ROUND_UP(f->size.h, 8);
     *col_step = hbytes;

@@ -25,4 +25,4 @@ typedef const struct __attribute__((packed)) {
                                             // потом [start - end] в порядке ascii кодов
 } font_t;
 
-const uint8_t * font_char_ptr(char c, const font_t * f, uint8_t * col_step);
+const uint8_t * font_char_ptr(char c, const font_t * f, unsigned * col_step);
