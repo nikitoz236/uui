@@ -4,12 +4,7 @@
 #include "str_utils.h"
 #include "str_val.h"
 
-#define WEEK_DAY_NAME(name)         #name
-#define MONTH_NAME(name)            #name
-
-static const char * week_day_names[] = {
-    WEEK_DAY_LIST(WEEK_DAY_NAME)
-};
+#define LIST_NAME(name)             #name
 
 #define SEC_IN_MIN                  60
 #define MIN_IN_HOUR                 60
@@ -161,13 +156,36 @@ void time_hh_mm_ss_to_str(time_t * t, char * str)
     str[8] = 0;
 }
 
-void date_dd_mname_yyyy_to_str(date_t * d, char * str)
+const char * day_of_week_name(week_day_t d)
+{
+    static const char * week_day_names[] = {
+        __WEEK_DAY_LIST(LIST_NAME)
+    };
+
+    if (d > WEEK_DAY_SUN) {
+        return 0;
+    }
+
+    return week_day_names[d];
+}
+
+const char * month_name(month_t m)
 {
     static const char * month_names[] = {
-        MONTH_LIST(MONTH_NAME)
+        __MONTH_LIST(LIST_NAME)
     };
+
+    if (m > MONTH_DEC) {
+        return 0;
+    }
+
+    return month_names[m];
+}
+
+void date_dd_mname_yyyy_to_str(date_t * d, char * str)
+{
     dec_to_str_right_aligned(d->d, &str[0], 2, 1);
-    str_cp(&str[3], month_names[d->m], 3);
+    str_cp(&str[3], month_name(d->m), 3);
     dec_to_str_right_aligned(d->y, &str[7], 4, 1);
     str[2] = ' ';
     str[6] = ' ';

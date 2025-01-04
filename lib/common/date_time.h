@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#define WEEK_DAY_LIST(m) \
+#define __WEEK_DAY_LIST(m) \
     m(MON), \
     m(TUE), \
     m(WED), \
@@ -10,7 +10,7 @@
     m(SAT), \
     m(SUN)
 
-#define MONTH_LIST(m) \
+#define __MONTH_LIST(m) \
     m(JAN), \
     m(FEB), \
     m(MAR), \
@@ -24,15 +24,15 @@
     m(NOV), \
     m(DEC)
 
-#define WEEK_DAY_ENUM(name)         WEEK_DAY_ ## name
-#define MONTH_ENUM(name)            MONTH_ ## name
+#define __WEEK_DAY_ENUM(name)       WEEK_DAY_ ## name
+#define __MONTH_ENUM(name)          MONTH_ ## name
 
 typedef enum {
-    WEEK_DAY_LIST(WEEK_DAY_ENUM)
+    __WEEK_DAY_LIST(__WEEK_DAY_ENUM)
 } week_day_t;                       // 0 - MON ... 6 - SUN
 
 typedef enum {
-    MONTH_LIST(MONTH_ENUM)
+    __MONTH_LIST(__MONTH_ENUM)
 } month_t;                          // 0 - JAN ... 11 - DEC
 
 typedef struct {
@@ -66,3 +66,6 @@ void time_hh_mm_ss_to_str(time_t * t, char * str);
 void time_hh_mm_to_str(time_t * t, char * str);
 
 void date_dd_mname_yyyy_to_str(date_t * d, char * c);
+
+const char * day_of_week_name(week_day_t d);
+const char * month_name(month_t m);
