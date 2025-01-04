@@ -20,10 +20,10 @@ static void draw_widget_text(ui_element_t * el)
     color_scheme_t cs = { .fg = cfg->color_text };
     if (el->active) {
         cs.bg = cfg->color_bg_selected;
-        printf("draw selected text %s\n", cfg->text);
+        // printf("draw selected text %s\n", cfg->text);
     } else {
         cs.bg = cfg->color_bg_unselected;
-        printf("draw unselected text %s\n", cfg->text);
+        // printf("draw unselected text %s\n", cfg->text);
     }
     draw_color_form(&el->f, cs.bg);
     lcd_text_color_print(cfg->text, &ctx->pos, &ctx->text_cfg, &cs, 0, 0, 0);

@@ -32,6 +32,9 @@ static void recalc_list(ui_element_t * el)
 
         item->f.p = f.p;
         item->f.s.w = f.s.w;
+
+        ui_tree_element_extend(item);
+
         form_cut(&f, DIMENSION_Y, EDGE_U, item->f.s.h);
 
         // printf("recalc_list form %d %d %d %d\n", f.p.x, f.p.y, f.s.w, f.s.h);
@@ -164,7 +167,7 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t __widget_selectable_list = {
-    .calc = calc,
+    .extend = calc,
     .draw = redraw_list,
     .select = select,
     .process_event = process_event,
