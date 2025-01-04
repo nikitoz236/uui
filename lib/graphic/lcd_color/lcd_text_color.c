@@ -16,7 +16,7 @@ static inline void print_char(char c, unsigned x, unsigned y, const font_t * fon
     #endif
     static lcd_color_t char_col_buffer[2][MAX_FONT_HEIGHT];
 
-    uint8_t col_step;
+    unsigned col_step;
     const uint8_t * font_data = font_char_ptr(c, font, &col_step);
     if (font_data != 0) {
         for (int rx = 0; rx < font->size.w; rx++) {
@@ -42,20 +42,25 @@ static inline void print_char(char c, unsigned x, unsigned y, const font_t * fon
             lcd_image(x + (rx * scale), y, 1, font->size.h, scale, col_buf);
         }
     } else {
+        // если символа нет рисуем пиксельную шашечку
         lcd_color_t * col_buf = char_col_buffer[0];
-        for (int ry = 0; ry < (font->size.h + 1);) {
-            col_buf[ry] = fg;
-            ry++;
-            col_buf[ry] = bg;
-            ry++;
+
+        // сначала заполняем col_buf на 1 пиксель больше высоты символа, цветами фона и текста
+        unsigned ry = 0;
+        while (ry < (font->size.h + 1)) {
+            col_buf[ry + 0] = fg;
+            col_buf[ry + 1] = bg;
+            ry += 2;
         }
 
+        // дальше заполняем знакоместо столбиками из буфера, сдвигая на 1 пиксель между сосоедними столбиками
         for (int rx = 0; rx < font->size.w; rx++) {
             lcd_image(x + rx, y, 1, font->size.h, scale, &col_buf[rx & 1]);
         }
     }
 }
 
+// заполняет rem_chars символов прямоугольником цвета color
 static inline void fill_rem_form_str(unsigned x, unsigned y, unsigned rem_chars, const lcd_text_cfg_t * cfg, unsigned color)
 {
     unsigned rem_w = (rem_chars * cfg->font->size.w * cfg->scale) + ((rem_chars - 1) * cfg->gaps.w);
@@ -97,6 +102,7 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
 
             if ((c == 0) || (*c == 0)) {
                 // bg = 0xFF0000;
+                // заполняем строку до конца пустотой ( на случай если там был какойто другой текст шире )
                 if (len == 0) {
                     fill_rem_form_str(x, y, cfg->text_size.w - cx, cfg, bg);
                 } else {
@@ -130,7 +136,6 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
             if (char_count == len) {
                 return;
             }
-            tx = 0;
         }
         y += cfg->font->size.h * cfg->scale;
 
@@ -141,6 +146,85 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
             lcd_rect(pos->x, y, tw, cfg->gaps.h, bg);
             // printf("   drawed\n");
         }
+        tx = 0;
         y += cfg->gaps.h;
     }
 };
+
+void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len)
+{
+    unsigned scale = cfg->scale;
+    if (scale == 0) {
+        scale = 1;
+    }
+
+    xy_t char_idx = {};
+    if (pos_chars) {
+        char_idx = *pos_chars;
+    }
+
+    xy_t char_shift;
+    xy_t char_pos_px;
+    xy_t gap;
+
+
+    for (unsigned i = 0; i < DIMENSION_COUNT; i++) {
+        gap.ca[i] = cfg->gaps.ca[i];
+        if (gap.ca[i] == 0) {
+            gap.ca[i] = 1;
+        }
+        char_shift.ca[i] = (cfg->font->size.ca[i] * scale) + gap.ca[i];
+
+        char_pos_px.ca[i] = pos_px->ca[i];
+
+        if (pos_chars) {
+            char_pos_px.ca[i] += pos_chars->ca[i] * char_shift.ca[i];
+        }
+    }
+
+    while (1) {
+
+        if (*str == '\r') {
+            str++;
+        } else if (*str == 0) {
+            return;
+        } else if (*str == '\n') {
+
+        } else {
+            if (*str == ' ') {
+                lcd_rect(char_pos_px.x, char_pos_px.y, (cfg->font->size.w * scale), (cfg->font->size.h * scale), cs->bg);
+                // ?? надо ли заполнять зазор между буквами?
+            } else {
+                print_char(*str, char_pos_px.x, char_pos_px.y, cfg->font, cs->fg, cs->bg, scale);
+            }
+
+            str++;
+
+            if (*str == 0) {
+                return;
+            }
+
+            if (len) {
+                len--;
+                if (len == 0) {
+                    return;
+                }
+            }
+
+            char_idx.x++;
+            if ((limit_chars) && (char_idx.x == limit_chars->x)) {
+                char_idx.x = 0;
+                char_idx.y++;
+
+                if (char_idx.y == limit_chars->y) {
+                    return;
+                }
+
+                char_pos_px.x = pos_px->x;
+                char_pos_px.y += char_shift.y;
+            } else {
+                char_pos_px.x += char_shift.x;
+            }
+        }
+    }
+}
