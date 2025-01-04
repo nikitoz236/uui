@@ -279,10 +279,11 @@ typedef struct {
 
 typedef struct {
     const text_field_cfg_t * tfcfg;
-    xy_t pos_char;
-    val_text_t vt;
     uint16_t min;
     uint16_t max;
+    uint16_t step;
+    xy_t pos_char;
+    val_text_t vt;
     uint8_t ovf : 1;
 } val_text_updatable_t;
 
@@ -294,12 +295,12 @@ const text_field_cfg_t tf = {
 
 
 const val_text_updatable_t vtu_list[] = {
-    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .ovf = 0 },
-    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1, .max = 31, .ovf = 1 },
-    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0, .max = 12, .ovf = 1 },
-    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0, .max = 23, .ovf = 1 },
-    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0, .max = 59, .ovf = 1 },
-    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0, .max = 59, .ovf = 1 },
+    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
+    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
+    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1 },
+    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
+    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
+    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
     [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8 }, },
 };
 
@@ -350,6 +351,7 @@ static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t
         str = day_of_week_name(*(week_day_t *)ptr);
     } else if (vt_idx == VTU_MONTH) {
         str = month_name(*(month_t *)ptr);
+        // printf("update vt month %s\n", str);
     } else {
         str = str_val_buf_get();
         str_val_buf_lock();
@@ -357,7 +359,7 @@ static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t
         // printf("update vt val_text_to_str %p\n", str);
     }
 
-    printf("update vt %d %s cs: %06X %06X, pos_char: %d %d len %d, pos px %d %d\n", vt_idx, str, cs->bg, cs->fg, vtu->pos_char.x, vtu->pos_char.y, vtu->vt.l, pos_px->x, pos_px->y);
+    // printf("update vt %d %s cs: %06X %06X, pos_char: %d %d len %d, pos px %d %d\n", vt_idx, str, cs->bg, cs->fg, vtu->pos_char.x, vtu->pos_char.y, vtu->vt.l, pos_px->x, pos_px->y);
 
     lcd_color_text_raw_print(str, vtu->tfcfg->fcfg, cs, pos_px, &vtu->tfcfg->limit_char, &vtu->pos_char, vtu->vt.l);
 }
@@ -407,81 +409,69 @@ static unsigned process_date(ui_element_t * el, unsigned event)
         MOD_NONE
     } mod = MOD_NONE;
 
+    unsigned change_vtu = ctx->vtu;
+
     if (ctx->vtu == VTU_NONE) {
         if (event == EVENT_BTN_OK) {
             ctx->vtu = VTU_YEAR;
             update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 1));
             return 1;
         }
-    } else if (ctx->vtu == VTU_YEAR) {
+    } else {
+        void * ptrs[] = {
+            [VTU_YEAR] = &ctx->date.y,
+            [VTU_MONTH] = &ctx->date.m,
+            [VTU_DAY] = &ctx->date.d
+        };
+
         if (event == EVENT_BTN_OK) {
-            ctx->vtu = VTU_MONTH;
-            update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 0));
-            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 1));
+            unsigned next_vtu_list[] = {
+                [VTU_YEAR] = VTU_MONTH,
+                [VTU_MONTH] = VTU_DAY,
+                [VTU_DAY] = VTU_NONE
+            };
+            change_vtu = next_vtu_list[ctx->vtu];
+            if (change_vtu == VTU_NONE) {
+                rtc_set_time_s(date_change_in_s(&ctx->date, rtc_get_time_s()));
+            }
+        }
+
+        if (event == EVENT_BTN_LEFT) {
+            static unsigned next_vtu_list[] = {
+                [VTU_YEAR] = VTU_NONE,
+                [VTU_MONTH] = VTU_YEAR,
+                [VTU_DAY] = VTU_MONTH
+            };
+            change_vtu = next_vtu_list[ctx->vtu];
+            if (change_vtu == VTU_NONE) {
+                ctx->current_day = -1;
+            }
+        }
+
+        if (change_vtu != ctx->vtu) {
+            if (change_vtu == VTU_NONE) {
+                ctx->vtu = VTU_NONE;
+                update_date(el);
+            } else {
+                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 0));
+                ctx->vtu = change_vtu;
+                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
+            }
             return 1;
-        } else if (event == EVENT_BTN_LEFT) {
-            ctx->vtu = VTU_NONE;
-            ctx->current_day = -1;
-            update_date(el);
-            return 1;
-        } else if (event == EVENT_BTN_UP) {
+        }
+
+        if (event == EVENT_BTN_UP) {
             mod = MOD_UP;
-        } else if (event == EVENT_BTN_DOWN) {
+        }
+
+        if (event == EVENT_BTN_DOWN) {
             mod = MOD_DOWN;
         }
         if (mod != MOD_NONE) {
-            if (val_mod_unsigned(&ctx->date.y, vtu_list[VTU_YEAR].vt.vs, mod, 0, 2000, 2100, 1)) {
-                update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, VTU_YEAR, 1, 1);
+            val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
+            if (val_mod_unsigned(ptrs[ctx->vtu], vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
+                update_vt_and_dow(&ctx->text_pos, &ctx->date, ptrs[ctx->vtu], ctx->vtu, 1, 1);
             }
-            return 1;
-        }
-    } else if (ctx->vtu == VTU_MONTH) {
-        if (event == EVENT_BTN_OK) {
-            ctx->vtu = VTU_DAY;
-            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 0));
-            update_vt(&ctx->text_pos, VTU_DAY, &ctx->date.d, cs(1, 1));
-            return 1;
-        } else if (event == EVENT_BTN_LEFT) {
-            ctx->vtu = VTU_YEAR;
-            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 0));
-            update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 1));
-            return 1;
-        } else if (event == EVENT_BTN_UP) {
-            ctx->date.m++;
-            if (ctx->date.m == 12) {
-                ctx->date.m = 0;
-            }
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.m, VTU_MONTH, 1, 1);
-            return 1;
-        } else if (event == EVENT_BTN_DOWN) {
-            if (ctx->date.m == 0) {
-                ctx->date.m = 12;
-            }
-            ctx->date.m--;
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.m, VTU_MONTH, 1, 1);
-            return 1;
-        }
-    } else if (ctx->vtu == VTU_DAY) {
-        if (event == EVENT_BTN_OK) {
-            ctx->vtu = VTU_NONE;
-            rtc_set_time_s(date_change_in_s(&ctx->date, rtc_get_time_s()));
-            update_date(el);
-            return 1;
-        } else if (event == EVENT_BTN_LEFT) {
-            ctx->vtu = VTU_MONTH;
-            update_vt(&ctx->text_pos, VTU_DAY, &ctx->date.d, cs(1, 0));
-            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(1, 1));
-            return 1;
-        } else if (event == EVENT_BTN_UP) {
-            MOD_OVF_ADD(ctx->date.d, 1 + days_in_month(ctx->date.m, ctx->date.y), 1);
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.d, VTU_DAY, 1, 1);
-            return 1;
-        } else if (event == EVENT_BTN_DOWN) {
-            if (ctx->date.d == 1) {
-                ctx->date.d = days_in_month(ctx->date.m, ctx->date.y) + 1;
-            }
-            ctx->date.d--;
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.d, VTU_DAY, 1, 1);
             return 1;
         }
     }
