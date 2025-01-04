@@ -28,11 +28,14 @@ ui_node_desc_t ui = {
             {
                 .widget = &__widget_selectable_list,
                 .cfg = &(__widget_selectable_list_cfg_t) {
-                    .num = 3,
+                    .num = 4,
                     .different_nodes = 0,
                     .ui_node = (ui_node_desc_t[]) {
                         {
                             .widget = &__widget_time_settings
+                        },
+                        {
+                            .widget = &__widget_date_settings
                         },
                         {
                             .widget = &__widget_text,
