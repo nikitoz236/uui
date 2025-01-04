@@ -141,6 +141,11 @@ unsigned time_sec_in_day_from_s(unsigned s)
     return s % SEC_IN_DAY;
 }
 
+unsigned time_change_in_s(time_t * t, unsigned s)
+{
+    return days_to_s(days_from_s(s)) + time_to_s(t);
+}
+
 unsigned date_change_in_s(date_t * d, unsigned s)
 {
     return days_to_s(days_from_date(d)) + (s % SEC_IN_DAY);
