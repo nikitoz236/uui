@@ -54,6 +54,10 @@ week_day_t day_of_week(date_t * d);
 unsigned days_from_s(unsigned s);
 unsigned days_to_s(unsigned days);
 unsigned days_from_date(date_t * d);
+unsigned time_sec_in_day_from_s(unsigned s);
+
+// функция позволяет поменять дату в общем количестве секунд
+unsigned date_change_in_s(date_t * d, unsigned s);
 
 void date_from_days(date_t * d, unsigned days);
 void date_from_s(date_t * d, unsigned s);

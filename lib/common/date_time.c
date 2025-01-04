@@ -136,6 +136,16 @@ unsigned time_to_s(time_t * t)
     return t->s + t->m * SEC_IN_MIN + t->h * SEC_IN_HOUR;
 }
 
+unsigned time_sec_in_day_from_s(unsigned s)
+{
+    return s % SEC_IN_DAY;
+}
+
+unsigned date_change_in_s(date_t * d, unsigned s)
+{
+    return days_to_s(days_from_date(d)) + (s % SEC_IN_DAY);
+}
+
 void date_yy_to_str(date_t * d, char * c);
 void date_yyyy_to_str(date_t * d, char * c);
 
