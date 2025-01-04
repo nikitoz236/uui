@@ -296,6 +296,7 @@ static void print_date(ui_element_t * el)
 static void update_date(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
+    // printf("update date, current day %d state %d\n", ctx->current_day, ctx->state);
     if (ctx->state == EDIT_NONE) {
         unsigned current_day = days_from_s(rtc_get_time_s());
         if (ctx->current_day != current_day) {
@@ -311,7 +312,7 @@ static void redraw_date_widget(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, cs(el->active, 0)->bg);
     lcd_color_text_raw_print("Date setup", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
-    ctx->current_day = 0;
+    ctx->current_day = -1;
     update_date(el);
 }
 
