@@ -132,17 +132,27 @@ xy_t size_add_margins(xy_t size, xy_t margins)
     };
 }
 
+static xy_t calc_setting_form_size(unsigned len)
+{
+    return size_add_margins(lcd_text_size_px(&(xy_t){ .x = len, .y = 2 }, &fcfg), text_margin);
+}
+
+static void calc_pos(ctx_t * ctx, form_t * f, unsigned title_len, unsigned text_len)
+{
+    ctx->title_pos = align_form_pos(f, lcd_text_size_px(&(xy_t){ .x = title_len, .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+    ctx->text_pos = align_form_pos(f, lcd_text_size_px(&(xy_t){ .x = text_len, .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
+}
+
 static void calc_time(ui_element_t * el)
 {
-    el->f.s = size_add_margins(lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:"), .y = 2 }, &fcfg), text_margin);
+    el->f.s = calc_setting_form_size(TEXT_LEN("Time set:"));
 }
 
 static void extend_time(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->vtu = VTU_NONE;
-    ctx->title_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
-    ctx->text_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("00:00:00"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
+    calc_pos(ctx, &el->f, TEXT_LEN("Time set:"), TEXT_LEN("00:00:00"));
 }
 
 static void update_time(ui_element_t * el)
@@ -270,16 +280,14 @@ void calc_date(ui_element_t * el)
     //  Date setup
     //  TUE 21 APR 2000
     //  0123456789012345
-
-    el->f.s = size_add_margins(lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Date set:"), .y = 2 }, &fcfg), text_margin);
+    el->f.s = calc_setting_form_size(TEXT_LEN("Date set:"));
 }
 
 static void extend_date(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->vtu = VTU_NONE;
-    ctx->title_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Date set:"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
-    ctx->text_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("TUE 21 APR 2000"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
+    calc_pos(ctx, &el->f, TEXT_LEN("Date set:"), TEXT_LEN("TUE 21 APR 2000"));
 }
 
 static void update_vt_and_dow(xy_t * pos_px, date_t * d, void * ptr, unsigned vt_idx, unsigned active, unsigned edit)
@@ -310,7 +318,7 @@ static void redraw_date_widget(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, cs(el->active, 0)->bg);
-    lcd_color_text_raw_print("Date setup", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
+    lcd_color_text_raw_print("Date set:", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
     // printf("redraw date widget, active %d\n", el->active);
     ctx->current_day = -1;
     update_date(el);
