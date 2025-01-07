@@ -91,3 +91,6 @@ SRC += ../../../widgets/common/widget_selectable_list.c
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 
 include $(LIB)/hw/system/uc_build.mk
+
+test_color_convert:
+	gcc test_color_convert.c -o test_color_convert && ./test_color_convert && rm ./test_color_convert
