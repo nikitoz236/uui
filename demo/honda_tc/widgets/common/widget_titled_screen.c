@@ -96,9 +96,7 @@ static unsigned process(ui_element_t * el, unsigned event)
 
     if (ctx->focus) {
         ui_element_t * item = ui_tree_child(el);
-        if (ui_tree_element_process(item, event)) {
-            return 1;
-        }
+
         if (event == EVENT_BTN_RIGHT) {
             ctx->current_idx++;
             if (ctx->current_idx == cfg->screen_num) {
