@@ -3,7 +3,7 @@
 #include "emu_graphic.h"
 #include "emu_lcd.h"
 
-#include "tc_events.h"
+#include "event_list.h"
 #include "tc_colors.h"
 
 #include "systick.h"
