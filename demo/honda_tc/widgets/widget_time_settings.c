@@ -9,7 +9,26 @@
 #include "draw_color.h"
 #include "str_val.h"
 #include "val_pack.h"
-#include "mod_macro.h"
+
+#include "val_text.h"
+#include "str_val_buf.h"
+#include "val_mod.h"
+
+typedef struct {
+    const lcd_font_cfg_t * fcfg;
+    xy_t limit_char;
+    xy_t margin;
+} text_field_cfg_t;
+
+typedef struct {
+    const text_field_cfg_t * tfcfg;
+    uint16_t min;
+    uint16_t max;
+    uint16_t step;
+    xy_t pos_char;
+    val_text_t vt;
+    uint8_t ovf : 1;
+} val_text_updatable_t;
 
 /*
     состояние 1 - отображаем текущее время
@@ -76,12 +95,43 @@ const lcd_font_cfg_t fcfg = {
     .scale = 2
 };
 
-lcd_text_cfg_t tcfg = {
-    .font = &font_5x7,
-    .text_size = { .x = 8, .y = 1 },
-    .gaps = { .x = 2 , .y = 4 },
-    .scale = 2
+const text_field_cfg_t tf = {
+    .fcfg = &fcfg,
+    .limit_char = { .x = TEXT_LEN("TUE 21 APR 2000"), .y = 1 },
+    .margin = { .x = 0, .y = 0 }
 };
+
+const val_text_updatable_t vtu_list[] = {
+    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
+    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
+    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1 },
+    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
+    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
+    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
+    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8 }, },
+};
+
+static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t * cs)
+{
+    const char * str;
+    val_text_updatable_t * vtu = &vtu_list[vt_idx];
+
+    if (vt_idx == VTU_DOW) {
+        str = day_of_week_name(*(week_day_t *)ptr);
+    } else if (vt_idx == VTU_MONTH) {
+        str = month_name(*(month_t *)ptr);
+        // printf("update vt month %s\n", str);
+    } else {
+        str = str_val_buf_get();
+        str_val_buf_lock();
+        val_text_to_str(str, ptr, &vtu->vt);
+        // printf("update vt val_text_to_str %p\n", str);
+    }
+
+    // printf("update vt %d %s cs: %06X %06X, pos_char: %d %d len %d, pos px %d %d\n", vt_idx, str, cs->bg, cs->fg, vtu->pos_char.x, vtu->pos_char.y, vtu->vt.l, pos_px->x, pos_px->y);
+
+    lcd_color_text_raw_print(str, vtu->tfcfg->fcfg, cs, pos_px, &vtu->tfcfg->limit_char, &vtu->pos_char, vtu->vt.l);
+}
 
 static inline color_scheme_t * cs(unsigned is_active, unsigned is_edit)
 {
@@ -102,69 +152,37 @@ static inline color_scheme_t * cs(unsigned is_active, unsigned is_edit)
 
 void calc(ui_element_t * el)
 {
-    el->f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time settings"), .y = 2 }, &fcfg);
+    el->f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:"), .y = 2 }, &fcfg);
 }
 
 static void extend(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    ctx->state = EDIT_NONE;
+    ctx->vtu = VTU_NONE;
 
-    form_t f = el->f;
-    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("00:00:00") }, &fcfg);
-    lcd_text_calc_size(&f.s, &tcfg);
+    form_t f;
 
-    form_align(&el->f, &f, &ALIGN_MODE(LI, tcfg.scale * 4, UI, tcfg.gaps.y));
+    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:") }, &fcfg);
+    form_align(&el->f, &f, &ALIGN_MODE(LI, 8, UI, 8));
     ctx->title_pos = f.p;
 
-    form_align(&el->f, &f, &ALIGN_MODE(RI, tcfg.scale * 4, DI, tcfg.gaps.y));
+    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("00:00:00") }, &fcfg);
+    form_align(&el->f, &f, &ALIGN_MODE(RI, 8, DI, 8));
     ctx->text_pos = f.p;
-}
-
-static void print_time(ctx_t * ctx, lcd_color_t bg)
-{
-    char str[4];
-
-    color_scheme_t cs = {
-        .bg = bg,
-        .fg = tc_colors[TC_COLOR_FG_UNSELECTED]
-    };
-
-    dec_to_str_right_aligned(ctx->time.s, str, 2, 1);
-    lcd_text_color_print(str, &ctx->text_pos, &tcfg, &cs, 6, 0, 2);
-
-    if (ctx->state == EDIT_H) {
-        cs.fg = tc_colors[TC_COLOR_FG_SELECTED];
-    } else {
-        cs.fg = tc_colors[TC_COLOR_FG_UNSELECTED];
-    }
-
-    dec_to_str_right_aligned(ctx->time.h, str, 2, 1);
-    lcd_text_color_print(str, &ctx->text_pos, &tcfg, &cs, 0, 0, 2);
-
-    if (ctx->state == EDIT_M) {
-        cs.fg = tc_colors[TC_COLOR_FG_SELECTED];
-    } else {
-        cs.fg = tc_colors[TC_COLOR_FG_UNSELECTED];
-    }
-
-    dec_to_str_right_aligned(ctx->time.m, str, 2, 1);
-    lcd_text_color_print(str, &ctx->text_pos, &tcfg, &cs, 3, 0, 2);
 }
 
 static void update_time(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    if (ctx->state == EDIT_NONE) {
+    if (ctx->state == VTU_NONE) {
         unsigned current_time_s = rtc_get_time_s();
         if (ctx->current_time_s != current_time_s) {
             ctx->current_time_s = current_time_s;
             time_from_s(&ctx->time, current_time_s);
-            lcd_color_t bg = tc_colors[TC_COLOR_BG_UNSELECTED];
-            if (el->active) {
-                bg = tc_colors[TC_COLOR_BG_SELECTED];
-            }
-            print_time(ctx, bg);
+
+            update_vt(&ctx->text_pos, VTU_H, &ctx->time.h, cs(el->active, 0));
+            update_vt(&ctx->text_pos, VTU_M, &ctx->time.m, cs(el->active, 0));
+            update_vt(&ctx->text_pos, VTU_S, &ctx->time.s, cs(el->active, 0));
         }
     }
 }
@@ -172,145 +190,96 @@ static void update_time(ui_element_t * el)
 static void redraw_time_widget(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    lcd_color_t bg = tc_colors[TC_COLOR_BG_UNSELECTED];
-
-    if (el->active) {
-        bg = tc_colors[TC_COLOR_BG_SELECTED];
-    }
-
-    printf("redraw_time_widget, active %d\n", el->active);
-
-    draw_color_form(&el->f, bg);
-
-    lcd_text_color_print("Time setup", &ctx->title_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = tc_colors[TC_COLOR_FG_UNSELECTED] }, 0, 0, 0);
-
-    lcd_text_color_print(":", &ctx->text_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = tc_colors[TC_COLOR_FG_UNSELECTED] }, 2, 0, 1);
-    lcd_text_color_print(":", &ctx->text_pos, &tcfg, &(color_scheme_t){ .bg = bg, .fg = tc_colors[TC_COLOR_FG_UNSELECTED] }, 5, 0, 1);
+    draw_color_form(&el->f, cs(el->active, 0)->bg);
+    lcd_color_text_raw_print("Date setup", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
+    lcd_color_text_raw_print(":", &fcfg, cs(el->active, 0), &ctx->text_pos, 0, &(xy_t){ .x = 2 }, 1);
+    lcd_color_text_raw_print(":", &fcfg, cs(el->active, 0), &ctx->text_pos, 0, &(xy_t){ .x = 5 }, 1);
 
     ctx->current_time_s = -1;
     update_time(el);
 }
 
+
 static unsigned process_time(ui_element_t * el, unsigned event)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
+    // printf("process_time %d\n", event);
 
-    printf("process_time %d\n", event);
+    enum {
+        MOD_UP = MOD_OP_ADD,
+        MOD_DOWN = MOD_OP_SUB,
+        MOD_NONE
+    } mod = MOD_NONE;
 
-    if (ctx->state == EDIT_NONE) {
+    unsigned change_vtu = ctx->vtu;
+
+    if (ctx->vtu == VTU_NONE) {
         if (event == EVENT_BTN_OK) {
-            ctx->state = EDIT_H;
+            ctx->vtu = VTU_H;
             ctx->time.s = 0;
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
+            update_vt(&ctx->text_pos, VTU_H, &ctx->time.h, cs(1, 1));
+            update_vt(&ctx->text_pos, VTU_S, &ctx->time.s, cs(1, 0));
             return 1;
         }
-        return 0;
-    } else if (ctx->state == EDIT_H) {
+    } else {
+        void * ptrs[] = {
+            [VTU_H] = &ctx->time.h,
+            [VTU_M] = &ctx->time.m,
+        };
+
         if (event == EVENT_BTN_OK) {
-            ctx->state = EDIT_M;
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
-            return 1;
-        } else if (event == EVENT_BTN_LEFT) {
-            ctx->state = EDIT_NONE;
-            ctx->current_time_s = -1;
-            update_time(el);
-            return 1;
-        } else if (event == EVENT_BTN_UP) {
-            ctx->time.h++;
-            if (ctx->time.h == 24) {
-                ctx->time.h = 0;
+            unsigned next_vtu_list[] = {
+                [VTU_H] = VTU_M,
+                [VTU_M] = VTU_NONE,
+            };
+            change_vtu = next_vtu_list[ctx->vtu];
+            if (change_vtu == VTU_NONE) {
+                // set time
+                rtc_set_time_s(time_change_in_s(&ctx->time, rtc_get_time_s()));
             }
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
-            return 1;
-        } else if (event == EVENT_BTN_DOWN) {
-            if (ctx->time.h == 0) {
-                ctx->time.h += 24;
+        }
+
+        if (event == EVENT_BTN_LEFT) {
+            static unsigned next_vtu_list[] = {
+                [VTU_H] = VTU_NONE,
+                [VTU_M] = VTU_H,
+            };
+            change_vtu = next_vtu_list[ctx->vtu];
+            if (change_vtu == VTU_NONE) {
+                ctx->current_time_s = -1;
             }
-            ctx->time.h--;
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
+        }
+
+        if (change_vtu != ctx->vtu) {
+            if (change_vtu == VTU_NONE) {
+                ctx->vtu = VTU_NONE;
+                update_time(el);
+            } else {
+                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 0));
+                ctx->vtu = change_vtu;
+                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
+            }
             return 1;
         }
-        return 0;
-    } else if (ctx->state == EDIT_M) {
-        if (event == EVENT_BTN_OK) {
-            rtc_set_time_s(time_change_in_s(&ctx->time, rtc_get_time_s()));
-            ctx->state = EDIT_NONE;
-            ctx->current_time_s = -1;
-            update_time(el);
-            return 1;
-        } else if (event == EVENT_BTN_LEFT) {
-            ctx->state = EDIT_H;
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
-            return 1;
-        } else if (event == EVENT_BTN_UP) {
-            ctx->time.m++;
-            if (ctx->time.m == 60) {
-                ctx->time.m = 0;
+
+        if (event == EVENT_BTN_UP) {
+            mod = MOD_UP;
+        }
+
+        if (event == EVENT_BTN_DOWN) {
+            mod = MOD_DOWN;
+        }
+
+        if (mod != MOD_NONE) {
+            val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
+            if (val_mod_unsigned(ptrs[ctx->vtu], vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
+                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
             }
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
-            return 1;
-        } else if (event == EVENT_BTN_DOWN) {
-            if (ctx->time.m == 0) {
-                ctx->time.m += 60;
-            }
-            ctx->time.m--;
-            print_time(ctx, tc_colors[TC_COLOR_BG_SELECTED]);
             return 1;
         }
-        return 0;
     }
+    return 0;
 }
-
-
-
-//------------------------------------------------------------------------------
-
-
-#include "val_text.h"
-#include "str_val_buf.h"
-#include "val_mod.h"
-
-typedef struct {
-    const lcd_font_cfg_t * fcfg;
-    xy_t limit_char;
-    xy_t margin;
-} text_field_cfg_t;
-
-typedef struct {
-    const text_field_cfg_t * tfcfg;
-    uint16_t min;
-    uint16_t max;
-    uint16_t step;
-    xy_t pos_char;
-    val_text_t vt;
-    uint8_t ovf : 1;
-} val_text_updatable_t;
-
-const text_field_cfg_t tf = {
-    .fcfg = &fcfg,
-    .limit_char = { .x = TEXT_LEN("TUE 21 APR 2000"), .y = 1 },
-    .margin = { .x = 0, .y = 0 }
-};
-
-
-const val_text_updatable_t vtu_list[] = {
-    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
-    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
-    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1 },
-    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
-    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
-    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
-    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8 }, },
-};
-
-// хочется скомпактить функции process, для этого нам надо меняльные структуры с мин макс значением, шагом итд.
-
-/*
-переписать тоже с временем
-*/
-
-
 
 static void calc_date(ui_element_t * el)
 {
@@ -340,28 +309,6 @@ static void extend_date(ui_element_t * el)
 
     draw_color_form(&f, 0xFFEEDD);
     ctx->text_pos = f.p;
-}
-
-static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t * cs)
-{
-    const char * str;
-    val_text_updatable_t * vtu = &vtu_list[vt_idx];
-
-    if (vt_idx == VTU_DOW) {
-        str = day_of_week_name(*(week_day_t *)ptr);
-    } else if (vt_idx == VTU_MONTH) {
-        str = month_name(*(month_t *)ptr);
-        // printf("update vt month %s\n", str);
-    } else {
-        str = str_val_buf_get();
-        str_val_buf_lock();
-        val_text_to_str(str, ptr, &vtu->vt);
-        // printf("update vt val_text_to_str %p\n", str);
-    }
-
-    // printf("update vt %d %s cs: %06X %06X, pos_char: %d %d len %d, pos px %d %d\n", vt_idx, str, cs->bg, cs->fg, vtu->pos_char.x, vtu->pos_char.y, vtu->vt.l, pos_px->x, pos_px->y);
-
-    lcd_color_text_raw_print(str, vtu->tfcfg->fcfg, cs, pos_px, &vtu->tfcfg->limit_char, &vtu->pos_char, vtu->vt.l);
 }
 
 static void update_vt_and_dow(xy_t * pos_px, date_t * d, void * ptr, unsigned vt_idx, unsigned active, unsigned edit)
@@ -432,6 +379,7 @@ static unsigned process_date(ui_element_t * el, unsigned event)
             };
             change_vtu = next_vtu_list[ctx->vtu];
             if (change_vtu == VTU_NONE) {
+                // set date
                 rtc_set_time_s(date_change_in_s(&ctx->date, rtc_get_time_s()));
             }
         }
