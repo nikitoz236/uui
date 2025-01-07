@@ -8,6 +8,7 @@ INC += $(LIB)/hw/api
 INC += $(LIB)/graphic
 
 # emu_lcd.h
+# coord_type.h
 INC += $(LIB)/emu/graphic/
 
 SRC += $(LIB)/emu/graphic/gfx.c

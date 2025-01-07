@@ -35,6 +35,9 @@ SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/date_time.c
 SRC += $(LIB)/common/val_mod.c
 
+#depricated
+SRC += $(LIB)/graphic/align_forms.c
+
 watch_screen_test_run:
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk

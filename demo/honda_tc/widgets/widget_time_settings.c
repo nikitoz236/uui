@@ -13,6 +13,7 @@
 #include "val_text.h"
 #include "str_val_buf.h"
 #include "val_mod.h"
+#include "forms_align.h"
 
 typedef struct {
     const lcd_font_cfg_t * fcfg;
@@ -30,25 +31,6 @@ typedef struct {
     uint8_t ovf : 1;
 } val_text_updatable_t;
 
-/*
-    состояние 1 - отображаем текущее время
-        при нажатии вверх вниз выбираются другие виджеты
-        при нажатии кнопки ок, выделяются часы, секунды становятся 00, состояние 2
-
-    состояние 2 - меняем часы
-        кнопки вверх вниз меняют часы
-        при нажатии кнопки ок, выделяются минуты, состояние 3
-        кнопка ок переходит к минутам
-        кнопка назад выходит из редактирования
-        кнопка долгое назад тоже выходит из редактирования, состояние 1
-
-    состояние 3 - меняем минуты
-        кнопки вверх вниз меняют минуты
-        кнопка назад переходит к часам, состояние 2
-        кнопка ок устанавливает время
-        кнопка долгое назад тоже выходит из редактирования, состояние 1
-*/
-
 typedef struct {
     union {
         enum {
@@ -59,19 +41,9 @@ typedef struct {
             VTU_H,
             VTU_M,
             VTU_S,
+            VTU_TZ,
             VTU_NONE
         } vtu;
-        enum {
-            EDIT_NONE,
-            EDIT_H,
-            EDIT_M,
-
-            EDIT_YEAR,
-            EDIT_MONTH,
-            EDIT_DAY,
-
-            EDIT_TIMEZONE
-        } state;
     };
     union {
         struct {
@@ -95,6 +67,8 @@ const lcd_font_cfg_t fcfg = {
     .scale = 2
 };
 
+const xy_t text_margin = { .x = 8, .y = 8 };
+
 const text_field_cfg_t tf = {
     .fcfg = &fcfg,
     .limit_char = { .x = TEXT_LEN("TUE 21 APR 2000"), .y = 1 },
@@ -107,14 +81,14 @@ const val_text_updatable_t vtu_list[] = {
     [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1 },
     [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
     [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
-    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
-    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8 }, },
+    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, },
+    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8, }, },
 };
 
 static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t * cs)
 {
     const char * str;
-    val_text_updatable_t * vtu = &vtu_list[vt_idx];
+    const val_text_updatable_t * vtu = &vtu_list[vt_idx];
 
     if (vt_idx == VTU_DOW) {
         str = day_of_week_name(*(week_day_t *)ptr);
@@ -124,7 +98,7 @@ static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t
     } else {
         str = str_val_buf_get();
         str_val_buf_lock();
-        val_text_to_str(str, ptr, &vtu->vt);
+        val_text_to_str((char*)str, ptr, &vtu->vt);
         // printf("update vt val_text_to_str %p\n", str);
     }
 
@@ -150,31 +124,31 @@ static inline color_scheme_t * cs(unsigned is_active, unsigned is_edit)
     return &color_scheme;
 }
 
-void calc(ui_element_t * el)
+xy_t size_add_margins(xy_t size, xy_t margins)
 {
-    el->f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:"), .y = 2 }, &fcfg);
+    return (xy_t){
+        .x = size.x + margins.x * 2,
+        .y = size.y + margins.y * 2
+    };
 }
 
-static void extend(ui_element_t * el)
+static void calc_time(ui_element_t * el)
+{
+    el->f.s = size_add_margins(lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:"), .y = 2 }, &fcfg), text_margin);
+}
+
+static void extend_time(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->vtu = VTU_NONE;
-
-    form_t f;
-
-    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:") }, &fcfg);
-    form_align(&el->f, &f, &ALIGN_MODE(LI, 8, UI, 8));
-    ctx->title_pos = f.p;
-
-    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("00:00:00") }, &fcfg);
-    form_align(&el->f, &f, &ALIGN_MODE(RI, 8, DI, 8));
-    ctx->text_pos = f.p;
+    ctx->title_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time set:"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+    ctx->text_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("00:00:00"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
 }
 
 static void update_time(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    if (ctx->state == VTU_NONE) {
+    if (ctx->vtu == VTU_NONE) {
         unsigned current_time_s = rtc_get_time_s();
         if (ctx->current_time_s != current_time_s) {
             ctx->current_time_s = current_time_s;
@@ -191,7 +165,7 @@ static void redraw_time_widget(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, cs(el->active, 0)->bg);
-    lcd_color_text_raw_print("Date setup", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
+    lcd_color_text_raw_print("Time set:", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
     lcd_color_text_raw_print(":", &fcfg, cs(el->active, 0), &ctx->text_pos, 0, &(xy_t){ .x = 2 }, 1);
     lcd_color_text_raw_print(":", &fcfg, cs(el->active, 0), &ctx->text_pos, 0, &(xy_t){ .x = 5 }, 1);
 
@@ -271,7 +245,7 @@ static unsigned process_time(ui_element_t * el, unsigned event)
         }
 
         if (mod != MOD_NONE) {
-            val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
+            const val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
             if (val_mod_unsigned(ptrs[ctx->vtu], vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
                 update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
             }
@@ -281,34 +255,21 @@ static unsigned process_time(ui_element_t * el, unsigned event)
     return 0;
 }
 
-static void calc_date(ui_element_t * el)
+void calc_date(ui_element_t * el)
 {
     //  Date setup
     //  TUE 21 APR 2000
     //  0123456789012345
 
-    el->f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("TUE 21 APR 2000"), .y = 2 }, &fcfg);
-
-    // margin
-    el->f.s.h += 2 * 8;
-    el->f.s.w += 2 * 8;
+    el->f.s = size_add_margins(lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Date set:"), .y = 2 }, &fcfg), text_margin);
 }
 
 static void extend_date(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->vtu = VTU_NONE;
-
-    form_t f;
-    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Date set:") }, &fcfg);
-    form_align(&el->f, &f, &ALIGN_MODE(LI, 8, UI, 8));
-    ctx->title_pos = f.p;
-
-    f.s = lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("TUE 21 APR 2000") }, &fcfg);
-    form_align(&el->f, &f, &ALIGN_MODE(RI, 8, DI, 8));
-
-    draw_color_form(&f, 0xFFEEDD);
-    ctx->text_pos = f.p;
+    ctx->title_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Date set:"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+    ctx->text_pos = align_form_pos(&el->f, lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("TUE 21 APR 2000"), .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
 }
 
 static void update_vt_and_dow(xy_t * pos_px, date_t * d, void * ptr, unsigned vt_idx, unsigned active, unsigned edit)
@@ -416,7 +377,7 @@ static unsigned process_date(ui_element_t * el, unsigned event)
             mod = MOD_DOWN;
         }
         if (mod != MOD_NONE) {
-            val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
+            const val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
             if (val_mod_unsigned(ptrs[ctx->vtu], vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
                 update_vt_and_dow(&ctx->text_pos, &ctx->date, ptrs[ctx->vtu], ctx->vtu, 1, 1);
             }
@@ -426,9 +387,21 @@ static unsigned process_date(ui_element_t * el, unsigned event)
     return 0;
 }
 
+static void calc_tz(ui_element_t * el)
+{
+    xy_t ts = size_add_margins(lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time zone:"), .y = 2 }, &fcfg), text_margin);
+}
+
+static void extend_tz(ui_element_t * el)
+{
+    // ctx_t * ctx = (ctx_t *)el->ctx;
+    // ctx->title_pos = align_form_pos(&el->f, &lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time zone:"), .y = 2 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+    // ctx->text_pos = align_form_pos(&el->f, &lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("+12:45"), .y = 2 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+}
+
 const widget_desc_t __widget_time_settings = {
-    .calc = calc,
-    .extend = extend,
+    .calc = calc_time,
+    .extend = extend_time,
     .select = redraw_time_widget,
     .draw = redraw_time_widget,
     .process_event = process_time,
@@ -447,5 +420,9 @@ const widget_desc_t __widget_date_settings = {
 };
 
 const widget_desc_t __widget_time_zone_settings = {
-
+    // .calc = calc_tz,
+    // .extend = extend_tz,
+    // .select = redraw_tz_widget,
+    // .draw = redraw_tz_widget,
+    // .process_event = process_tz
 };
