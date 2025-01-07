@@ -54,7 +54,7 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     if (display_size) {
         el->f.s = *display_size;
     }
-    el->f.p = (xy_t){0, 0};
+    el->f.p = (xy_t){ .x = 0, .y = 0 };
     ui_tree_element_extend(el);
 }
 
