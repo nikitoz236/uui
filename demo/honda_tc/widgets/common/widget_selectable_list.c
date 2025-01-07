@@ -67,7 +67,6 @@ static void redraw_list(ui_element_t * el)
 
 static void calc(ui_element_t * el)
 {
-    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
 
     ctx->first = 0;
@@ -103,8 +102,6 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 {
     __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
     __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
-
-    ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
 
     // printf("widget_selectable_list process_event active %d, event %d\n", el->active, event);
 

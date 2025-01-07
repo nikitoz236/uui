@@ -19,7 +19,6 @@ static void extend(ui_element_t * el)
 
 static void draw_new_child(ui_element_t * el)
 {
-    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     ui_tree_delete_childs(el);
     calc(el);
     extend(el);

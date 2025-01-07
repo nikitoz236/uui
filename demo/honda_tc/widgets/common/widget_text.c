@@ -44,7 +44,6 @@ static void calc(ui_element_t * el)
 
 static void draw(ui_element_t * el)
 {
-    widget_text_cfg_t * cfg = (widget_text_cfg_t *)el->ui_node->cfg;
     widget_text_ctx_t * ctx = (widget_text_ctx_t *)el->ctx;
 
     // lcd_text_extend_scale(&el->f.s, &ctx->text_cfg);
