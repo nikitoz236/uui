@@ -1,7 +1,7 @@
 #include "widget_time_settings.h"
 #include "lcd_text.h"
 #include "lcd_text_color.h"
-#include "tc_events.h"
+#include "event_list.h"
 #include "tc_colors.h"
 #include "date_time.h"
 #include "rtc.h"
@@ -173,6 +173,14 @@ static void redraw_time_widget(ui_element_t * el)
     update_time(el);
 }
 
+static void * ptr_of_time(time_t * t, unsigned id)
+{
+    switch (id) {
+        case VTU_H: return &t->h;
+        case VTU_M: return &t->m;
+    }
+    return 0;
+};
 
 static unsigned process_time(ui_element_t * el, unsigned event)
 {
@@ -196,17 +204,12 @@ static unsigned process_time(ui_element_t * el, unsigned event)
             return 1;
         }
     } else {
-        void * ptrs[] = {
-            [VTU_H] = &ctx->time.h,
-            [VTU_M] = &ctx->time.m,
-        };
-
         if (event == EVENT_BTN_OK) {
-            unsigned next_vtu_list[] = {
-                [VTU_H] = VTU_M,
-                [VTU_M] = VTU_NONE,
-            };
-            change_vtu = next_vtu_list[ctx->vtu];
+            if (ctx->vtu == VTU_H) {
+                change_vtu = VTU_M;
+            } else if (ctx->vtu == VTU_M) {
+                change_vtu = VTU_NONE;
+            }
             if (change_vtu == VTU_NONE) {
                 // set time
                 rtc_set_time_s(time_change_in_s(&ctx->time, rtc_get_time_s()));
@@ -214,11 +217,18 @@ static unsigned process_time(ui_element_t * el, unsigned event)
         }
 
         if (event == EVENT_BTN_LEFT) {
-            static unsigned next_vtu_list[] = {
-                [VTU_H] = VTU_NONE,
-                [VTU_M] = VTU_H,
-            };
-            change_vtu = next_vtu_list[ctx->vtu];
+            // static unsigned next_vtu_list[] = {
+            //     [VTU_H] = VTU_NONE,
+            //     [VTU_M] = VTU_H,
+            // };
+            // change_vtu = next_vtu_list[ctx->vtu];
+            // изза того что VTU_H не начинается с 0, требуется заполнять предыдущий массив нулями
+            // компилятору для этого нужен memset
+            if (ctx->vtu == VTU_H) {
+                change_vtu = VTU_NONE;
+            } else if (ctx->vtu == VTU_M) {
+                change_vtu = VTU_NONE;
+            }
             if (change_vtu == VTU_NONE) {
                 ctx->current_time_s = -1;
             }
@@ -229,9 +239,9 @@ static unsigned process_time(ui_element_t * el, unsigned event)
                 ctx->vtu = VTU_NONE;
                 update_time(el);
             } else {
-                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 0));
+                update_vt(&ctx->text_pos, ctx->vtu, ptr_of_time(&ctx->time, ctx->vtu), cs(1, 0));
                 ctx->vtu = change_vtu;
-                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
+                update_vt(&ctx->text_pos, ctx->vtu, ptr_of_time(&ctx->time, ctx->vtu), cs(1, 1));
             }
             return 1;
         }
@@ -246,8 +256,8 @@ static unsigned process_time(ui_element_t * el, unsigned event)
 
         if (mod != MOD_NONE) {
             const val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
-            if (val_mod_unsigned(ptrs[ctx->vtu], vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
-                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
+            if (val_mod_unsigned(ptr_of_time(&ctx->time, ctx->vtu), vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
+                update_vt(&ctx->text_pos, ctx->vtu, ptr_of_time(&ctx->time, ctx->vtu), cs(1, 1));
             }
             return 1;
         }

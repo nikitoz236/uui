@@ -36,7 +36,11 @@ SRC += $(LIB)/hw/drivers/lcd_ili9341.c
 INC += $(LIB)/common
 SRC += $(LIB)/common/str_utils.c
 SRC += $(LIB)/common/str_val.c
+SRC += $(LIB)/common/str_val_buf.c
+SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/date_time.c
+SRC += $(LIB)/common/val_mod.c
+
 
 # rtc.h
 INC += $(LIB)/hw/include/
@@ -67,10 +71,22 @@ SRC += $(LIB)/graphic/forms/forms_split.c
 INC += $(LIB)/graphic
 SRC += $(LIB)/graphic/lcd_text.c
 SRC += $(LIB)/graphic/align_forms.c
+SRC += $(LIB)/graphic/forms/forms_align.c
+
+# tc_colors.h
+INC += ../../../view
 
 # widgets
 INC += ../../../widgets
 SRC += ../../../widgets/widget_watch_screen.c
+
+SRC += ../../../widgets/widget_time_settings.c
+SRC += ../../../widgets/common/widget_text.c
+
+
+INC += ../../../widgets/common
+SRC += ../../../widgets/common/widget_screen_switch.c
+SRC += ../../../widgets/common/widget_selectable_list.c
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 

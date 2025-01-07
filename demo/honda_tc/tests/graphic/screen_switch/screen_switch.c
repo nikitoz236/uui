@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include "emu_graphic.h"
 #include "emu_lcd.h"
-#include "tc_events.h"
 #include "ui_tree.h"
 #include "widget_test_rect_with_text.h"
 #include "widget_screen_switch.h"
+#include "event_list.h"
 
 void view_process(char key)
 {

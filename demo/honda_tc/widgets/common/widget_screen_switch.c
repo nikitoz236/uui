@@ -1,5 +1,5 @@
 #include "widget_screen_switch.h"
-#include "tc_events.h"
+#include "event_list.h"
 
 static void calc(ui_element_t * el)
 {

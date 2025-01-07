@@ -1,6 +1,4 @@
 #include "widget_text.h"
-#include "emu_tc.h"
-
 #include "lcd_text.h"
 #include "lcd_text_color.h"
 #include "align_forms.h"

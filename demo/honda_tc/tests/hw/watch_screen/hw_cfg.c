@@ -52,3 +52,20 @@ const lcd_cfg_t lcd_cfg = {
         .gpio = { GPIO_PORT_B, 5 },
     }
 };
+
+#include "btn_list.h"
+
+const gpio_cfg_t btn_cfg = {
+    .mode = GPIO_MODE_INPUT,
+    .pull = GPIO_PULL_DOWN,
+    .speed = GPIO_SPEED_HIGH,
+    .type = GPIO_TYPE_PP
+};
+
+const gpio_pin_t btn_list[] = {
+    [BTN_LU] = { GPIO_PORT_B, 3 },
+    [BTN_LD] = { GPIO_PORT_A, 15 },
+    [BTN_RU] = { GPIO_PORT_B, 4 },
+    [BTN_RD] = { GPIO_PORT_B, 7 },
+    [BTN_OK] = { GPIO_PORT_B, 6 }
+};

@@ -8,6 +8,16 @@
 #include "ui_tree.h"
 
 #include "widget_watch_screen.h"
+#include "widget_selectable_list.h"
+#include "widget_screen_switch.h"
+#include "widget_time_settings.h"
+#include "widget_text.h"
+
+#include "mstimer.h"
+
+#include "tc_colors.h"
+
+
 
 /*
     конфигурация логанализатора
@@ -31,6 +41,113 @@ const gpio_pin_t debug_gpio_list[] = {
 void __debug_usart_tx_data(const char * s, unsigned len) { (void)s; (void)len; };
 
 uint8_t ui_ctx[1024] = {0};
+
+#include "btn_list.h"
+extern const gpio_pin_t btn_list[];
+extern const gpio_cfg_t btn_cfg;
+
+void init_buttons(void)
+{
+    for (unsigned i = 0; i < BTN_COUNT; i++) {
+        gpio_set_cfg(&btn_list[i], &btn_cfg);
+    }
+}
+
+mstimer_t btn_dead_timer = { .timeout = 50 };
+
+unsigned btn_last = 0;
+unsigned btn_last_ret = 0;
+
+unsigned btn_get_event(void)
+{
+    unsigned btn_state = 0;
+    for (unsigned i = 0; i < BTN_COUNT; i++) {
+        if (gpio_get_state(&btn_list[i])) {
+            btn_state |= 1 << i;
+        }
+    }
+    if (btn_last != btn_state) {
+        btn_last = btn_state;
+        mstimer_reset(&btn_dead_timer);
+    }
+
+    if (mstimer_is_over(&btn_dead_timer)) {
+        if (btn_last_ret != btn_last) {
+            btn_last_ret = btn_last;
+            return btn_last;
+        }
+    }
+
+    return 0;
+}
+
+
+
+#define COLOR_BG_UNSELECTED         COLOR(0x4d3143)
+#define COLOR_BG_SELECTED           COLOR(0x966bfa)
+#define COLOR_TEXT                  COLOR(0xfcba03)
+#define COLOR_FG_SELECTED           COLOR(0xff3334)
+
+const lcd_color_t tc_colors[] = {
+    [TC_COLOR_BG_UNSELECTED] = COLOR_BG_UNSELECTED,
+    [TC_COLOR_FG_UNSELECTED] = COLOR_TEXT,
+    [TC_COLOR_BG_SELECTED] = COLOR_BG_SELECTED,
+    [TC_COLOR_FG_SELECTED] = COLOR_FG_SELECTED
+};
+
+uint8_t screen_selector = 0;
+
+extern font_t font_5x7;
+
+ui_node_desc_t ui = {
+    .widget = &__widget_screen_switch,
+    .cfg = &(__widget_screen_switch_cfg_t){
+        .selector_ptr = &screen_selector,
+        .screens_num = 2,
+        .screens_list = (ui_node_desc_t[]){
+            {
+                .widget = &__widget_watch_screen,
+            },
+            {
+                .widget = &__widget_selectable_list,
+                .cfg = &(__widget_selectable_list_cfg_t) {
+                    .num = 4,
+                    .different_nodes = 0,
+                    .ui_node = (ui_node_desc_t[]) {
+                        {
+                            .widget = &__widget_time_settings
+                        },
+                        {
+                            .widget = &__widget_date_settings
+                        },
+                        {
+                            .widget = &__widget_text,
+                            .cfg = &(widget_text_cfg_t){
+                                .text = "one",
+                                .color_bg_selected = COLOR_BG_SELECTED,
+                                .color_bg_unselected = COLOR_BG_UNSELECTED,
+                                .color_text = COLOR_TEXT,
+                                .font = &font_5x7,
+                                .scale = 4
+                            }
+                        },
+                        {
+                            .widget = &__widget_text,
+                            .cfg = &(widget_text_cfg_t){
+                                .text = "two",
+                                .color_bg_selected = COLOR_BG_SELECTED,
+                                .color_bg_unselected = COLOR_BG_UNSELECTED,
+                                .color_text = COLOR_TEXT,
+                                .font = &font_5x7,
+                                .scale = 4
+                            }
+                        },
+                    }
+                }
+            }
+        }
+    }
+};
 
 
 int main(void)
@@ -66,16 +183,11 @@ int main(void)
     lcd_bl(4);
     init_lcd(&lcd_cfg);
 
-
-    ui_node_desc_t ui = {
-        .widget = &__widget_watch_screen
-    };
-
     ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});
     ui_tree_draw();
 
     while (1) {
-        ui_tree_update();
+        ui_tree_process(btn_get_event());
     };
 
     return 0;
