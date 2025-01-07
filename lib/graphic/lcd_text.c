@@ -15,7 +15,7 @@ xy_t lcd_text_size_px(const xy_t * text_size_chars, const lcd_font_cfg_t * cfg)
 {
     xy_t size;
 
-    printf("text_size_chars %d %d\n", text_size_chars->x, text_size_chars->y);
+    // printf("text_size_chars %d %d\n", text_size_chars->x, text_size_chars->y);
 
     unsigned scale = cfg->scale;
     if (scale == 0) {
@@ -39,7 +39,7 @@ xy_t lcd_text_size_px(const xy_t * text_size_chars, const lcd_font_cfg_t * cfg)
         ;
     }
 
-    printf("size %d %d\n", size.x, size.y);
+    // printf("size %d %d\n", size.x, size.y);
 
     return size;
 }
