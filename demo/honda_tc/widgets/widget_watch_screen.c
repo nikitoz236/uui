@@ -25,25 +25,25 @@ extern font_t font_5x7;
 lcd_text_cfg_t text_cfg[] = {
     [O_TIME] = {
         .font = &font_3x5,
-        .text_size = {5, 1},
+        .text_size = { .x = 5, .y = 1},
         .gaps = { .x = 8 },
         .scale = 16
     },
     [O_DATE] = {
         .font = &font_5x7,
-        .text_size = {DATE_TEXT_LEN, 1},
+        .text_size = { .x = DATE_TEXT_LEN, .y = 1},
         .gaps = { .x = 3},
         .scale = 3
     },
     [O_VOLTAGE] = {
         .font = &font_5x7,
-        .text_size = {6, 1},
+        .text_size = { .x = 6, .y = 1},
         .gaps = {.x = 2},
         .scale = 2
     },
     [O_TEMPERATURE] = {
         .font = &font_5x7,
-        .text_size = {8, 1},
+        .text_size = { .x = 8, .y = 1},
         .gaps = {.x = 2},
         .scale = 2
     }
