@@ -14,6 +14,7 @@
 #include "str_val_buf.h"
 #include "val_mod.h"
 #include "forms_align.h"
+#include "stddef.h"
 
 typedef struct {
     const lcd_font_cfg_t * fcfg;
@@ -23,6 +24,8 @@ typedef struct {
 
 typedef struct {
     const text_field_cfg_t * tfcfg;
+    unsigned offset_in_ctx;
+    const char * (*to_str)(unsigned x);
     uint16_t min;
     uint16_t max;
     uint16_t step;
@@ -32,19 +35,8 @@ typedef struct {
 } val_text_updatable_t;
 
 typedef struct {
-    union {
-        enum {
-            VTU_DAY,
-            VTU_MONTH,
-            VTU_YEAR,
-            VTU_DOW,
-            VTU_H,
-            VTU_M,
-            VTU_S,
-            VTU_TZ,
-            VTU_NONE
-        } vtu;
-    };
+    xy_t text_pos;
+    xy_t title_pos;
     union {
         struct {
             time_t time;
@@ -55,8 +47,18 @@ typedef struct {
             unsigned current_day;
         };
     };
-    xy_t text_pos;
-    xy_t title_pos;
+    enum {
+        VTU_DAY,
+        VTU_MONTH,
+        VTU_YEAR,
+        VTU_DOW,
+        VTU_H,
+        VTU_M,
+        VTU_S,
+        VTU_TZ,
+        VTU_NONE
+    } vtu;
+    uint8_t dow;
 } ctx_t;
 
 extern font_t font_5x7;
@@ -76,36 +78,14 @@ const text_field_cfg_t tf = {
 };
 
 const val_text_updatable_t vtu_list[] = {
-    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
-    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
-    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1 },
-    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
-    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
-    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, },
-    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .vt = { .l = 3, .vs = VAL_SIZE_8, }, },
+    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .offset_in_ctx = offsetof(ctx_t, date.y), .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
+    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .offset_in_ctx = offsetof(ctx_t, date.d), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
+    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .offset_in_ctx = offsetof(ctx_t, date.m), .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1, .to_str = month_name },
+    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, time.h), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
+    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .offset_in_ctx = offsetof(ctx_t, time.m), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
+    [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .offset_in_ctx = offsetof(ctx_t, time.s), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, },
+    [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, dow), .vt = { .l = 3, }, .to_str = day_of_week_name },
 };
-
-static void update_vt(xy_t * pos_px, unsigned vt_idx, void * ptr, color_scheme_t * cs)
-{
-    const char * str;
-    const val_text_updatable_t * vtu = &vtu_list[vt_idx];
-
-    if (vt_idx == VTU_DOW) {
-        str = day_of_week_name(*(week_day_t *)ptr);
-    } else if (vt_idx == VTU_MONTH) {
-        str = month_name(*(month_t *)ptr);
-        // printf("update vt month %s\n", str);
-    } else {
-        str = str_val_buf_get();
-        str_val_buf_lock();
-        val_text_to_str((char*)str, ptr, &vtu->vt);
-        // printf("update vt val_text_to_str %p\n", str);
-    }
-
-    // printf("update vt %d %s cs: %06X %06X, pos_char: %d %d len %d, pos px %d %d\n", vt_idx, str, cs->bg, cs->fg, vtu->pos_char.x, vtu->pos_char.y, vtu->vt.l, pos_px->x, pos_px->y);
-
-    lcd_color_text_raw_print(str, vtu->tfcfg->fcfg, cs, pos_px, &vtu->tfcfg->limit_char, &vtu->pos_char, vtu->vt.l);
-}
 
 static inline color_scheme_t * cs(unsigned is_active, unsigned is_edit)
 {
@@ -122,6 +102,34 @@ static inline color_scheme_t * cs(unsigned is_active, unsigned is_edit)
         color_scheme.fg = tc_colors[TC_COLOR_FG_UNSELECTED];
     }
     return &color_scheme;
+}
+
+static void update_vtu(ctx_t * ctx, const val_text_updatable_t * vtu, color_scheme_t * cs)
+{
+    void * ptr = ctx;
+    ptr += vtu->offset_in_ctx;
+
+    const char * str;
+
+    if (vtu->to_str) {
+        unsigned x = val_ptr_to_usnigned(ptr, vtu->vt.vs);
+        str = vtu->to_str(x);
+    } else {
+        str = str_val_buf_get();
+        str_val_buf_lock();
+        val_text_to_str((char*)str, ptr, &vtu->vt);
+    }
+
+    lcd_color_text_raw_print(str, vtu->tfcfg->fcfg, cs, &ctx->text_pos, &vtu->tfcfg->limit_char, &vtu->pos_char, vtu->vt.l);
+}
+
+static void mod_vtu(ctx_t * ctx, const val_text_updatable_t * vtu, val_mod_op_t op)
+{
+    void * ptr = ctx;
+    ptr += vtu->offset_in_ctx;
+    if( val_mod_unsigned(ptr, vtu->vt.vs, op, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
+        update_vtu(ctx, vtu, cs(1, 1));
+    }
 }
 
 xy_t size_add_margins(xy_t size, xy_t margins)
@@ -164,9 +172,9 @@ static void update_time(ui_element_t * el)
             ctx->current_time_s = current_time_s;
             time_from_s(&ctx->time, current_time_s);
 
-            update_vt(&ctx->text_pos, VTU_H, &ctx->time.h, cs(el->active, 0));
-            update_vt(&ctx->text_pos, VTU_M, &ctx->time.m, cs(el->active, 0));
-            update_vt(&ctx->text_pos, VTU_S, &ctx->time.s, cs(el->active, 0));
+            update_vtu(ctx, &vtu_list[VTU_H], cs(el->active, 0));
+            update_vtu(ctx, &vtu_list[VTU_M], cs(el->active, 0));
+            update_vtu(ctx, &vtu_list[VTU_S], cs(el->active, 0));
         }
     }
 }
@@ -183,34 +191,18 @@ static void redraw_time_widget(ui_element_t * el)
     update_time(el);
 }
 
-static void * ptr_of_time(time_t * t, unsigned id)
-{
-    switch (id) {
-        case VTU_H: return &t->h;
-        case VTU_M: return &t->m;
-    }
-    return 0;
-};
-
 static unsigned process_time(ui_element_t * el, unsigned event)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     // printf("process_time %d\n", event);
-
-    enum {
-        MOD_UP = MOD_OP_ADD,
-        MOD_DOWN = MOD_OP_SUB,
-        MOD_NONE
-    } mod = MOD_NONE;
-
     unsigned change_vtu = ctx->vtu;
 
     if (ctx->vtu == VTU_NONE) {
         if (event == EVENT_BTN_OK) {
             ctx->vtu = VTU_H;
             ctx->time.s = 0;
-            update_vt(&ctx->text_pos, VTU_H, &ctx->time.h, cs(1, 1));
-            update_vt(&ctx->text_pos, VTU_S, &ctx->time.s, cs(1, 0));
+            update_vtu(ctx, &vtu_list[VTU_H], cs(1, 1));
+            update_vtu(ctx, &vtu_list[VTU_S], cs(1, 0));
             return 1;
         }
     } else {
@@ -249,26 +241,20 @@ static unsigned process_time(ui_element_t * el, unsigned event)
                 ctx->vtu = VTU_NONE;
                 update_time(el);
             } else {
-                update_vt(&ctx->text_pos, ctx->vtu, ptr_of_time(&ctx->time, ctx->vtu), cs(1, 0));
+                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 0));
                 ctx->vtu = change_vtu;
-                update_vt(&ctx->text_pos, ctx->vtu, ptr_of_time(&ctx->time, ctx->vtu), cs(1, 1));
+                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 1));
             }
             return 1;
         }
 
         if (event == EVENT_BTN_UP) {
-            mod = MOD_UP;
+            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_ADD);
+            return 1;
         }
 
         if (event == EVENT_BTN_DOWN) {
-            mod = MOD_DOWN;
-        }
-
-        if (mod != MOD_NONE) {
-            const val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
-            if (val_mod_unsigned(ptr_of_time(&ctx->time, ctx->vtu), vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
-                update_vt(&ctx->text_pos, ctx->vtu, ptr_of_time(&ctx->time, ctx->vtu), cs(1, 1));
-            }
+            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_SUB);
             return 1;
         }
     }
@@ -290,11 +276,11 @@ static void extend_date(ui_element_t * el)
     calc_pos(ctx, &el->f, TEXT_LEN("Date set:"), TEXT_LEN("TUE 21 APR 2000"));
 }
 
-static void update_vt_and_dow(xy_t * pos_px, date_t * d, void * ptr, unsigned vt_idx, unsigned active, unsigned edit)
+static void update_vtu_and_dow(ctx_t * ctx, const val_text_updatable_t * vtu, unsigned active, unsigned edit)
 {
-    update_vt(pos_px, vt_idx, ptr, cs(active, edit));
-    week_day_t dow = day_of_week(d);
-    update_vt(pos_px, VTU_DOW, &dow, cs(active, 0));
+    update_vtu(ctx, vtu, cs(active, edit));
+    ctx->dow = day_of_week(&ctx->date);
+    update_vtu(ctx, &vtu_list[VTU_DOW], cs(active, 0));
 }
 
 static void update_date(ui_element_t * el)
@@ -307,9 +293,9 @@ static void update_date(ui_element_t * el)
             ctx->current_day = current_day;
             date_from_days(&ctx->date, current_day);
 
-            update_vt(&ctx->text_pos, VTU_DAY, &ctx->date.d, cs(el->active, 0));
-            update_vt(&ctx->text_pos, VTU_MONTH, &ctx->date.m, cs(el->active, 0));
-            update_vt_and_dow(&ctx->text_pos, &ctx->date, &ctx->date.y, VTU_YEAR, el->active, 0);
+            update_vtu(ctx, &vtu_list[VTU_DAY], cs(el->active, 0));
+            update_vtu(ctx, &vtu_list[VTU_MONTH], cs(el->active, 0));
+            update_vtu_and_dow(ctx, &vtu_list[VTU_YEAR], el->active, 0);
         }
     }
 }
@@ -328,28 +314,15 @@ static unsigned process_date(ui_element_t * el, unsigned event)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     // printf("process date %d\n", event);
-
-    enum {
-        MOD_UP = MOD_OP_ADD,
-        MOD_DOWN = MOD_OP_SUB,
-        MOD_NONE
-    } mod = MOD_NONE;
-
     unsigned change_vtu = ctx->vtu;
 
     if (ctx->vtu == VTU_NONE) {
         if (event == EVENT_BTN_OK) {
             ctx->vtu = VTU_YEAR;
-            update_vt(&ctx->text_pos, VTU_YEAR, &ctx->date.y, cs(1, 1));
+            update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 1));
             return 1;
         }
     } else {
-        void * ptrs[] = {
-            [VTU_YEAR] = &ctx->date.y,
-            [VTU_MONTH] = &ctx->date.m,
-            [VTU_DAY] = &ctx->date.d
-        };
-
         if (event == EVENT_BTN_OK) {
             unsigned next_vtu_list[] = {
                 [VTU_YEAR] = VTU_MONTH,
@@ -380,24 +353,29 @@ static unsigned process_date(ui_element_t * el, unsigned event)
                 ctx->vtu = VTU_NONE;
                 update_date(el);
             } else {
-                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 0));
+                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 0));
                 ctx->vtu = change_vtu;
-                update_vt(&ctx->text_pos, ctx->vtu, ptrs[ctx->vtu], cs(1, 1));
+                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 1));
             }
             return 1;
         }
 
         if (event == EVENT_BTN_UP) {
-            mod = MOD_UP;
+            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_ADD);
+            unsigned dow = day_of_week(&ctx->date);
+            if (ctx->dow != dow) {
+                ctx->dow = dow;
+                update_vtu(ctx, &vtu_list[VTU_DOW], cs(1, 0));
+            }
+            return 1;
         }
 
         if (event == EVENT_BTN_DOWN) {
-            mod = MOD_DOWN;
-        }
-        if (mod != MOD_NONE) {
-            const val_text_updatable_t * vtu = &vtu_list[ctx->vtu];
-            if (val_mod_unsigned(ptrs[ctx->vtu], vtu->vt.vs, mod, vtu->ovf, vtu->min, vtu->max, vtu->step)) {
-                update_vt_and_dow(&ctx->text_pos, &ctx->date, ptrs[ctx->vtu], ctx->vtu, 1, 1);
+            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_SUB);
+            unsigned dow = day_of_week(&ctx->date);
+            if (ctx->dow != dow) {
+                ctx->dow = dow;
+                update_vtu(ctx, &vtu_list[VTU_DOW], cs(1, 0));
             }
             return 1;
         }
