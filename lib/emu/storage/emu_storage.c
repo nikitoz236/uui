@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "storage_hw.h"
-#include "flash_atomic.h"
 
 static uint8_t flash_mem[STORAGE_PAGES][FLASH_ATOMIC_ERASE_SIZE];
 
@@ -24,7 +23,7 @@ static void emu_storage_write_file_image(void)
     }
 }
 
-void * storage_page_to_pointer(unsigned page)
+const void * storage_page_to_pointer(unsigned page)
 {
     return flash_mem[page];
 }
