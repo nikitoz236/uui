@@ -112,6 +112,8 @@ int main()
     RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
 
 
+
+
     GPIOA->MODER &= ~GPIO_MODER_MODE2_Msk;
     GPIOA->MODER |= GPIO_MODER_MODE2_0;
 
@@ -122,12 +124,15 @@ int main()
     GPIOA->BSRR = GPIO_BSRR_BS3;
 
 
-    // while (1) {
-    //     GPIOA->BSRR = GPIO_BSRR_BR2;
-    //     for (volatile unsigned i = 0; i < 1000; i++) {};
-    //     GPIOA->BSRR = GPIO_BSRR_BS2;
-    //     for (volatile unsigned i = 0; i < 1000; i++) {};
-    // }
+
+
+
+    while (1) {
+        GPIOA->BSRR = GPIO_BSRR_BR2;
+        for (volatile unsigned i = 0; i < 1000; i++) {};
+        GPIOA->BSRR = GPIO_BSRR_BS2;
+        for (volatile unsigned i = 0; i < 1000; i++) {};
+    }
 
     while (1);
 }
