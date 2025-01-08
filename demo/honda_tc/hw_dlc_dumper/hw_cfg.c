@@ -29,8 +29,8 @@ const usart_cfg_t debug_usart = {
     .tx_pin = {GPIO_PORT_A, 9},
     .rx_pin = {GPIO_PORT_A, 10},
     .tx_dma = {
-        .dma_ch = 4,
-        .size = DEBUG_USART_TX_BUF_SIZE,
+        .dma_ch = 0,
+        .size = 0, //DEBUG_USART_TX_BUF_SIZE,
         .ctx = &debug_usart_dma_tx_ctx.ctx
     },
     .rx_dma = {

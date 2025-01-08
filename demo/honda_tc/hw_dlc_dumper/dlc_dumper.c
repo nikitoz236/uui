@@ -104,6 +104,8 @@ void dump_unit(uint8_t unit_addr, uint8_t frames)
     }
 }
 
+char xs[8];
+
 void dumper(void)
 {
     dpn("Honda test DLC dumper");
@@ -195,6 +197,12 @@ int main(void)
 
     init_systick();
     __enable_irq();
+
+    // for (unsigned i = 0; i < 100; i+= 7) {
+    //     dpx(i, 2);
+    //     dp(" ");
+    // }
+
 
     dumper();
 
