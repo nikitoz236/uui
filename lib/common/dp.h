@@ -126,8 +126,8 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
         return;
     }
 
-    char * str = str_val_buf_get();
     while (count--) {
+        char * str = str_val_buf_get();
         hex_to_str(x, str, size);
         x += size;
         unsigned plen = size * 2;
