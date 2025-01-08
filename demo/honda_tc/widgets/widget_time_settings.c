@@ -48,15 +48,15 @@ typedef struct {
         };
     };
     enum {
-        VTU_DAY,
-        VTU_MONTH,
-        VTU_YEAR,
+        VTU_YEAR = 0,
+        VTU_MONTH = 1,
+        VTU_DAY = 2,
+        VTU_H = 0,
+        VTU_M = 1,
+        VTU_S = 2,
+        VTU_NONE,
         VTU_DOW,
-        VTU_H,
-        VTU_M,
-        VTU_S,
         VTU_TZ,
-        VTU_NONE
     } vtu;
     uint8_t dow;
 } ctx_t;
@@ -77,13 +77,16 @@ const text_field_cfg_t tf = {
     .margin = { .x = 0, .y = 0 }
 };
 
-const val_text_updatable_t vtu_list[] = {
-    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .offset_in_ctx = offsetof(ctx_t, date.y), .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
-    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .offset_in_ctx = offsetof(ctx_t, date.d), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
-    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .offset_in_ctx = offsetof(ctx_t, date.m), .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1, .to_str = month_name },
+const val_text_updatable_t vtu_time[] = {
     [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, time.h), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
     [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .offset_in_ctx = offsetof(ctx_t, time.m), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
     [VTU_S]     = { .tfcfg =  &tf, .pos_char = { .x = 6  }, .offset_in_ctx = offsetof(ctx_t, time.s), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, },
+};
+
+const val_text_updatable_t vtu_date[] = {
+    [VTU_YEAR]  = { .tfcfg =  &tf, .pos_char = { .x = 11 }, .offset_in_ctx = offsetof(ctx_t, date.y), .vt = { .l = 4, .vs = VAL_SIZE_16, .zl = 0}, .min = 2000, .max = 2100, .step = 1, .ovf = 0 },
+    [VTU_DAY]   = { .tfcfg =  &tf, .pos_char = { .x = 4  }, .offset_in_ctx = offsetof(ctx_t, date.d), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 1,    .max = 31,   .step = 1, .ovf = 1 },
+    [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .offset_in_ctx = offsetof(ctx_t, date.m), .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1, .to_str = month_name },
     [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, dow), .vt = { .l = 3, }, .to_str = day_of_week_name },
 };
 
@@ -172,9 +175,9 @@ static void update_time(ui_element_t * el)
             ctx->current_time_s = current_time_s;
             time_from_s(&ctx->time, current_time_s);
 
-            update_vtu(ctx, &vtu_list[VTU_H], cs(el->active, 0));
-            update_vtu(ctx, &vtu_list[VTU_M], cs(el->active, 0));
-            update_vtu(ctx, &vtu_list[VTU_S], cs(el->active, 0));
+            update_vtu(ctx, &vtu_time[VTU_H], cs(el->active, 0));
+            update_vtu(ctx, &vtu_time[VTU_M], cs(el->active, 0));
+            update_vtu(ctx, &vtu_time[VTU_S], cs(el->active, 0));
         }
     }
 }
@@ -201,17 +204,17 @@ static unsigned process_time(ui_element_t * el, unsigned event)
         if (event == EVENT_BTN_OK) {
             ctx->vtu = VTU_H;
             ctx->time.s = 0;
-            update_vtu(ctx, &vtu_list[VTU_H], cs(1, 1));
-            update_vtu(ctx, &vtu_list[VTU_S], cs(1, 0));
+            update_vtu(ctx, &vtu_time[VTU_H], cs(1, 1));
+            update_vtu(ctx, &vtu_time[VTU_S], cs(1, 0));
             return 1;
         }
     } else {
         if (event == EVENT_BTN_OK) {
-            if (ctx->vtu == VTU_H) {
-                change_vtu = VTU_M;
-            } else if (ctx->vtu == VTU_M) {
-                change_vtu = VTU_NONE;
-            }
+            static unsigned next_vtu_date[] = {
+                [VTU_H] = VTU_M,
+                [VTU_M] = VTU_NONE,
+            };
+            change_vtu = next_vtu_date[ctx->vtu];
             if (change_vtu == VTU_NONE) {
                 // set time
                 rtc_set_time_s(time_change_in_s(&ctx->time, rtc_get_time_s()));
@@ -219,13 +222,11 @@ static unsigned process_time(ui_element_t * el, unsigned event)
         }
 
         if (event == EVENT_BTN_LEFT) {
-            // static unsigned next_vtu_list[] = {
-            //     [VTU_H] = VTU_NONE,
-            //     [VTU_M] = VTU_H,
-            // };
-            // change_vtu = next_vtu_list[ctx->vtu];
-            // изза того что VTU_H не начинается с 0, требуется заполнять предыдущий массив нулями
-            // компилятору для этого нужен memset
+            static unsigned next_vtu_date[] = {
+                [VTU_H] = VTU_NONE,
+                [VTU_M] = VTU_H,
+            };
+            change_vtu = next_vtu_date[ctx->vtu];
             if (ctx->vtu == VTU_H) {
                 change_vtu = VTU_NONE;
             } else if (ctx->vtu == VTU_M) {
@@ -241,20 +242,20 @@ static unsigned process_time(ui_element_t * el, unsigned event)
                 ctx->vtu = VTU_NONE;
                 update_time(el);
             } else {
-                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 0));
+                update_vtu(ctx, &vtu_time[ctx->vtu], cs(1, 0));
                 ctx->vtu = change_vtu;
-                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 1));
+                update_vtu(ctx, &vtu_time[ctx->vtu], cs(1, 1));
             }
             return 1;
         }
 
         if (event == EVENT_BTN_UP) {
-            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_ADD);
+            mod_vtu(ctx, &vtu_time[ctx->vtu], MOD_OP_ADD);
             return 1;
         }
 
         if (event == EVENT_BTN_DOWN) {
-            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_SUB);
+            mod_vtu(ctx, &vtu_time[ctx->vtu], MOD_OP_SUB);
             return 1;
         }
     }
@@ -280,7 +281,7 @@ static void update_vtu_and_dow(ctx_t * ctx, const val_text_updatable_t * vtu, un
 {
     update_vtu(ctx, vtu, cs(active, edit));
     ctx->dow = day_of_week(&ctx->date);
-    update_vtu(ctx, &vtu_list[VTU_DOW], cs(active, 0));
+    update_vtu(ctx, &vtu_date[VTU_DOW], cs(active, 0));
 }
 
 static void update_date(ui_element_t * el)
@@ -293,9 +294,9 @@ static void update_date(ui_element_t * el)
             ctx->current_day = current_day;
             date_from_days(&ctx->date, current_day);
 
-            update_vtu(ctx, &vtu_list[VTU_DAY], cs(el->active, 0));
-            update_vtu(ctx, &vtu_list[VTU_MONTH], cs(el->active, 0));
-            update_vtu_and_dow(ctx, &vtu_list[VTU_YEAR], el->active, 0);
+            update_vtu(ctx, &vtu_date[VTU_DAY], cs(el->active, 0));
+            update_vtu(ctx, &vtu_date[VTU_MONTH], cs(el->active, 0));
+            update_vtu_and_dow(ctx, &vtu_date[VTU_YEAR], el->active, 0);
         }
     }
 }
@@ -319,17 +320,17 @@ static unsigned process_date(ui_element_t * el, unsigned event)
     if (ctx->vtu == VTU_NONE) {
         if (event == EVENT_BTN_OK) {
             ctx->vtu = VTU_YEAR;
-            update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 1));
+            update_vtu(ctx, &vtu_date[ctx->vtu], cs(1, 1));
             return 1;
         }
     } else {
         if (event == EVENT_BTN_OK) {
-            unsigned next_vtu_list[] = {
+            unsigned next_vtu_date[] = {
                 [VTU_YEAR] = VTU_MONTH,
                 [VTU_MONTH] = VTU_DAY,
                 [VTU_DAY] = VTU_NONE
             };
-            change_vtu = next_vtu_list[ctx->vtu];
+            change_vtu = next_vtu_date[ctx->vtu];
             if (change_vtu == VTU_NONE) {
                 // set date
                 rtc_set_time_s(date_change_in_s(&ctx->date, rtc_get_time_s()));
@@ -337,12 +338,12 @@ static unsigned process_date(ui_element_t * el, unsigned event)
         }
 
         if (event == EVENT_BTN_LEFT) {
-            static unsigned next_vtu_list[] = {
+            static unsigned next_vtu_date[] = {
                 [VTU_YEAR] = VTU_NONE,
                 [VTU_MONTH] = VTU_YEAR,
                 [VTU_DAY] = VTU_MONTH
             };
-            change_vtu = next_vtu_list[ctx->vtu];
+            change_vtu = next_vtu_date[ctx->vtu];
             if (change_vtu == VTU_NONE) {
                 ctx->current_day = -1;
             }
@@ -353,29 +354,29 @@ static unsigned process_date(ui_element_t * el, unsigned event)
                 ctx->vtu = VTU_NONE;
                 update_date(el);
             } else {
-                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 0));
+                update_vtu(ctx, &vtu_date[ctx->vtu], cs(1, 0));
                 ctx->vtu = change_vtu;
-                update_vtu(ctx, &vtu_list[ctx->vtu], cs(1, 1));
+                update_vtu(ctx, &vtu_date[ctx->vtu], cs(1, 1));
             }
             return 1;
         }
 
         if (event == EVENT_BTN_UP) {
-            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_ADD);
+            mod_vtu(ctx, &vtu_date[ctx->vtu], MOD_OP_ADD);
             unsigned dow = day_of_week(&ctx->date);
             if (ctx->dow != dow) {
                 ctx->dow = dow;
-                update_vtu(ctx, &vtu_list[VTU_DOW], cs(1, 0));
+                update_vtu(ctx, &vtu_date[VTU_DOW], cs(1, 0));
             }
             return 1;
         }
 
         if (event == EVENT_BTN_DOWN) {
-            mod_vtu(ctx, &vtu_list[ctx->vtu], MOD_OP_SUB);
+            mod_vtu(ctx, &vtu_date[ctx->vtu], MOD_OP_SUB);
             unsigned dow = day_of_week(&ctx->date);
             if (ctx->dow != dow) {
                 ctx->dow = dow;
-                update_vtu(ctx, &vtu_list[VTU_DOW], cs(1, 0));
+                update_vtu(ctx, &vtu_date[VTU_DOW], cs(1, 0));
             }
             return 1;
         }
