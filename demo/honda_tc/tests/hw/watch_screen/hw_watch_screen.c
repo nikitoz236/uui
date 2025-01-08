@@ -17,7 +17,7 @@
 
 #include "tc_colors.h"
 
-
+#include "storage.h"
 
 /*
     конфигурация логанализатора
@@ -81,7 +81,9 @@ unsigned btn_get_event(void)
     return 0;
 }
 
-int timezone_s = 5 * 60 * 60;
+#define TIMEZONE_FILE_ID            0x001A
+
+int timezone_s = 0;
 
 int time_zone_get(void)
 {
@@ -91,6 +93,7 @@ int time_zone_get(void)
 void time_zone_set(int tz)
 {
     timezone_s = tz;
+    storage_write_file(TIMEZONE_FILE_ID, &timezone_s, sizeof(tz));
 }
 
 #define COLOR_BG_UNSELECTED         COLOR(0x4d3143)
@@ -190,6 +193,14 @@ int main(void)
     hw_rcc_pclk_ctrl(&dma_pclk, 1);
     init_systick();
     init_rtc();
+
+    storage_init();
+    unsigned tz_len;
+    int * tz_file = storage_search_file(TIMEZONE_FILE_ID, &tz_len);
+    if (tz_file) {
+        timezone_s = *tz_file;
+    }
+
     __enable_irq();
 
     init_lcd_hw(&lcd_cfg);

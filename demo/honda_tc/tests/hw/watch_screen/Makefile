@@ -25,6 +25,7 @@ SRC += $(LIB)/hw/uc_hw/stm32f10x_rtc.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_pwm.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_spi.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
 
 INC += $(LIB)/hw/api/
 INC += $(LIB)/hw/drivers
@@ -41,6 +42,9 @@ SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/date_time.c
 SRC += $(LIB)/common/val_mod.c
 
+# storage
+INC += $(LIB)/storage
+SRC += $(LIB)/storage/storage.c
 
 # rtc.h
 INC += $(LIB)/hw/include/
