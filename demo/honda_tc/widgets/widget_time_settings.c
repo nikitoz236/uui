@@ -141,7 +141,6 @@ static void update_vtu(ctx_t * ctx, const val_text_updatable_t * vtu, color_sche
         str = vtu->to_str(x);
     } else {
         str = str_val_buf_get();
-        str_val_buf_lock();
         val_text_to_str((char*)str, ptr, &vtu->vt);
     }
 

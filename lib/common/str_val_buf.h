@@ -7,5 +7,5 @@
 */
 
 #define STR_VAL_BUF_LEN             14
+
 char * str_val_buf_get(void);
-void str_val_buf_lock(void);
