@@ -277,11 +277,13 @@ static void extend_date(ui_element_t * el)
     calc_pos(ctx, &el->f, TEXT_LEN("Date set:"), TEXT_LEN("TUE 21 APR 2000"));
 }
 
-static void update_vtu_and_dow(ctx_t * ctx, const val_text_updatable_t * vtu, unsigned active, unsigned edit)
+static void update_dow(ctx_t * ctx, color_scheme_t * cs)
 {
-    update_vtu(ctx, vtu, cs(active, edit));
-    ctx->dow = day_of_week(&ctx->date);
-    update_vtu(ctx, &vtu_date[VTU_DOW], cs(active, 0));
+    unsigned dow = day_of_week(&ctx->date);
+    if (ctx->dow != dow) {
+        ctx->dow = dow;
+        update_vtu(ctx, &vtu_date[VTU_DOW], cs);
+    }
 }
 
 static void update_date(ui_element_t * el)
@@ -296,7 +298,8 @@ static void update_date(ui_element_t * el)
 
             update_vtu(ctx, &vtu_date[VTU_DAY], cs(el->active, 0));
             update_vtu(ctx, &vtu_date[VTU_MONTH], cs(el->active, 0));
-            update_vtu_and_dow(ctx, &vtu_date[VTU_YEAR], el->active, 0);
+            update_vtu(ctx, &vtu_date[VTU_YEAR], cs(el->active, 0));
+            update_dow(ctx, cs(el->active, 0));
         }
     }
 }
@@ -308,6 +311,7 @@ static void redraw_date_widget(ui_element_t * el)
     lcd_color_text_raw_print("Date set:", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
     // printf("redraw date widget, active %d\n", el->active);
     ctx->current_day = -1;
+    ctx->dow = -1;
     update_date(el);
 }
 
@@ -363,21 +367,13 @@ static unsigned process_date(ui_element_t * el, unsigned event)
 
         if (event == EVENT_BTN_UP) {
             mod_vtu(ctx, &vtu_date[ctx->vtu], MOD_OP_ADD);
-            unsigned dow = day_of_week(&ctx->date);
-            if (ctx->dow != dow) {
-                ctx->dow = dow;
-                update_vtu(ctx, &vtu_date[VTU_DOW], cs(1, 0));
-            }
+            update_dow(ctx, cs(el->active, 0));
             return 1;
         }
 
         if (event == EVENT_BTN_DOWN) {
             mod_vtu(ctx, &vtu_date[ctx->vtu], MOD_OP_SUB);
-            unsigned dow = day_of_week(&ctx->date);
-            if (ctx->dow != dow) {
-                ctx->dow = dow;
-                update_vtu(ctx, &vtu_date[VTU_DOW], cs(1, 0));
-            }
+            update_dow(ctx, cs(el->active, 0));
             return 1;
         }
     }
