@@ -27,7 +27,7 @@ INC += $(LIB)/hw/drivers
 INC += $(LIB)/common
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_utils.c
-SRC += $(LIB)/common/dp.c
+SRC += $(LIB)/common/str_val_buf.c
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 
