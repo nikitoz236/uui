@@ -92,5 +92,8 @@ SRC += ../../../widgets/common/widget_selectable_list.c
 
 include $(LIB)/hw/system/uc_build.mk
 
+test_%: test_%.c
+	gcc $< -o $@ $(addprefix -I, $(INC)) -m32 && ./$@ && rm ./$@
+
 test_color_convert:
-	gcc test_color_convert.c -o test_color_convert && ./test_color_convert && rm ./test_color_convert
+test_offsetof:
