@@ -51,7 +51,7 @@ unsigned val_mod_unsigned(void * ptr, val_size_t size, val_mod_op_t op, unsigned
     return 1;
 }
 
-unsigned val_mod_signed(void * ptr, val_size_t size, val_mod_op_t op, unsigned ovf, int min, int max, unsigned step)
+unsigned val_mod_signed(void * ptr, val_size_t size, val_mod_op_t op, unsigned ovf, int min, int max, int step)
 {
     int val = val_ptr_to_signed(ptr, size);
     if (ovf) {
