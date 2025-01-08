@@ -8,9 +8,18 @@ void __debug_usart_tx_data(const char * s, unsigned len);
 
 // static const char * __debug_module_name = { __FILE__ };
 
-static char __debug_is_str_started = 0;
+struct dp_ctx {
+    struct dp_ctx * next;
+    char * module_name;
+    char silent;
+    char started;
+    char registred;
+};
 
-unsigned __debug_is_module_silent(const char * name);
+static struct dp_ctx __dp_ctx = {
+    .module_name = __FILE__,
+    // .registred = 1
+};
 
 static inline void __debug_print_str(const char * s)
 {
@@ -21,14 +30,33 @@ static inline void __debug_print_str(const char * s)
 // также печатает название модуля
 static inline unsigned __debug_start(void)
 {
-    // if (__debug_is_module_silent()) {
-    //     return 1;
-    // }
+    if (__dp_ctx.registred == 0) {
+        // если не регистрировали модуль то пофиг. печатаем без названия как есть
 
-    // if (__debug_is_str_started == 0) {
+        // позже здесь будет регистрация в системе логирования
+        // а там и файлы всякие разные, и в кучу все можно валить и на флешку писать итд
+        return 0;
+    }
 
-    //     __debug_usart_tx_data()
-    // }
+    if (__dp_ctx.silent) {
+        return 1;
+    }
+
+    #define NAME_LEN 30
+
+    if (__dp_ctx.started == 0) {
+        __dp_ctx.started = 1;
+        unsigned len = str_len(__dp_ctx.module_name, -1);
+        __debug_usart_tx_data("[", 1);
+        if (len > NAME_LEN) {
+            len = NAME_LEN;
+        }
+        __debug_usart_tx_data(__dp_ctx.module_name, len);
+        __debug_usart_tx_data("] ", 2);
+        for (unsigned i = 0; i < NAME_LEN - len; i++) {
+            __debug_usart_tx_data(" ", 1);
+        }
+    }
     return 0;
 }
 
@@ -47,7 +75,7 @@ static inline void dpn(const char * s)
     }
     __debug_print_str(s);
     __debug_usart_tx_data("\r\n", 2);
-    __debug_is_str_started = 0;
+    __dp_ctx.started = 0;
 }
 
 static inline void dn(void)
@@ -56,7 +84,7 @@ static inline void dn(void)
         return;
     }
     __debug_usart_tx_data("\r\n", 2);
-    __debug_is_str_started = 0;
+    __dp_ctx.started = 0;
 }
 
 static inline void dpd(unsigned d, unsigned w)
