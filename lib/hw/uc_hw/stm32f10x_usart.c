@@ -3,17 +3,17 @@
 #include "dma.h"
 #include "irq_vectors.h"
 
-#define __DBGPIO_USART(n, x);
+// #define __DBGPIO_USART(n, x);
 
-// extern gpio_pin_t debug_gpio_list[];
-// #define __DBGPIO_USART(n, x)                gpio_set_state(&debug_gpio_list[n], x)
+extern gpio_pin_t debug_gpio_list[];
+#define __DBGPIO_USART(n, x)                gpio_set_state(&debug_gpio_list[n], x)
 
-#define __DBGPIO_USART_WAIT_AVAILABLE(x)    //  __DBGPIO_USART(1, x)
-#define __DBGPIO_DMA_IRQ(x)                 //  __DBGPIO_USART(2, x)
-#define __DBGPIO_DMA_IRQ_END_BUF(x)         //  __DBGPIO_USART(0, x)
-#define __DBGPIO_USART_START_DMA(x)         //  __DBGPIO_USART(0, x)
-#define __DBGPIO_USART_TX_FUNC(x)           __DBGPIO_USART(1, x)
-#define __DBGPIO_USART_TX_DMA_WAIT_PREV(x)  __DBGPIO_USART(2, x)
+#define __DBGPIO_USART_WAIT_AVAILABLE(x)    __DBGPIO_USART(1, x)
+#define __DBGPIO_DMA_IRQ(x)                 __DBGPIO_USART(2, x)
+#define __DBGPIO_DMA_IRQ_END_BUF(x)         __DBGPIO_USART(0, x)
+#define __DBGPIO_USART_START_DMA(x)         __DBGPIO_USART(0, x)
+#define __DBGPIO_USART_TX_FUNC(x)
+#define __DBGPIO_USART_TX_DMA_WAIT_PREV(x)
 
 static inline void usart_tx_byte(const usart_cfg_t * usart, char c)
 {
