@@ -16,6 +16,13 @@ uint8_t screen_selector = 0;
 
 extern font_t font_5x7;
 
+int tz = 0;
+
+void set_tz(int timezone_s)
+{
+    tz = timezone_s;
+}
+
 ui_node_desc_t ui = {
     .widget = &__widget_screen_switch,
     .cfg = &(__widget_screen_switch_cfg_t){
@@ -28,7 +35,7 @@ ui_node_desc_t ui = {
             {
                 .widget = &__widget_selectable_list,
                 .cfg = &(__widget_selectable_list_cfg_t) {
-                    .num = 4,
+                    .num = 5,
                     .different_nodes = 0,
                     .ui_node = (ui_node_desc_t[]) {
                         {
@@ -36,6 +43,13 @@ ui_node_desc_t ui = {
                         },
                         {
                             .widget = &__widget_date_settings
+                        },
+                        {
+                            .widget = &__widget_time_zone_settings,
+                            .cfg = &(__widget_time_zone_settings_cfg_t){
+                                .timezone_s_ptr = &tz,
+                                .set_timezone = set_tz
+                            }
                         },
                         {
                             .widget = &__widget_text,

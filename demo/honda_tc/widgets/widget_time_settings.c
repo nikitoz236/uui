@@ -39,12 +39,17 @@ typedef struct {
     xy_t title_pos;
     union {
         struct {
-            time_t time;
             unsigned current_time_s;
+            time_t time;
         };
         struct {
-            date_t date;
             unsigned current_day;
+            date_t date;
+        };
+        struct {
+            int tz_s;
+            time_t tz_time;
+            uint8_t tz_sign;
         };
     };
     enum {
@@ -54,9 +59,9 @@ typedef struct {
         VTU_H = 0,
         VTU_M = 1,
         VTU_S = 2,
+        VTU_TZ_SIGN = 2,
+        VTU_DOW = 3,
         VTU_NONE,
-        VTU_DOW,
-        VTU_TZ,
     } vtu;
     uint8_t dow;
 } ctx_t;
@@ -77,6 +82,14 @@ const text_field_cfg_t tf = {
     .margin = { .x = 0, .y = 0 }
 };
 
+const char * tz_sign_to_str(unsigned sign)
+{
+    if (sign) {
+        return "-";
+    }
+    return "+";
+}
+
 const val_text_updatable_t vtu_time[] = {
     [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, time.h), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 23,   .step = 1, .ovf = 1 },
     [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 3  }, .offset_in_ctx = offsetof(ctx_t, time.m), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1}, .min = 0,    .max = 59,   .step = 1, .ovf = 1 },
@@ -89,6 +102,13 @@ const val_text_updatable_t vtu_date[] = {
     [VTU_MONTH] = { .tfcfg =  &tf, .pos_char = { .x = 7  }, .offset_in_ctx = offsetof(ctx_t, date.m), .vt = { .l = 3, .vs = VAL_SIZE_8,  .zl = 0}, .min = 0,    .max = 11,   .step = 1, .ovf = 1, .to_str = month_name },
     [VTU_DOW]   = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, dow), .vt = { .l = 3, }, .to_str = day_of_week_name },
 };
+
+const val_text_updatable_t vtu_tz[] = {
+    [VTU_H]     = { .tfcfg =  &tf, .pos_char = { .x = 2  }, .offset_in_ctx = offsetof(ctx_t, tz_time.h), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 0} },
+    [VTU_M]     = { .tfcfg =  &tf, .pos_char = { .x = 5  }, .offset_in_ctx = offsetof(ctx_t, tz_time.m), .vt = { .l = 2, .vs = VAL_SIZE_8,  .zl = 1} },
+    [VTU_TZ_SIGN] = { .tfcfg =  &tf, .pos_char = { .x = 0  }, .offset_in_ctx = offsetof(ctx_t, tz_sign), .vt = { .l = 1, .vs = VAL_SIZE_8 }, .to_str = tz_sign_to_str },
+};
+
 
 static inline color_scheme_t * cs(unsigned is_active, unsigned is_edit)
 {
@@ -382,14 +402,91 @@ static unsigned process_date(ui_element_t * el, unsigned event)
 
 static void calc_tz(ui_element_t * el)
 {
-    xy_t ts = size_add_margins(lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time zone:"), .y = 2 }, &fcfg), text_margin);
+    //  Time zone:
+    //  -12:00
+    //  0123456789012345
+    el->f.s = calc_setting_form_size(TEXT_LEN("Time zone:"));
 }
 
 static void extend_tz(ui_element_t * el)
 {
-    // ctx_t * ctx = (ctx_t *)el->ctx;
-    // ctx->title_pos = align_form_pos(&el->f, &lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("Time zone:"), .y = 2 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
-    // ctx->text_pos = align_form_pos(&el->f, &lcd_text_size_px(&(xy_t){ .x = TEXT_LEN("+12:45"), .y = 2 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    ctx->vtu = VTU_NONE;
+    calc_pos(ctx, &el->f, TEXT_LEN("Time zone:"), TEXT_LEN("- 12:00"));
+}
+
+static void update_tz(ctx_t * ctx, color_scheme_t * cs)
+{
+    if (ctx->tz_s < 0) {
+        ctx->tz_sign = 1;
+        time_from_s(&ctx->tz_time, -ctx->tz_s);
+    } else {
+        ctx->tz_sign = 0;
+        time_from_s(&ctx->tz_time, ctx->tz_s);
+    }
+
+    update_vtu(ctx, &vtu_tz[VTU_TZ_SIGN], cs);
+    update_vtu(ctx, &vtu_tz[VTU_H], cs);
+    update_vtu(ctx, &vtu_tz[VTU_M], cs);
+
+    lcd_color_text_raw_print(":", &fcfg, cs, &ctx->text_pos, 0, &(xy_t){ .x = 4 }, 1);
+}
+
+static void redraw_tz_widget(ui_element_t * el)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    draw_color_form(&el->f, cs(el->active, 0)->bg);
+    lcd_color_text_raw_print("Time zone:", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
+
+    __widget_time_zone_settings_cfg_t * cfg = (__widget_time_zone_settings_cfg_t *)el->ui_node->cfg;
+    ctx->tz_s = *cfg->timezone_s_ptr;
+    update_tz(ctx, cs(el->active, 0));
+}
+
+static unsigned process_tz(ui_element_t * el, unsigned event)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    __widget_time_zone_settings_cfg_t * cfg = (__widget_time_zone_settings_cfg_t *)el->ui_node->cfg;
+    // printf("process date %d\n", event);
+
+    if (ctx->vtu == VTU_NONE) {
+        if (event == EVENT_BTN_OK) {
+            ctx->vtu = 1;
+            update_tz(ctx, cs(1, 1));
+            return 1;
+        }
+    } else {
+        if (event == EVENT_BTN_OK) {
+            // set time zone
+            cfg->set_timezone(ctx->tz_s);
+            update_tz(ctx, cs(1, 0));
+            ctx->vtu = VTU_NONE;
+            return 1;
+        }
+
+        if (event == EVENT_BTN_LEFT) {
+            ctx->tz_s = *cfg->timezone_s_ptr;
+            update_tz(ctx, cs(1, 0));
+            ctx->vtu = VTU_NONE;
+            return 1;
+        }
+
+        if (event == EVENT_BTN_UP) {
+            if (val_mod_signed(&ctx->tz_s, VAL_SIZE_32, MOD_OP_ADD, 0, -12 * 60 * 60, 12 * 60 * 60, 15 * 60)) {
+                update_tz(ctx, cs(1, 1));
+            }
+            return 1;
+        }
+
+        if (event == EVENT_BTN_DOWN) {
+            if (val_mod_signed(&ctx->tz_s, VAL_SIZE_32, MOD_OP_SUB, 0, -12 * 60 * 60, 12 * 60 * 60, 15 * 60)) {
+                update_tz(ctx, cs(1, 1));
+            }
+            return 1;
+        }
+
+    }
+    return 0;
 }
 
 const widget_desc_t __widget_time_settings = {
@@ -413,9 +510,10 @@ const widget_desc_t __widget_date_settings = {
 };
 
 const widget_desc_t __widget_time_zone_settings = {
-    // .calc = calc_tz,
-    // .extend = extend_tz,
-    // .select = redraw_tz_widget,
-    // .draw = redraw_tz_widget,
-    // .process_event = process_tz
+    .calc = calc_tz,
+    .extend = extend_tz,
+    .select = redraw_tz_widget,
+    .draw = redraw_tz_widget,
+    .process_event = process_tz,
+    .ctx_size = sizeof(ctx_t)
 };
