@@ -6,8 +6,9 @@
 
 */
 
-void dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned lzero)
+unsigned dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned lzero)
 {
+    unsigned empty = 0;
     str[len] = 0;
     if (val == 0) {
         len--;
@@ -19,6 +20,7 @@ void dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned l
             str[len] = '0' + (val % 10);
             val /= 10;
         } else {
+            empty++;
             if (lzero) {
                 str[len] = '0';
             } else {
@@ -29,6 +31,7 @@ void dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsigned l
     if (val) {
         str[0] = '@';
     }
+    return empty;
 }
 
 void hex_to_str(const void * val, char * str, unsigned size)
