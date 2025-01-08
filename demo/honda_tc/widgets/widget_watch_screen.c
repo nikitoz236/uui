@@ -6,6 +6,8 @@
 #include "lcd_text_color.h"
 
 #include "rtc.h"
+#include "time_zone.h"
+
 #include "date_time.h"
 #include "str_val.h"
 
@@ -67,7 +69,7 @@ static void update(ui_element_t * el)
 
     char str[16];
 
-    unsigned time_s = rtc_get_time_s();
+    unsigned time_s = rtc_get_time_s() + time_zone_get();
 
     if (ctx->last_time_s != time_s) {
         ctx->last_time_s = time_s;

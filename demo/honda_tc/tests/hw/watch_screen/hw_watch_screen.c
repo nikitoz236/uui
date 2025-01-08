@@ -81,7 +81,17 @@ unsigned btn_get_event(void)
     return 0;
 }
 
+int timezone_s = 5 * 60 * 60;
 
+int time_zone_get(void)
+{
+    return timezone_s;
+}
+
+void time_zone_set(int tz)
+{
+    timezone_s = tz;
+}
 
 #define COLOR_BG_UNSELECTED         COLOR(0x4d3143)
 #define COLOR_BG_SELECTED           COLOR(0x966bfa)
@@ -111,7 +121,7 @@ ui_node_desc_t ui = {
             {
                 .widget = &__widget_selectable_list,
                 .cfg = &(__widget_selectable_list_cfg_t) {
-                    .num = 4,
+                    .num = 5,
                     .different_nodes = 0,
                     .ui_node = (ui_node_desc_t[]) {
                         {
@@ -119,6 +129,9 @@ ui_node_desc_t ui = {
                         },
                         {
                             .widget = &__widget_date_settings
+                        },
+                        {
+                            .widget = &__widget_time_zone_settings
                         },
                         {
                             .widget = &__widget_text,

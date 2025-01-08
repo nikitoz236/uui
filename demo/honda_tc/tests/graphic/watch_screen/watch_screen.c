@@ -16,11 +16,16 @@ uint8_t screen_selector = 0;
 
 extern font_t font_5x7;
 
-int tz = 0;
+int timezone_s = 0;
 
-void set_tz(int timezone_s)
+int time_zone_get(void)
 {
-    tz = timezone_s;
+    return timezone_s;
+}
+
+void time_zone_set(int tz)
+{
+    timezone_s = tz;
 }
 
 ui_node_desc_t ui = {
@@ -45,11 +50,7 @@ ui_node_desc_t ui = {
                             .widget = &__widget_date_settings
                         },
                         {
-                            .widget = &__widget_time_zone_settings,
-                            .cfg = &(__widget_time_zone_settings_cfg_t){
-                                .timezone_s_ptr = &tz,
-                                .set_timezone = set_tz
-                            }
+                            .widget = &__widget_time_zone_settings
                         },
                         {
                             .widget = &__widget_text,

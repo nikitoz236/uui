@@ -16,6 +16,8 @@
 #include "forms_align.h"
 #include "stddef.h"
 
+#include "time_zone.h"
+
 typedef struct {
     const lcd_font_cfg_t * fcfg;
     xy_t limit_char;
@@ -190,7 +192,7 @@ static void update_time(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     if (ctx->vtu == VTU_NONE) {
-        unsigned current_time_s = rtc_get_time_s();
+        unsigned current_time_s = rtc_get_time_s() + time_zone_get();
         if (ctx->current_time_s != current_time_s) {
             ctx->current_time_s = current_time_s;
             time_from_s(&ctx->time, current_time_s);
@@ -237,7 +239,9 @@ static unsigned process_time(ui_element_t * el, unsigned event)
             change_vtu = next_vtu_date[ctx->vtu];
             if (change_vtu == VTU_NONE) {
                 // set time
-                rtc_set_time_s(time_change_in_s(&ctx->time, rtc_get_time_s()));
+                int tz = time_zone_get();
+                unsigned time_s = rtc_get_time_s() + tz;
+                rtc_set_time_s(time_change_in_s(&ctx->time, time_s) - tz);
             }
         }
 
@@ -311,7 +315,7 @@ static void update_date(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     // printf("update date, current day %d vtu %d\n", ctx->current_day, ctx->vtu);
     if (ctx->vtu == VTU_NONE) {
-        unsigned current_day = days_from_s(rtc_get_time_s());
+        unsigned current_day = days_from_s(rtc_get_time_s() + time_zone_get());
         if (ctx->current_day != current_day) {
             ctx->current_day = current_day;
             date_from_days(&ctx->date, current_day);
@@ -357,7 +361,9 @@ static unsigned process_date(ui_element_t * el, unsigned event)
             change_vtu = next_vtu_date[ctx->vtu];
             if (change_vtu == VTU_NONE) {
                 // set date
-                rtc_set_time_s(date_change_in_s(&ctx->date, rtc_get_time_s()));
+                int tz = time_zone_get();
+                unsigned time_s = rtc_get_time_s() + tz;
+                rtc_set_time_s(date_change_in_s(&ctx->date, time_s) - tz);
             }
         }
 
@@ -438,15 +444,20 @@ static void redraw_tz_widget(ui_element_t * el)
     draw_color_form(&el->f, cs(el->active, 0)->bg);
     lcd_color_text_raw_print("Time zone:", &fcfg, cs(el->active, 0), &ctx->title_pos, 0, 0, 0);
 
-    __widget_time_zone_settings_cfg_t * cfg = (__widget_time_zone_settings_cfg_t *)el->ui_node->cfg;
-    ctx->tz_s = *cfg->timezone_s_ptr;
+    ctx->tz_s = time_zone_get();
     update_tz(ctx, cs(el->active, 0));
+}
+
+static void mod_tz(ctx_t * ctx, val_mod_op_t op)
+{
+    if (val_mod_signed(&ctx->tz_s, VAL_SIZE_32, op, 0, -12 * 60 * 60, 12 * 60 * 60, 15 * 60)) {
+        update_tz(ctx, cs(1, 1));
+    }
 }
 
 static unsigned process_tz(ui_element_t * el, unsigned event)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    __widget_time_zone_settings_cfg_t * cfg = (__widget_time_zone_settings_cfg_t *)el->ui_node->cfg;
     // printf("process date %d\n", event);
 
     if (ctx->vtu == VTU_NONE) {
@@ -457,31 +468,26 @@ static unsigned process_tz(ui_element_t * el, unsigned event)
         }
     } else {
         if (event == EVENT_BTN_OK) {
-            // set time zone
-            cfg->set_timezone(ctx->tz_s);
+            time_zone_set(ctx->tz_s);
             update_tz(ctx, cs(1, 0));
             ctx->vtu = VTU_NONE;
             return 1;
         }
 
         if (event == EVENT_BTN_LEFT) {
-            ctx->tz_s = *cfg->timezone_s_ptr;
+            ctx->tz_s = time_zone_get();
             update_tz(ctx, cs(1, 0));
             ctx->vtu = VTU_NONE;
             return 1;
         }
 
         if (event == EVENT_BTN_UP) {
-            if (val_mod_signed(&ctx->tz_s, VAL_SIZE_32, MOD_OP_ADD, 0, -12 * 60 * 60, 12 * 60 * 60, 15 * 60)) {
-                update_tz(ctx, cs(1, 1));
-            }
+            mod_tz(ctx, MOD_OP_ADD);
             return 1;
         }
 
         if (event == EVENT_BTN_DOWN) {
-            if (val_mod_signed(&ctx->tz_s, VAL_SIZE_32, MOD_OP_SUB, 0, -12 * 60 * 60, 12 * 60 * 60, 15 * 60)) {
-                update_tz(ctx, cs(1, 1));
-            }
+            mod_tz(ctx, MOD_OP_SUB);
             return 1;
         }
 
