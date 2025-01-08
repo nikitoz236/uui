@@ -31,7 +31,7 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf $(BUILD_DIR)
 	$(BIN) $< $@
 
 $(BUILD_DIR)/$(TARGET).elf: $(SRC) $(BUILD_DIR)/stack_size.ld Makefile
-	$(CC) $(SRC) $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(addprefix -T, $(LD_FILES)) $(OPT) -Wall -fno-builtin -nostdlib -g -MMD -Wl,-Map,"$(BUILD_DIR)/map_file" $(MCU) -o $@
+	$(CC) $(SRC) $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(addprefix -T, $(LD_FILES)) $(OPT) -Wall -fno-builtin -nostdlib -MMD -Wl,-Map,"$(BUILD_DIR)/map_file" $(MCU) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/stack_size.ld: $(BUILD_DIR)
