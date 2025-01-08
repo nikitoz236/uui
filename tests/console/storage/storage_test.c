@@ -7,6 +7,14 @@
 
 #include "emu_storage.h"
 
+/*
+    сначала была реализация emu_flash_in_ram.c в виде области памяти в ОЗУ
+    потом появилась emu_storage.с которая еще и файл создает и позволяет сохранять состояние файловой системы
+    между тестами
+*/
+
+
+
 void print_hex_dump(const void * ptr, unsigned size)
 {
     const uint8_t * p = ptr;
@@ -93,7 +101,7 @@ int main ()
         // storage_print_info();
     }
 
-    printf("\n\n\n\n\nREADY");
+    printf("\n\n\n\n\nREADY\n");
     storage_print_info();
 
     print_hex_dump(storage_page_to_pointer(0), 32);

@@ -1,4 +1,3 @@
-#include "flash_atomic.h"
 #include "storage_hw.h"
 
 /*
@@ -7,7 +6,7 @@
 
 static uint8_t flash_mem[STORAGE_PAGES][FLASH_ATOMIC_ERASE_SIZE];
 
-void * storage_page_to_pointer(unsigned page)
+const void * storage_page_to_pointer(unsigned page)
 {
     return flash_mem[page];
 }
