@@ -368,7 +368,6 @@ void storage_init(void)
             }
 
             storage_page_add_header(ph, PAGE_ERASE_CNT_START);
-            empty_page_num++;
         } else {
             const file_header_t * last_version_of_file = 0;
             for_each_file_in_page_header(ph) {
@@ -392,6 +391,9 @@ void storage_init(void)
         }
         storage_ctx[i].usefull = usefull;
         storage_ctx[i].used = used;
+        if (used == sizeof(page_header_t)) {
+            empty_page_num++;
+        }
     }
 }
 
