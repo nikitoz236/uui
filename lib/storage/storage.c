@@ -2,10 +2,14 @@
 #include "misc.h"
 #include "stddef.h"
 #include "storage_hw.h"
-#include "flash_atomic.h"
+
+#define printf(...)
 
 #define STORAGE_PAGE_MAGIC          0x5A6B
 #define MAX_FILE_OFFSET_IN_PAGE     (FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t))
+
+// для теста переполнений счетчики версий файла и стирания страницы
+// можно начать с близкого к переполнению значения
 #define FILE_VERSION_START          65530
 #define PAGE_ERASE_CNT_START        65530
 
@@ -33,7 +37,7 @@ static unsigned empty_page_num = 0;
 
 static inline const  page_header_t * page_header_from_page(unsigned page)
 {
-    return (page_header_t *) storage_page_to_pointer(page);
+    return (page_header_t *)storage_page_to_pointer(page);
 }
 
 static inline unsigned file_data_full_size(unsigned size)
@@ -48,7 +52,6 @@ static inline unsigned file_record_full_size(unsigned size)
 
 static unsigned flash_is_erased(const void * ptr, unsigned len)
 {
-    unsigned result = 1;
     const uint8_t * p = ptr;
     while (len--) {
         if (*p++ != 0xFF) {
@@ -392,26 +395,34 @@ void storage_init(void)
     }
 }
 
+#include "dp.h"
+
 void storage_print_info(void)
 {
-    printf("\n+++   stroage info: empty pages %d\n", empty_page_num);
-    for (unsigned i = 0; i < STORAGE_PAGES; i++) {
-        const page_header_t * ph = page_header_from_page(i);
+    dp("stroage info: empty pages "); dpd(empty_page_num, 2); dn();
+    for (unsigned p = 0; p < STORAGE_PAGES; p++) {
+        const page_header_t * ph = page_header_from_page(p);
+        storage_page_ctx_t * pctx = &storage_ctx[p];
+        unsigned free = FLASH_ATOMIC_ERASE_SIZE - pctx->used;
+        uint16_t erased = ph->erase_cnt - PAGE_ERASE_CNT_START;
+        dp("  page: "); dpd(p, 2); dp("     erased: "); dpd(erased, 5); dp("     used: "); dpd(pctx->used, 4);
+        dp("     usefull: "); dpd(pctx->usefull, 4); dp("     free: "); dpd(free, 4); dn();
 
-        printf("  page %2d erased %3d used %5d usefull [%5d] free [%5d]\n", i, ph->erase_cnt, storage_ctx[i].used, storage_ctx[i].usefull, FLASH_ATOMIC_ERASE_SIZE - storage_ctx[i].used);
         const file_header_t * last_version_of_file = 0;
         for_each_file_in_page_header(ph) {
             if ((last_version_of_file == 0) || (last_version_of_file->id != file->id)) {
                 unsigned file_page;
-                printf("                search last_version_of_file %d\n", file->id);
+                // printf("                search last_version_of_file %d\n", file->id);
                 last_version_of_file = search_file_by_id(file->id, &file_page);
             }
-            printf("                    file id <%05d> ver %5d len %5d full len %5d", file->id, file->version, file->len, file_record_full_size(file->len));
+
+            uint16_t f_ver = file->version - FILE_VERSION_START;
+            dp("    file id <"); dpd(file->id, 5); dp(">     ver: "); dpd(f_ver, 5);
+            dp("     len: "); dpd(file->len, 5); dp("     full len: "); dpd(file_record_full_size(file->len), 5);
             if (file == last_version_of_file) {
-                printf("   <<- !!! actual\n");
-            } else {
-                printf("\n");
+                dp("   <<- !!! actual");
             }
+            dn();
         }
     }
 }
