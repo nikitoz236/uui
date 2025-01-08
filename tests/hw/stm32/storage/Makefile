@@ -17,23 +17,25 @@ SRC += $(TARGET).c
 SRC += hw_cfg.c
 
 # drivers
+INC += $(LIB)/hw/include/
+
 SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
 
-INC += $(LIB)/hw/include/
-# INC += $(LIB)/hw/api/
-# INC += $(LIB)/hw/drivers
+# storage
+INC += $(LIB)/storage
+SRC += $(LIB)/storage/storage.c
 
 # misc.h
 # dp.h
 INC += $(LIB)/common
 
+# dp.h dependecies
 SRC += $(LIB)/common/str_utils.c
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
-SRC += $(LIB)/common/val_text.c
-SRC += $(LIB)/common/val_mod.c
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 

@@ -1,7 +1,7 @@
 #include "config.h"
 
 #include "dp.h"
-// #include "storage.h"
+#include "storage.h"
 
 /*
     конфигурация логанализатора
@@ -52,6 +52,9 @@ int main(void)
     __enable_irq();
 
     dn(); dn(); dpn("TEST STORAGE");
+
+    storage_init();
+    storage_print_info();
 
     while (1) {
     };
