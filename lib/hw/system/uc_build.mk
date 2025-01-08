@@ -91,3 +91,6 @@ reset:
 swd_dbg:
 	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
 	-f target/$(OPENOCD_TARGET).cfg
+
+minicom:
+	$(shell gnome-terminal -- minicom -D /dev/ttyACM0 -b 115200)
