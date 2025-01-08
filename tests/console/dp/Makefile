@@ -1,4 +1,4 @@
-LIB = ../../lib
+LIB = ../../../lib
 
 test_debug_print_run:
 
