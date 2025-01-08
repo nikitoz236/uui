@@ -1,6 +1,6 @@
-LIB = ../../lib
+LIB = ../../../lib
 
-all: storage_test_test_run
+all: storage_test_run
 
 INC += ./
 INC += $(LIB)/storage
