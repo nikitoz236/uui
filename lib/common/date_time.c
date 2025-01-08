@@ -25,7 +25,7 @@ unsigned is_year_leap(unsigned y)
     return 1;
 }
 
-unsigned days_in_month(month_t month, unsigned year)
+unsigned days_in_month(unsigned month, unsigned year)
 {
     //                                   J   F   M   A   M   J   J   A   S   O   N   D
     static const uint8_t month_len[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
@@ -39,7 +39,7 @@ unsigned days_in_month(month_t month, unsigned year)
     return d;
 }
 
-week_day_t day_of_week(date_t * d)
+unsigned day_of_week(date_t * d)
 {
     uint16_t y = d->y;
     uint8_t m;
@@ -171,7 +171,7 @@ void time_hh_mm_ss_to_str(time_t * t, char * str)
     str[8] = 0;
 }
 
-const char * day_of_week_name(week_day_t d)
+const char * day_of_week_name(unsigned d)
 {
     static const char * week_day_names[] = {
         __WEEK_DAY_LIST(LIST_NAME)
@@ -184,7 +184,7 @@ const char * day_of_week_name(week_day_t d)
     return week_day_names[d];
 }
 
-const char * month_name(month_t m)
+const char * month_name(unsigned m)
 {
     static const char * month_names[] = {
         __MONTH_LIST(LIST_NAME)

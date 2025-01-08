@@ -27,18 +27,18 @@
 #define __WEEK_DAY_ENUM(name)       WEEK_DAY_ ## name
 #define __MONTH_ENUM(name)          MONTH_ ## name
 
-typedef enum {
+enum {
     __WEEK_DAY_LIST(__WEEK_DAY_ENUM)
-} week_day_t;                       // 0 - MON ... 6 - SUN
+};                                  // 0 - MON ... 6 - SUN
 
-typedef enum {
+enum {
     __MONTH_LIST(__MONTH_ENUM)
-} month_t;                          // 0 - JAN ... 11 - DEC
+};                                  // 0 - JAN ... 11 - DEC
 
-typedef struct {
-    uint8_t d;                      // 1 ... 31
-    month_t m;                      // 0 ... 11
+typedef struct __attribute__((packed)) {
     uint16_t y;                     // 0 ... 2022 ... 65535
+    uint8_t m;                      // 0 ... 11
+    uint8_t d;                      // 1 ... 31
 } date_t;
 
 typedef struct {
@@ -48,8 +48,8 @@ typedef struct {
 } time_t;
 
 unsigned is_year_leap(unsigned y);
-unsigned days_in_month(month_t m, unsigned y);
-week_day_t day_of_week(date_t * d);
+unsigned days_in_month(unsigned m, unsigned y);
+unsigned day_of_week(date_t * d);
 
 unsigned days_from_s(unsigned s);
 unsigned days_to_s(unsigned days);
@@ -75,5 +75,5 @@ void time_hh_mm_to_str(time_t * t, char * str);
 
 void date_dd_mname_yyyy_to_str(date_t * d, char * c);
 
-const char * day_of_week_name(week_day_t d);
-const char * month_name(month_t m);
+const char * day_of_week_name(unsigned dow);
+const char * month_name(unsigned m);
