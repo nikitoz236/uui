@@ -1,6 +1,6 @@
 #include "fonts.h"
 
-font_t font_3x5 = {
+const font_t font_3x5 = {
     .size = {
         .w = 3,
         .h = 5,
