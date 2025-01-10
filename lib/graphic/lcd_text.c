@@ -11,7 +11,7 @@ void lcd_text_calc_size(xy_t * size, const lcd_text_cfg_t * cfg)
     }
 }
 
-xy_t lcd_text_size_px(const xy_t * text_size_chars, const lcd_font_cfg_t * cfg)
+xy_t lcd_text_size_px(const lcd_font_cfg_t * cfg, xy_t text_size_chars)
 {
     xy_t size;
 
@@ -23,7 +23,7 @@ xy_t lcd_text_size_px(const xy_t * text_size_chars, const lcd_font_cfg_t * cfg)
     }
 
     for (int i = 0; i < DIMENSION_COUNT; i++) {
-        unsigned text_len = text_size_chars->ca[i];
+        unsigned text_len = text_size_chars.ca[i];
         if (text_len == 0) {
             text_len = 1;
         }

@@ -158,13 +158,13 @@ static void mod_vtu(ctx_t * ctx, const val_text_updatable_t * vtu, val_mod_op_t 
 
 static xy_t calc_setting_form_size(unsigned len)
 {
-    return size_add_margins(lcd_text_size_px(&(xy_t){ .x = len, .y = 2 }, &fcfg), text_margin);
+    return size_add_margins(lcd_text_size_px(&fcfg, (xy_t){ .x = len, .y = 2 }), text_margin);
 }
 
 static void calc_pos(ctx_t * ctx, form_t * f, unsigned title_len, unsigned text_len)
 {
-    ctx->title_pos = align_form_pos(f, lcd_text_size_px(&(xy_t){ .x = title_len, .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
-    ctx->text_pos = align_form_pos(f, lcd_text_size_px(&(xy_t){ .x = text_len, .y = 1 }, &fcfg), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
+    ctx->title_pos = align_form_pos(f, lcd_text_size_px(&fcfg, (xy_t){ .x = title_len, .y = 1 }), &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U } }, &text_margin);
+    ctx->text_pos = align_form_pos(f, lcd_text_size_px(&fcfg, (xy_t){ .x = text_len, .y = 1 }), &(align_t){ .x = { .edge = EDGE_R }, .y = { .edge = EDGE_D } }, &text_margin);
 }
 
 static void calc_time(ui_element_t * el)
