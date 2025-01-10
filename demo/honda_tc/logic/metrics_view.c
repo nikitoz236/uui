@@ -97,6 +97,7 @@ const char * metric_var_get_name(metric_var_id_t id)
 
 const char * metric_var_get_unit(metric_var_id_t id)
 {
+    // может возвращать 0! так как не у всех значений есть единицы измерения
     #define METRIC_UNIT(id, name, unit, ...) unit
     static const char * metric_var_units[] = {
         METRIC_VAR_LIST(METRIC_UNIT)
