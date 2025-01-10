@@ -28,7 +28,7 @@ int main()
         const char side[] = { [ALIGN_I] = 'I', [ALIGN_O] = 'O' };
         char astr[2][2] = {0};
 
-        xy_t res_pos = align_form_pos(&tests[i].pf, tests[i].s, &tests[i].a, &tests[i].margin);
+        xy_t res_pos = align_form_pos(&tests[i].pf, tests[i].s, tests[i].a, tests[i].margin);
 
         for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
             if (res_pos.ca[d] != tests[i].res.ca[d]) {
