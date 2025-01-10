@@ -3,7 +3,7 @@
 #include "emu_graphic.h"
 #include "emu_lcd.h"
 
-#include "tc_events.h"
+#include "event_list.h"
 #include "widget_screen_switch.h"
 #include "widget_selectable.h"
 
@@ -23,7 +23,7 @@ void view_process(char key)
         event = EVENT_BTN_RIGHT;
     }
 
-    ui_tree_process_event(event);
+    ui_tree_process(event);
 }
 
 int main()
@@ -43,7 +43,7 @@ int main()
     emu_graphic_init(lcd_form.s.w, lcd_form.s.h);
     emu_lcd_clear();
 
-    unsigned screen_selector = 0;
+    uint8_t screen_selector = 0;
 
     ui_node_desc_t ui = {
         .widget = &__widget_screen_switch,

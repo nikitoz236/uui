@@ -1,5 +1,5 @@
 #include "ui_tree.h"
-#include "tc_events.h"
+#include "event_list.h"
 #include "widget_test_rect_with_text.h"
 
 #include "widget_screen_switch.h"
@@ -69,7 +69,7 @@ xy_t lcd_size = {
 
 void view_process(unsigned int event)
 {
-    ui_tree_process_event(event);
+    ui_tree_process(event);
 }
 
 void view_screen_on(void)

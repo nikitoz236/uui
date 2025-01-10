@@ -1,6 +1,6 @@
 #include "widget_selectable.h"
 #include "widget_test_rect_with_text.h"
-#include "tc_events.h"
+#include "event_list.h"
 
 typedef struct {
     uint8_t selected;
@@ -13,14 +13,14 @@ typedef struct {
 static void update(ui_element_t * el)
 {
     __widget_selectable_ctx_t * ctx = (__widget_selectable_ctx_t *)el->ctx;
-    printf("update selectable: %s\n", ctx->text);
+    // printf("update selectable: %s\n", ctx->text);
     if (ctx->selected == 0) {
         ctx->child_cfg.cs.bg = 0xA04020;
     } else {
         ctx->child_cfg.cs.bg = 0x708090;
     }
     ctx->text[1] = '1' + ctx->n;
-    printf("update selectable end: %s\n", ctx->text);
+    // printf("update selectable end: %s\n", ctx->text);
 
     ui_element_t * item = ui_tree_child(el);
     ui_tree_element_draw(item);
@@ -28,7 +28,7 @@ static void update(ui_element_t * el)
 
 static void draw(ui_element_t * el)
 {
-    printf("draw selectable\n");
+    // printf("draw selectable\n");
     __widget_selectable_ctx_t * ctx = (__widget_selectable_ctx_t *)el->ctx;
 
     ctx->child_node.cfg = &ctx->child_cfg;

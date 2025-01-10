@@ -9,6 +9,11 @@ SRC += ./$(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
 
 INC += ./$(LIB)/hw/include/
 
+
+INC += ./$(LIB)/graphic
+SRC += ./$(LIB)/graphic/align_forms.c
+
+INC += ..
 INC += ./
 SRC += ./*.c
 
@@ -21,6 +26,6 @@ SRC += $(PROJECT)/logic/metrics_view.c
 SRC += $(PROJECT)/logic/metrics_ecu.c
 SRC += $(PROJECT)/logic/trip_integrate.c
 
-selector_test_run:
+TEST_NAME = selector
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk

@@ -1,11 +1,12 @@
 #include "widget_titled_screen.h"
 #include "color_forms.h"
 #include "lcd_text_color.h"
-#include "tc_events.h"
+#include "event_list.h"
 
 #include "fonts.h"
 #include "str_utils.h"
 #include "align_forms.h"
+#include "forms_split.h"
 
 extern font_t font_5x7;
 
