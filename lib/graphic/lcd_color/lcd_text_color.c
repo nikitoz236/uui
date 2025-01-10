@@ -163,6 +163,12 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
         char_idx = *pos_chars;
     }
 
+    if (limit_chars) {
+        if (char_idx.x >= limit_chars->x) {
+            return;
+        }
+    }
+
     xy_t char_shift;
     xy_t char_pos_px;
     xy_t gap;
@@ -182,49 +188,56 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
         }
     }
 
+    // printf("lcd_color_text_raw_print str %s, len %d\n", str, len);
+
     while (1) {
+        char c = 0;
 
-        if (*str == '\r') {
-            str++;
-        } else if (*str == 0) {
-            return;
-        } else if (*str == '\n') {
-
-        } else {
-            if (*str == ' ') {
-                lcd_rect(char_pos_px.x, char_pos_px.y, (cfg->font->size.w * scale), (cfg->font->size.h * scale), cs->bg);
-                // ?? надо ли заполнять зазор между буквами?
-            } else {
-                print_char(*str, char_pos_px.x, char_pos_px.y, cfg->font, cs->fg, cs->bg, scale);
+        if (str) {
+            c = *str;
+            if (c) {
+                str++;
             }
+        }
 
-            str++;
+        if (c == 0) {
+            if (len == 0) {
+                return;
+            }
+            // если строка закончилась или отсутствует, но указан len
+            // заполняем оставшиеся от len знакоместа пробелами
+            c = ' ';
+        }
 
-            if (*str == 0) {
+        // printf("lcd_color_text_raw_print char %c\n", c);
+
+        if (c == ' ') {
+            lcd_rect(char_pos_px.x, char_pos_px.y, (cfg->font->size.w * scale), (cfg->font->size.h * scale), cs->bg);
+            // ?? надо ли заполнять зазор между буквами?
+        } else {
+            print_char(c, char_pos_px.x, char_pos_px.y, cfg->font, cs->fg, cs->bg, scale);
+        }
+
+        if (len) {
+            len--;
+            if (len == 0) {
+                return;
+            }
+        }
+
+        char_idx.x++;
+        if ((limit_chars) && (char_idx.x == limit_chars->x)) {
+            char_idx.x = 0;
+            char_idx.y++;
+
+            if (char_idx.y == limit_chars->y) {
                 return;
             }
 
-            if (len) {
-                len--;
-                if (len == 0) {
-                    return;
-                }
-            }
-
-            char_idx.x++;
-            if ((limit_chars) && (char_idx.x == limit_chars->x)) {
-                char_idx.x = 0;
-                char_idx.y++;
-
-                if (char_idx.y == limit_chars->y) {
-                    return;
-                }
-
-                char_pos_px.x = pos_px->x;
-                char_pos_px.y += char_shift.y;
-            } else {
-                char_pos_px.x += char_shift.x;
-            }
+            char_pos_px.x = pos_px->x;
+            char_pos_px.y += char_shift.y;
+        } else {
+            char_pos_px.x += char_shift.x;
         }
     }
 }
