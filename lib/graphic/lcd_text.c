@@ -44,6 +44,27 @@ xy_t lcd_text_size_px(const lcd_font_cfg_t * cfg, xy_t text_size_chars)
     return size;
 }
 
+xy_t lcd_text_char_places(const lcd_font_cfg_t * cfg, xy_t size_px)
+{
+    xy_t text_size_chars;
+
+    unsigned scale = cfg->scale;
+    if (scale == 0) {
+        scale = 1;
+    }
+
+    for (int i = 0; i < DIMENSION_COUNT; i++) {
+        unsigned gap = cfg->gaps.ca[i];
+        if (gap == 0) {
+            gap = 1;
+        }
+
+        text_size_chars.ca[i] = (size_px.ca[i] + gap) / ((cfg->font->size.ca[i] * scale) + gap);
+    }
+
+    return text_size_chars;
+}
+
 void lcd_text_extend_text_size(const xy_t * available_size, lcd_text_cfg_t * cfg)
 {
     for (int i = 0; i < 2; i++) {
