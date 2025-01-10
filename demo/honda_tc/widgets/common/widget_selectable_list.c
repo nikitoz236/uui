@@ -22,10 +22,15 @@ static void recalc_list(ui_element_t * el)
     form_t f = el->f;
 
     while (1) {
-
-        ui_element_t * item = ui_tree_add(el, &cfg->ui_node[child_idx], child_idx);
+        const ui_node_desc_t * child_ui_node;
+        if (cfg->different_nodes) {
+            child_ui_node = &cfg->ui_node[child_idx];
+        } else {
+            child_ui_node = cfg->ui_node;
+        }
+        ui_element_t * item = ui_tree_add(el, child_ui_node, child_idx);
         ui_tree_element_calc(item);
-        xy_t item_size = size_add_margins(item->f.s, cfg->margin);
+        xy_t item_size = size_add_padding(item->f.s, cfg->margin);
 
         // printf("recalc_list item size %d %d with margin %d %d\n", item->f.s.w, item->f.s.h, item_size.w, item_size.h);
 
@@ -33,7 +38,7 @@ static void recalc_list(ui_element_t * el)
             break;
         }
 
-        item->f.p = align_form_pos(&f, item->f.s, &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U }}, &cfg->margin);
+        item->f.p = align_form_pos(&f, item->f.s, ALIGN_LIUI, cfg->margin);
         item->f.s.w = f.s.w - (2 * cfg->margin.x);
 
         // printf("recalc_list item pos %d %d size %d %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h);
