@@ -3,8 +3,9 @@ LIB = $(PROJECT)/../../lib
 
 INC += $(PROJECT)/widgets
 INC += $(PROJECT)/widgets/common
+SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 SRC += $(PROJECT)/widgets/widget_metric_list_item.c
-SRC += $(PROJECT)/widgets/common/widget_metric_list.c
+# SRC += $(PROJECT)/widgets/common/widget_metric_list.c
 
 INC += $(PROJECT)/view
 
@@ -18,9 +19,16 @@ SRC += ./$(LIB)/emu/hw/systick.c
 
 INC += ..
 
+INC += $(LIB)/common/
+SRC += $(LIB)/common/str_val.c
+SRC += $(LIB)/common/str_val_buf.c
+SRC += $(LIB)/common/val_text.c
+SRC += $(LIB)/common/val_mod.c
+
+
 #depricated
 SRC += $(LIB)/graphic/align_forms.c
 
 TEST_NAME = test_widget_metric_list
 
-include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
+include ../emu_widget.mk
