@@ -2,7 +2,7 @@
 #include "metrics_view.h"
 #include "color_type.h"
 
-extern widget_desc_t __widget_metric_list_item;
+extern const widget_desc_t __widget_metric_list_item;
 
 typedef struct {
     lcd_color_t color_text;
