@@ -38,6 +38,6 @@ SRC += $(LIB)/common/val_mod.c
 #depricated
 SRC += $(LIB)/graphic/align_forms.c
 
-watch_screen_run:
+TEST_NAME = watch_screen
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
