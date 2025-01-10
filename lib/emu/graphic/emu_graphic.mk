@@ -16,24 +16,7 @@ SRC += $(LIB)/emu/graphic/emu_lcd.c
 
 GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
 
-$(TEST_NAME)_run:
-
-build_check: $(TEST_NAME)_app
-	echo "==== try to build test $(TEST_NAME) ===="
-	rm ./$(TEST_NAME)_app
+include $(LIB)/emu/emu.mk
 
 %_app: %.c $(SRC)
 	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(GFX_FLAGS) -o $@
-
-%_run: %_app
-	./$<
-	rm $<
-
-src_print:
-	echo $(SRC)
-
-inc_print:
-	echo $(INC)
-
-clean:
-	rm -f *_test_app

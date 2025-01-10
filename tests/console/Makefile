@@ -1,6 +1,7 @@
-TEST_CHECKS_BUILD_LIST = $(subst Makefile,build_check, $(wildcard ./*/Makefile))
+LIB = ../../lib
+
+TEST_CHECKS_BUILD_LIST = $(subst Makefile,folder_build_check, $(wildcard ./*/Makefile))
 
 build_check: $(TEST_CHECKS_BUILD_LIST)
 
-%/build_check:
-	cd $(dir $@) ; $(MAKE) build_check ; cd -
+include $(LIB)/emu/build_check.mk
