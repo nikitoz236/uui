@@ -42,7 +42,7 @@ ui_node_desc_t ui = {
                 .cfg = &(__widget_selectable_list_cfg_t) {
                     .num = 5,
                     .margin = { .x = 4, .y = 4 },
-                    .different_nodes = 0,
+                    .different_nodes = 1,
                     .ui_node = (ui_node_desc_t[]) {
                         {
                             .widget = &__widget_time_settings
