@@ -38,6 +38,6 @@ SRC += $(LIB)/common/val_mod.c
 #depricated
 SRC += $(LIB)/graphic/align_forms.c
 
-watch_screen_test_run:
+watch_screen_run:
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk

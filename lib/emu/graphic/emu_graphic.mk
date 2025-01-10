@@ -16,10 +16,10 @@ SRC += $(LIB)/emu/graphic/emu_lcd.c
 
 GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
 
-%_test_app: %.c $(SRC)
+%_app: %.c $(SRC)
 	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(GFX_FLAGS) -o $@
 
-%_test_run: %_test_app
+%_run: %_app
 	./$<
 	rm $<
 
