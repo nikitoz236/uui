@@ -1,7 +1,7 @@
 #include "widget_text.h"
 #include "lcd_text.h"
 #include "lcd_text_color.h"
-#include "align_forms.h"
+#include "forms_align.h"
 #include "str_utils.h"
 #include "draw_color.h"
 
@@ -50,7 +50,7 @@ static void draw(ui_element_t * el)
 
     form_t text_form;
     lcd_text_calc_size(&text_form.s, &ctx->text_cfg);
-    form_align(&el->f, &text_form, &ALIGN_MODE(LI, 5, C, 0));
+    align_form(&el->f, &text_form, &(align_t){ .x = { .edge = EDGE_L }, .y = { .center = 1 }}, &(xy_t){.x = 5, .y = 0});
     ctx->pos = text_form.p;
 
     draw_widget_text(el);

@@ -11,6 +11,6 @@ SRC += $(PROJECT)/widgets/common/widget_text.c
 INC += $(LIB)/common/
 SRC += $(LIB)/common/str_val.c
 
-selectable_list_test_run:
+selectable_list_run:
 
 include ../emu_widget.mk
