@@ -11,6 +11,6 @@ SRC += $(LIB)/graphic/lcd_color/*.c
 # misc.h
 INC += $(LIB)/common
 
-lcd_color_text_raw_print_test_run:
+TEST_NAME = test_lcd_color_text_raw_print
 
 include $(LIB)/emu/graphic/emu_graphic.mk
