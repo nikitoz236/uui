@@ -10,6 +10,9 @@ INC += $(LIB)/graphic/forms
 SRC += $(LIB)/graphic/forms/forms_split.c
 SRC += $(LIB)/graphic/forms/forms_align.c
 
+# text_field.h
+INC += $(LIB)/graphic/text
+
 # systick.h
 # rtc.h
 INC += $(LIB)/hw/include/
