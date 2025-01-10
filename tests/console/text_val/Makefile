@@ -6,6 +6,6 @@ SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_utils.c
 
-test_val_text_run:
+TEST_NAME = test_val_text
 
 include $(LIB)/emu/test_console.mk

@@ -13,6 +13,6 @@ INC += $(LIB)/graphic
 INC += $(LIB)/graphic/forms
 SRC += $(LIB)/graphic/forms/forms_align.c
 
-test_forms_align_run:
+TEST_NAME = test_forms_align
 
 include $(LIB)/emu/test_console.mk

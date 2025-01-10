@@ -1,6 +1,6 @@
 LIB = ../../../lib
 
-all: storage_test_run
+TEST_NAME = storage_test
 
 INC += ./
 INC += $(LIB)/storage
