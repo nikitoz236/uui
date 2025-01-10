@@ -5,7 +5,7 @@
 #include "ui_tree.h"
 #include "widget_metric_list.h"
 #include "widget_metric_list_item.h"
-#include "tc_events.h"
+#include "event_list.h"
 // #include "metrics_view.h"
 
 void view_process(char key)
@@ -17,7 +17,7 @@ void view_process(char key)
         event = EVENT_BTN_DOWN;
     }
 
-    ui_tree_process_event(event);
+    ui_tree_process(event);
 }
 
 int main()

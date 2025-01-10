@@ -16,7 +16,11 @@ SRC += $(PROJECT)/logic/trip_integrate.c
 INC += ./$(LIB)/hw/include/
 SRC += ./$(LIB)/emu/hw/systick.c
 
+INC += ..
 
-widget_metrics_list_test_run:
+#depricated
+SRC += $(LIB)/graphic/align_forms.c
+
+TEST_NAME = test_widget_metric_list
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
