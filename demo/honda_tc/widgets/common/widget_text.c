@@ -50,7 +50,7 @@ static void draw(ui_element_t * el)
 
     form_t text_form;
     lcd_text_calc_size(&text_form.s, &ctx->text_cfg);
-    align_form(&el->f, &text_form, &(align_t){ .x = { .edge = EDGE_L }, .y = { .center = 1 }}, &(xy_t){.x = 5, .y = 0});
+    align_form(&el->f, &text_form, ALIGN_LIC, (xy_t){.x = 5, .y = 0});
     ctx->pos = text_form.p;
 
     draw_widget_text(el);
