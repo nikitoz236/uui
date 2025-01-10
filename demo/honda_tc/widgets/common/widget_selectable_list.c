@@ -4,6 +4,8 @@
 #include "event_list.h"
 #include "draw_color.h"
 
+#include "forms_align.h"
+
 typedef struct {
     uint8_t pos;
     uint8_t first;
@@ -23,19 +25,22 @@ static void recalc_list(ui_element_t * el)
 
         ui_element_t * item = ui_tree_add(el, &cfg->ui_node[child_idx], child_idx);
         ui_tree_element_calc(item);
+        xy_t item_size = size_add_margins(item->f.s, cfg->margin);
 
-        // printf("recalc_list item size %d %d\n", item->f.s.w, item->f.s.h);
+        // printf("recalc_list item size %d %d with margin %d %d\n", item->f.s.w, item->f.s.h, item_size.w, item_size.h);
 
-        if (f.s.h < item->f.s.h) {
+        if (f.s.h < item_size.h) {
             break;
         }
 
-        item->f.p = f.p;
-        item->f.s.w = f.s.w;
+        item->f.p = align_form_pos(&f, item->f.s, &(align_t){ .x = { .edge = EDGE_L }, .y = { .edge = EDGE_U }}, &cfg->margin);
+        item->f.s.w = f.s.w - (2 * cfg->margin.x);
+
+        // printf("recalc_list item pos %d %d size %d %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h);
 
         ui_tree_element_extend(item);
 
-        form_cut(&f, DIMENSION_Y, EDGE_U, item->f.s.h);
+        form_cut(&f, DIMENSION_Y, EDGE_U, item_size.h - cfg->margin.y);
 
         // printf("recalc_list form %d %d %d %d\n", f.p.x, f.p.y, f.s.w, f.s.h);
 

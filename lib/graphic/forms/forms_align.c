@@ -21,3 +21,11 @@ xy_t align_form_pos(const form_t * pf, xy_t s, const align_t * a, const xy_t * m
     }
     return p;
 }
+
+xy_t size_add_margins(xy_t size, xy_t margins)
+{
+    return (xy_t){
+        .x = size.x + margins.x * 2,
+        .y = size.y + margins.y * 2
+    };
+}

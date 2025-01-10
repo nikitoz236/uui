@@ -27,3 +27,5 @@ static inline void align_form(const form_t * pf, form_t * af, const align_t * a,
 {
     af->p = align_form_pos(pf, af->s, a, margin);
 }
+
+xy_t size_add_margins(xy_t size, xy_t margins);

@@ -125,6 +125,7 @@ ui_node_desc_t ui = {
                 .widget = &__widget_selectable_list,
                 .cfg = &(__widget_selectable_list_cfg_t) {
                     .num = 5,
+                    .margin = { .x = 4, .y = 4 },
                     .different_nodes = 0,
                     .ui_node = (ui_node_desc_t[]) {
                         {

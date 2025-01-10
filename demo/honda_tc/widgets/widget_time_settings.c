@@ -156,14 +156,6 @@ static void mod_vtu(ctx_t * ctx, const val_text_updatable_t * vtu, val_mod_op_t 
     }
 }
 
-xy_t size_add_margins(xy_t size, xy_t margins)
-{
-    return (xy_t){
-        .x = size.x + margins.x * 2,
-        .y = size.y + margins.y * 2
-    };
-}
-
 static xy_t calc_setting_form_size(unsigned len)
 {
     return size_add_margins(lcd_text_size_px(&(xy_t){ .x = len, .y = 2 }, &fcfg), text_margin);

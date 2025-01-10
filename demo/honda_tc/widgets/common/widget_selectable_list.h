@@ -11,5 +11,6 @@ extern const widget_desc_t __widget_selectable_list;
 typedef struct {
     uint16_t num;
     uint8_t different_nodes : 1;
+    xy_t margin;
     const ui_node_desc_t * ui_node;
 } __widget_selectable_list_cfg_t;
