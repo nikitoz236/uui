@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "emu_graphic.h"
 #include "emu_lcd.h"
-#include "tc_events.h"
+#include "event_list.h"
 #include "ui_tree.h"
 
 #include "view.h"

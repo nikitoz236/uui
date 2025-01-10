@@ -25,6 +25,12 @@ SRC += $(PROJECT)/logic/metrics_view.c
 SRC += $(PROJECT)/logic/metrics_ecu.c
 SRC += $(PROJECT)/logic/trip_integrate.c
 
-tc_view_test_run:
+INC += ..
+SRC += $(LIB)/graphic/forms/forms_split.c
+
+#depricated
+SRC += $(LIB)/graphic/align_forms.c
+
+TEST_NAME = tc_view
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
