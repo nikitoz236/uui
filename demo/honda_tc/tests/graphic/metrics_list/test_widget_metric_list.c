@@ -17,7 +17,7 @@ ui_node_desc_t ui = {
                 .color_bg = 0
             }
         },
-        .margin = { .x = 4, .y = 4 },
+        .margin = { .x = 0, .y = 0 },
         .num = METRIC_VAR_ID_NUM,
         .different_nodes = 0
     }
