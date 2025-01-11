@@ -6,33 +6,71 @@
 
 #include "forms_align.h"
 
-typedef struct {
-    uint8_t pos;
-    uint8_t first;
-    uint8_t count;
-} __widget_selectable_list_ctx_t;
+/*
+    нужно добавить движение все списка кнопками для варианта selectable = 0
+    еще нужно обрабатывать cycled
+*/
 
-static void recalc_list(ui_element_t * el)
+typedef struct {
+    uint8_t pos;        // номер выбранного элемента среди тех что на экране
+    uint8_t first;      // номер элемента в списке с которого начинается отрисовка списка
+    uint8_t count;      // количество элементов поместившихся на экране
+} ctx_t;
+
+static void recalc_list_same(ui_element_t * el)
 {
     __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
-    __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    ui_element_t * item = ui_tree_add(el, cfg->ui_node, ctx->first);
+    ui_tree_element_calc(item);
+    xy_t item_size = item->f.s;
+    xy_t item_place_size = size_add_padding(item_size, cfg->margin);
+    ctx->count = el->f.s.h / item_place_size.h;
+    if (ctx->count > (cfg->num - ctx->first)) {
+        ctx->count = (cfg->num - ctx->first);
+    }
+
+    unsigned list_idx = 0;
+    form_t f = el->f;
+
+    // printf("recalc_list_same item count %d, form p %d %d s %d %d\n", ctx->count, f.p.x, f.p.y, f.s.w, f.s.h);
+    while (1) {
+        /*
+            потенциально проблемы так как ты не дергаешь calc каждого элемента. ты просто ставишь им размер как у первого.
+            соответственно нельзя инициализировать контекст в вызове calc
+        */
+
+        item->f.s = item_size;
+        item->f.p = align_form_pos(&f, item_size, ALIGN_LIUI, cfg->margin);
+        item->f.s.w = f.s.w - (2 * cfg->margin.x);
+        ui_tree_element_extend(item);
+        // printf("recalc_list_same item pos %d %d size %d %d, idx %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h, ctx->first + list_idx);
+
+        form_cut(&f, DIMENSION_Y, EDGE_U, item_place_size.h - cfg->margin.y);
+        list_idx++;
+        if (list_idx >= ctx->count) {
+            break;
+        }
+        item = ui_tree_add(el, cfg->ui_node, ctx->first + list_idx);
+    }
+}
+
+static void recalc_list_different_down(ui_element_t * el)
+{
+    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
+    ctx_t * ctx = (ctx_t *)el->ctx;
 
     ctx->count = 0;
     unsigned child_idx = ctx->first;
     form_t f = el->f;
 
     while (1) {
-        const ui_node_desc_t * child_ui_node;
-        if (cfg->different_nodes) {
-            child_ui_node = &cfg->ui_node[child_idx];
-        } else {
-            child_ui_node = cfg->ui_node;
-        }
+        const ui_node_desc_t * child_ui_node = &cfg->ui_node[child_idx];
         ui_element_t * item = ui_tree_add(el, child_ui_node, child_idx);
         ui_tree_element_calc(item);
         xy_t item_size = size_add_padding(item->f.s, cfg->margin);
 
-        // printf("recalc_list item size %d %d with margin %d %d\n", item->f.s.w, item->f.s.h, item_size.w, item_size.h);
+        // printf("recalc_list_different_down item size %d %d with margin %d %d\n", item->f.s.w, item->f.s.h, item_size.w, item_size.h);
 
         if (f.s.h < item_size.h) {
             break;
@@ -41,13 +79,13 @@ static void recalc_list(ui_element_t * el)
         item->f.p = align_form_pos(&f, item->f.s, ALIGN_LIUI, cfg->margin);
         item->f.s.w = f.s.w - (2 * cfg->margin.x);
 
-        // printf("recalc_list item pos %d %d size %d %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h);
+        // printf("recalc_list_different_down item pos %d %d size %d %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h);
 
         ui_tree_element_extend(item);
 
         form_cut(&f, DIMENSION_Y, EDGE_U, item_size.h - cfg->margin.y);
 
-        // printf("recalc_list form %d %d %d %d\n", f.p.x, f.p.y, f.s.w, f.s.h);
+        // printf("recalc_list_different_down form %d %d %d %d\n", f.p.x, f.p.y, f.s.w, f.s.h);
 
         child_idx++;
         ctx->count++;
@@ -60,8 +98,10 @@ static void recalc_list(ui_element_t * el)
 
 static void redraw_list(ui_element_t * el)
 {
-    __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, 0);
+
+    printf("redraw list\n");
 
     ui_element_t * item = ui_tree_child(el);
     for (unsigned i = 0; i < ctx->count; i++) {
@@ -75,9 +115,19 @@ static void redraw_list(ui_element_t * el)
     }
 }
 
-static void calc(ui_element_t * el)
+static void recalc_list(ui_element_t * el)
 {
-    __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
+    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
+    if (cfg->different_nodes) {
+        recalc_list_different_down(el);
+    } else {
+        recalc_list_same(el);
+    }
+}
+
+static void extend(ui_element_t * el)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
 
     ctx->first = 0;
     ctx->pos = 0;
@@ -87,7 +137,7 @@ static void calc(ui_element_t * el)
 
 static void select(ui_element_t * el)
 {
-    __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
     ui_element_t * item = ui_tree_child_idx(el, ctx->pos);
     // printf("widget_selectable_list select, active %d, pos %d\n", el->active, ctx->pos);
     ui_tree_element_select(item, el->active);
@@ -111,7 +161,7 @@ static void move_list(ui_element_t * el)
 static unsigned process_event(ui_element_t * el, unsigned event)
 {
     __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
-    __widget_selectable_list_ctx_t * ctx = (__widget_selectable_list_ctx_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
 
     // printf("widget_selectable_list process_event active %d, event %d\n", el->active, event);
 
@@ -177,9 +227,9 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t __widget_selectable_list = {
-    .extend = calc,
+    .extend = extend,
     .draw = redraw_list,
     .select = select,
     .process_event = process_event,
-    .ctx_size = sizeof(__widget_selectable_list_ctx_t)
+    .ctx_size = sizeof(ctx_t)
 };
