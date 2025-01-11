@@ -2,8 +2,6 @@ LIB = ../../../../../lib
 
 PROJECT = ../../..
 
-all: dlc_test_run
-
 INC += ./
 SRC += ./dlc_emu.c
 
@@ -18,5 +16,7 @@ SRC += ./$(LIB)/emu/hw/systick.c
 
 INC += ./$(LIB)/common/
 SRC += ./$(LIB)/common/str_utils.c
+
+TEST_NAME = test_dlc
 
 include $(LIB)/emu/test_console.mk

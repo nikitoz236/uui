@@ -2,7 +2,7 @@ LIB = ../../../../../lib
 
 PROJECT = ../../..
 
-all: tc_test_test_run
+TEST_NAME = tc_test
 
 INC += ../dlc/
 SRC += ../dlc/dlc_emu.c
@@ -16,7 +16,7 @@ SRC += ./$(PROJECT)/logic/tc.c
 
 INC += ./$(PROJECT)/view/
 
-INC += ./$(LIB)/../tests/storage/
+INC += ./$(LIB)/../tests/console/storage/
 
 INC += ./$(LIB)/emu/storage/
 SRC += ./$(LIB)/emu/storage/emu_storage.c
@@ -32,6 +32,13 @@ SRC += ./$(LIB)/emu/hw/systick.c
 SRC += ./$(LIB)/emu/hw/rtc.c
 
 INC += ./$(LIB)/common/
-SRC += ./$(LIB)/common/str_utils.c
+
+# dp dependencys
+SRC += $(LIB)/emu/console/emu_dp_usart.c
+SRC += $(LIB)/common/str_utils.c
+SRC += $(LIB)/common/str_val.c
+SRC += $(LIB)/common/str_val_buf.c
+
+
 
 include $(LIB)/emu/test_console.mk

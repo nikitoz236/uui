@@ -1,6 +1,6 @@
 LIB = ../../../../../lib
 
-all: trip_integrate_test_test_run
+TEST_NAME = trip_integrate_test
 
 INC += ../../../logic
 INC += $(LIB)/common
