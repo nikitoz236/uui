@@ -41,6 +41,37 @@ int main()
         0
     );
 
+    lcd_color_text_raw_print(
+        "Hey bitch!",
+        &(lcd_font_cfg_t){
+            .font = &font_5x7,
+        },
+        &(color_scheme_t){
+            .bg = 0x332211,
+            .fg = 0xAABBCC,
+        },
+        &(xy_t){ .x = 10, .y = 30},
+        &(xy_t){ .x = 8, .y = 4},
+        &(xy_t){ .x = 5 },
+        20
+    );
+
+    lcd_color_text_raw_print(
+        0,
+        &(lcd_font_cfg_t){
+            .font = &font_5x7,
+        },
+        &(color_scheme_t){
+            .bg = 0x332211,
+            .fg = 0xAABBCC,
+        },
+        &(xy_t){ .x = 10, .y = 160},
+        0,
+        0,
+        8
+    );
+
+
     emu_graphic_loop(0);
 
     return 0;
