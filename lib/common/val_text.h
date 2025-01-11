@@ -3,10 +3,10 @@
 #include "val_pack.h"
 
 typedef enum {
-    X_1,
-    X_10,
-    X_100,
-    X_1000,
+    X1      = 0,
+    X10     = 1,
+    X100    = 2,
+    X1000   = 3,
 } dec_factor_t;
 
 typedef struct __attribute__((packed)) {
