@@ -28,6 +28,16 @@ void time_zone_set(int tz)
     timezone_s = tz;
 }
 
+color_scheme_t cs_sel = {
+    .fg = COLOR_TEXT,
+    .bg = COLOR_BG_SELECTED
+};
+
+color_scheme_t cs_unsel = {
+    .fg = COLOR_TEXT,
+    .bg = COLOR_BG_UNSELECTED
+};
+
 ui_node_desc_t ui = {
     .widget = &__widget_screen_switch,
     .cfg = &(__widget_screen_switch_cfg_t){
@@ -55,24 +65,30 @@ ui_node_desc_t ui = {
                         },
                         {
                             .widget = &__widget_text,
-                            .cfg = &(widget_text_cfg_t){
+                            .cfg = &(widget_text_cfg_t) {
                                 .text = "one",
-                                .color_bg_selected = COLOR_BG_SELECTED,
-                                .color_bg_unselected = COLOR_BG_UNSELECTED,
-                                .color_text = COLOR_TEXT,
-                                .font = &font_5x7,
-                                .scale = 4
+                                .fcgf = &(lcd_font_cfg_t) {
+                                    .font = &font_5x7,
+                                    .gaps = { .x = 2, .y = 2 },
+                                    .scale = 2
+                                },
+                                .cs_selected = &cs_sel,
+                                .cs_unselected = &cs_unsel,
+                                .padding = { .x = 2, .y = 2 }
                             }
                         },
                         {
                             .widget = &__widget_text,
-                            .cfg = &(widget_text_cfg_t){
+                            .cfg = &(widget_text_cfg_t) {
                                 .text = "two",
-                                .color_bg_selected = COLOR_BG_SELECTED,
-                                .color_bg_unselected = COLOR_BG_UNSELECTED,
-                                .color_text = COLOR_TEXT,
-                                .font = &font_5x7,
-                                .scale = 4
+                                .fcgf = &(lcd_font_cfg_t) {
+                                    .font = &font_5x7,
+                                    .gaps = { .x = 2, .y = 2 },
+                                    .scale = 2
+                                },
+                                .cs_selected = &cs_sel,
+                                .cs_unselected = &cs_unsel,
+                                .padding = { .x = 2, .y = 2 }
                             }
                         },
                     }
