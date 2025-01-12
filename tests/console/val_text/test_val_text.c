@@ -53,6 +53,9 @@ struct {
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 0, .l =  7, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u32_2,       .es = "@967290"             },      //   19
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_s32_p,   .es = "  1234.536"          },      //   20
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 1, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_s32_p,   .es = "    1234.5"          },      //   21
+    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X10},    .ptr = &tv_s32_p,   .es = "123453.6  "          },      //   22
+    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 1, .f = X10},    .ptr = &tv_s32_p,   .es = "123453.600"          },      //   23
+    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_p,   .es = "  9765.4  "          },      //   24
 };
 
 

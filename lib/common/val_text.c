@@ -33,11 +33,11 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
 
 
         if (tv->p) {
-            int offset = tv->f - tv->p - 1; // знавковый, положительный сдвиг вправо
+            int offset = tv->p - tv->f + 1; // знавковый, положительный сдвиг вправо
 
             printf("\nval text point %d, f %d, len %d offset %d\n", tv->p, tv->f, len, offset);
 
-            dec_to_str_right_aligned(val_for_str, str, len + offset, tv->zl);
+            dec_to_str_right_aligned(val_for_str, str, len - offset, tv->zl);
 
             for (unsigned i = 0; i < tv->p; i++) {
                 unsigned idxs = len - i - 2;
@@ -53,11 +53,24 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
     1234536         offset +1
     1234.5          перекладываем 8 -> 9 и ставим точку в 8 = 10 - 1 - 1
 
+01234567890
+1234536             offset -3
+123453.6            перекладываем 6-> 7, ставим точку в 6, но еще нужно заполнить пробелами 8 и 9, 0 в 10
+
 */
                 char c = str[idxs]; // начиная с \0 в конце строки
+                printf("  -- move char %c from %d to %d\n", c, idxs, idxs + 1);
+                if(offset > 1) {
+                    if (tv->zr) {
+                        c = '0';
+                    } else {
+                        c = ' ';
+                    }
+                    offset--;
+                    printf("    char changed to [%c]\n", c);
+                }
                 str[idxs + 1] = c;
 
-                printf("  -- move char %c from %d to %d\n", c, idxs, idxs + 1);
             }
             str[tv->l - tv->p - 1] = '.';
             str[tv->l] = 0;
