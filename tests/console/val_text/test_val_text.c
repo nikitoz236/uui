@@ -56,6 +56,7 @@ struct {
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X10},    .ptr = &tv_s32_p,   .es = "123453.6  "          },      //   22
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 1, .f = X10},    .ptr = &tv_s32_p,   .es = "123453.600"          },      //   23
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_p,   .es = "  9765.4  "          },      //   24
+    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 2, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_p,   .es = "   9765.4 "          },      //   25
 };
 
 
@@ -81,7 +82,7 @@ int main()
             res = 1;
         }
 
-        printf("  TEST: %4d         [%2d] %20s      expect: [%2d] %20s     %s\r\n", i + 1, res_len, str, exp_len, tests[i]      .es, res_str[res]);
+        printf("  TEST: %4d         [%2d] %20s      expect: [%2d] %20s     %s\r\n", i + 1, res_len, str, exp_len, tests[i].es, res_str[res]);
 
         if (res) {
             total_res = 1;
