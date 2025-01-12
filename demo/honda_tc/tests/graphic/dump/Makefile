@@ -13,7 +13,7 @@ SRC += widget_tc_dump.c
 # dlc_poll.h
 INC += ../../../logic/
 SRC += ../emu_dlc_data.c
-SRC += ../../../logic/honda_units.c
+SRC += ../../../logic/honda_dlc_units.c
 
 
 # systick.h

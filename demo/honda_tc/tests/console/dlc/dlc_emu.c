@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "mstimer.h"
 #include "str_utils.h"
-#include "honda_units.h"
+#include "honda_dlc_units.h"
 #include <stdio.h>
 
 #define OBD_SPEED_KMH			123
