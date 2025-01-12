@@ -1,6 +1,9 @@
 #include "val_text.h"
 #include "str_val.h"
 
+// #define dbg_printf(...) printf(__VA_ARGS__)
+#define dbg_printf(...)
+
 void val_text_to_str(char * str, const void * val, const val_text_t * tv)
 {
     unsigned n = 0;
@@ -53,39 +56,51 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
             */
 
             int offset = tv->p - tv->f + 1;         // положительный сдвиг влево, отрицательный вправо
-            // printf("\nval text point %d, f %d, len %d offset %d\n", tv->p, tv->f, len, offset);
+            dbg_printf("\nval text point %d, f %d, len %d offset %d\n", tv->p, tv->f, len, offset);
             dec_to_str_right_aligned(val_for_str, str, len - offset, tv->zl);
             unsigned zr = tv->zr;
             for (unsigned i = 0; i < tv->p; i++) {
                 unsigned idx = len - i - 2;         // почему 2 ? одна из них это точка, вторая непонятно, это то куда сдвинется знак
                 char c = str[idx];                  // начиная с \0 в конце строки
-                // printf("  -- move char %c from %d to %d\n", c, idx, idx + 1);
+                dbg_printf("  -- move char %c from %d to %d\n", c, idx, idx + 1);
                 if(offset > 1) {
-                    if (tv->zr) {
+                    if (zr) {
                         c = '0';
                     } else {
                         c = ' ';
                     }
                     offset--;
-                    // printf("    char changed to [%c]\n", c);
+                    dbg_printf("    char changed to [%c]\n", c);
                 } else {
                     if (c == '0') {
                         if (zr == 0) {
                             if (i < tv->p - 1) {
+                                // test 26
                                 c = ' ';
-                                // printf("    char changed to [%c]\n", c);
+                                dbg_printf("    char changed to [%c]\n", c);
                             }
                         }
                     } else {
                         zr = 1;
+                        if (c == ' ') {
+                            // test 28
+                            c = '0';
+                        }
                     }
                 }
                 str[idx + 1] = c;
             }
             str[tv->l - tv->p - 1] = '.';
+
             if (str[tv->l - tv->p] == ' ') {
+                // test 27
                 str[tv->l - tv->p] = '0';
             }
+            if (str[tv->l - tv->p - 2] == ' ') {
+                // test 28
+                str[tv->l - tv->p - 2] = '0';
+            }
+
             str[tv->l] = 0;
         }
     }

@@ -61,6 +61,8 @@ struct {
 
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X100},   .ptr = &tv_u32_p,   .es = " 97654.0  "          },      //   26
     { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1},     .ptr = &tv_u32_1,   .es = "  3456.0  "          },      //   27
+
+    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u8_1,    .es = "     0.003"          },      //   27
 };
 
 
