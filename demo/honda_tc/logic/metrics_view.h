@@ -4,6 +4,7 @@
 #include "metrics_ecu.h"
 #include "trip_integrate.h"
 #include "metrics_list.h"
+#include "val_text.h"
 
 /*
     это модуль обертка для получения данных параметров в виджеты через единый интерфейс
@@ -57,3 +58,4 @@ int metric_var_get_real(metric_var_id_t id);
 unsigned metric_var_get_raw(metric_var_id_t id);
 const char * metric_var_get_name(metric_var_id_t id);
 const char * metric_var_get_unit(metric_var_id_t id);
+dec_factor_t metric_var_get_factor(metric_var_id_t id);

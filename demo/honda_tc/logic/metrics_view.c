@@ -107,3 +107,16 @@ const char * metric_var_get_unit(metric_var_id_t id)
     }
     return metric_var_units[id];
 }
+
+dec_factor_t metric_var_get_factor(metric_var_id_t id)
+{
+    #define METRIC_FACTOR(id, name, unit, factor, ...) factor
+    static const uint8_t metric_var_factors[] = {
+        METRIC_VAR_LIST(METRIC_FACTOR)
+    };
+
+    if (id >= METRIC_VAR_ID_NUM) {
+        return 0;
+    }
+    return metric_var_factors[id];
+}
