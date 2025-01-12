@@ -101,7 +101,7 @@ static void redraw_list(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, 0);
 
-    printf("redraw list\n");
+    // printf("redraw list\n");
 
     ui_element_t * item = ui_tree_child(el);
     for (unsigned i = 0; i < ctx->count; i++) {

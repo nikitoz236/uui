@@ -40,11 +40,21 @@ static const char * metric_str_raw_val(unsigned idx)
 
 static const char * metric_str_real_val(unsigned idx)
 {
-    return "12345678";
-    // char * str = 
-    // val_text_to_str(&metric_ecu_get_real(idx), &);
+    char * str = str_val_buf_get();
+    int val = metric_var_get_real(idx);
+    val_text_t vt = {
+        .f = metric_var_get_factor(idx),
+        .p = 2,
+        .s = 1,
+        .zl = 0,
+        .zr = 0,
+        .t = DEC,
+        .vs = VAL_SIZE_32,
+        .l = VAL_LEN
+    };
+    val_text_to_str(str, &val, &vt);
+    return str;
 }
-
 
 color_scheme_t cst = {
     .fg = 0xfffa75,
@@ -77,7 +87,7 @@ static void extend(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->pos = align_form_pos(&el->f, lcd_text_size_px(tf.fcfg, tf.limit_char), tf.a, tf.padding);
-    printf("widget_metric_list_item extend item %d size %d %d, text pos %d %d\n", el->idx, el->f.s.w, el->f.s.h, ctx->pos.x, ctx->pos.y);
+    // printf("widget_metric_list_item extend item %d size %d %d, text pos %d %d\n", el->idx, el->f.s.w, el->f.s.h, ctx->pos.x, ctx->pos.y);
 }
 
 void update_tf(const item_tf_t * item, xy_t pos, unsigned idx)
