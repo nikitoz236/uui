@@ -90,15 +90,15 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
                 }
                 str[idx + 1] = c;
             }
-            str[tv->l - tv->p - 1] = '.';
+            str[len - tv->p - 1] = '.';
 
-            if (str[tv->l - tv->p] == ' ') {
+            if (str[len - tv->p] == ' ') {
                 // test 27
-                str[tv->l - tv->p] = '0';
+                str[len - tv->p] = '0';
             }
-            if (str[tv->l - tv->p - 2] == ' ') {
+            if (str[len - tv->p - 2] == ' ') {
                 // test 28
-                str[tv->l - tv->p - 2] = '0';
+                str[len - tv->p - 2] = '0';
             }
 
             str[tv->l] = 0;
