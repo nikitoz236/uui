@@ -18,10 +18,10 @@ INC += ./
 SRC += ./*.c
 
 
-# debug_print.h
-INC += $(LIB)/emu
-
-
+# tc_colors.h
+# emu_tc.h
+INC += ..
+SRC += ../emu_tc.c
 
 # SRC += ./$(LIB)/emu/hw/systick.c
 
@@ -31,6 +31,18 @@ INC += $(LIB)/emu
 # SRC += $(PROJECT)/logic/trip_integrate.c
 
 
-screen_switch_test_run:
+# systick.h
+INC += $(LIB)/hw/include/
+SRC += $(LIB)/emu/hw/systick.c
+SRC += $(LIB)/emu/hw/rtc.c
+
+SRC += $(LIB)/graphic/forms/forms_split.c
+
+#depricated
+SRC += $(LIB)/graphic/align_forms.c
+
+
+
+TEST_NAME = test_screen_switch
 
 include $(LIB)/emu/graphic/emu_graphic_ui_tree.mk
