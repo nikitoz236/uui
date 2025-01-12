@@ -8,17 +8,17 @@ ui_node_desc_t ui = {
     .widget = &__widget_selectable_list,
     .cfg = &(__widget_selectable_list_cfg_t){
         .ui_node = &(ui_node_desc_t){
-            .widget = &__widget_metric_list_item,
-            .cfg = &(__widget_metric_list_item_cfg_t){
-                .color_text = 0xfffa75,
-                .color_value = 0x66CFAB,
-                .color_raw = 0xff4450,
-                .color_unit = 0x00ff00,
-                .color_bg = 0
-            }
+            .widget = &__widget_metric_list_item_bool,
+            // .cfg = &(__widget_metric_list_item_cfg_t){
+            //     .color_text = 0xfffa75,
+            //     .color_value = 0x66CFAB,
+            //     .color_raw = 0xff4450,
+            //     .color_unit = 0x00ff00,
+            //     .color_bg = 0
+            // }
         },
         .margin = { .x = 0, .y = 0 },
-        .num = METRIC_VAR_ID_NUM,
+        .num = METRIC_BOOL_ID_NUM,
         .different_nodes = 0
     }
 };

@@ -7,7 +7,7 @@
 
 typedef struct {
     xy_t pos;
-    int real;
+    int val;
 } ctx_t;
 
 extern const font_t font_5x7;
@@ -25,7 +25,8 @@ enum {
     ITEM_NAME,
     ITEM_REAL,
     ITEM_RAW,
-    ITEM_UNIT
+    ITEM_UNIT,
+    ITEM_BOOL = ITEM_REAL,
 };
 
 #define VAL_LEN 8
@@ -56,6 +57,15 @@ static const char * metric_str_real_val(unsigned idx)
     return str;
 }
 
+static const char * metric_str_bool(unsigned idx)
+{
+    unsigned val = metric_bool_get_val(idx);
+    if (val) {
+        return "ACTIVE";
+    }
+    return "inactive";
+}
+
 color_scheme_t cst = {
     .fg = 0xfffa75,
     .bg = 0
@@ -71,11 +81,16 @@ typedef struct {
     color_scheme_t * cs;
 } item_tf_t;
 
-static const item_tf_t items[] = {
+static const item_tf_t items_real[] = {
     [ITEM_NAME]  = { .cs = &cst, .tv = { .tfcfg = &tf, .to_str = metric_var_get_name,   .len = METRIC_NAME_MAX_LEN, .pos = { .x = 0 }, } },
     [ITEM_UNIT]  = { .cs = &cst, .tv = { .tfcfg = &tf, .to_str = metric_var_get_unit,   .len = METRIC_UNIT_MAX_LEN, .pos = { .x = METRIC_NAME_MAX_LEN + 1 + VAL_LEN + 1 }, } },
     [ITEM_RAW]   = { .cs = &csv, .tv = { .tfcfg = &tf, .to_str = metric_str_raw_val,    .len = 4,                   .pos = { .x = METRIC_NAME_MAX_LEN + 1 + VAL_LEN + 1 + METRIC_UNIT_MAX_LEN + 1 } } },
     [ITEM_REAL]  = { .cs = &csv, .tv = { .tfcfg = &tf, .to_str = metric_str_real_val,   .len = 8,                   .pos = { .x = METRIC_NAME_MAX_LEN + 1 } } },
+};
+
+static const item_tf_t items_bool[] = {
+    [ITEM_NAME]  = { .cs = &cst, .tv = { .tfcfg = &tf, .to_str = metric_bool_get_name,  .len = METRIC_NAME_MAX_LEN, .pos = { .x = 0 }, } },
+    [ITEM_BOOL]  = { .cs = &csv, .tv = { .tfcfg = &tf, .to_str = metric_str_bool,       .len = TEXT_LEN("inactive"),.pos = { .x = METRIC_NAME_MAX_LEN + 1 } } },
 };
 
 static void calc(ui_element_t * el)
@@ -96,31 +111,58 @@ void update_tf(const item_tf_t * item, xy_t pos, unsigned idx)
     lcd_color_text_raw_print(str, item->tv.tfcfg->fcfg, item->cs, &pos, &item->tv.tfcfg->limit_char, &item->tv.pos, item->tv.len);
 }
 
-static void update(ui_element_t * el)
+static void update_real(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     int real = metric_var_get_real(el->idx);
-    if (ctx->real != real) {
-        ctx->real = real;
-        update_tf(&items[ITEM_REAL], ctx->pos, el->idx);
-        update_tf(&items[ITEM_RAW], ctx->pos, el->idx);
+    if (ctx->val != real) {
+        ctx->val = real;
+        update_tf(&items_real[ITEM_REAL], ctx->pos, el->idx);
+        update_tf(&items_real[ITEM_RAW], ctx->pos, el->idx);
     }
 }
 
-static void draw(ui_element_t * el)
+static void update_bool(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    ctx->real = metric_ecu_get_real(el->idx);
-    update_tf(&items[ITEM_NAME], ctx->pos, el->idx);
-    update_tf(&items[ITEM_UNIT], ctx->pos, el->idx);
-    update_tf(&items[ITEM_REAL], ctx->pos, el->idx);
-    update_tf(&items[ITEM_RAW], ctx->pos, el->idx);
+    int val = metric_bool_get_val(el->idx);
+    if (ctx->val != val) {
+        ctx->val = val;
+        update_tf(&items_bool[ITEM_NAME], ctx->pos, el->idx);
+        update_tf(&items_bool[ITEM_BOOL], ctx->pos, el->idx);
+    }
 }
 
-const widget_desc_t __widget_metric_list_item = {
+static void draw_real(ui_element_t * el)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    ctx->val = metric_ecu_get_real(el->idx);
+    update_tf(&items_real[ITEM_NAME], ctx->pos, el->idx);
+    update_tf(&items_real[ITEM_UNIT], ctx->pos, el->idx);
+    update_tf(&items_real[ITEM_REAL], ctx->pos, el->idx);
+    update_tf(&items_real[ITEM_RAW], ctx->pos, el->idx);
+}
+
+static void draw_bool(ui_element_t * el)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    ctx->val = metric_ecu_get_bool(el->idx);
+    update_tf(&items_bool[ITEM_NAME], ctx->pos, el->idx);
+    update_tf(&items_bool[ITEM_BOOL], ctx->pos, el->idx);
+}
+
+const widget_desc_t __widget_metric_list_item_real = {
     .calc = calc,
-    .draw = draw,
-    .update = update,
+    .draw = draw_real,
+    .update = update_real,
+    .extend = extend,
+    .ctx_size = sizeof(ctx_t)
+};
+
+const widget_desc_t __widget_metric_list_item_bool = {
+    .calc = calc,
+    .draw = draw_bool,
+    .update = update_bool,
     .extend = extend,
     .ctx_size = sizeof(ctx_t)
 };
