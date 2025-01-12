@@ -18,6 +18,7 @@ int32_t tv_s32_m = -12356;
 uint32_t tv_u32_1 = 3456;
 uint32_t tv_u32_2 = 4294967290;
 uint32_t tv_u32_p = 9765400;
+uint32_t tv_u32_0 = 0;
 
 struct {
     val_text_t tv;
@@ -64,6 +65,7 @@ struct {
 
     { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u8_1,    .es = "     0.003"          },      //   27
     { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 1, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_s8_m,    .es = "-    0.012"          },      //   29
+    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 1, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_0,   .es = "     0.0  "          },      //   30
 };
 
 

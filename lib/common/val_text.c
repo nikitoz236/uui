@@ -56,48 +56,53 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
             */
 
             int offset = tv->p - tv->f + 1;         // положительный сдвиг влево, отрицательный вправо
-            dbg_printf("\nval text point %d, f %d, len %d offset %d\n", tv->p, tv->f, len, offset);
             dec_to_str_right_aligned(val_for_str, str, len - offset, tv->zl);
+            dbg_printf("\nval text point %d, f %d, len %d offset %d, result str before add point >%s<\n", tv->p, tv->f, len, offset, str);
+
+
             unsigned zr = tv->zr;
             for (unsigned i = 0; i < tv->p; i++) {
                 unsigned idx = len - i - 2;         // почему 2 ? одна из них это точка, вторая непонятно, это то куда сдвинется знак
-                char c = str[idx];                  // начиная с \0 в конце строки
+                char c = str[idx];
                 dbg_printf("  -- move char %c from %d to %d\n", c, idx, idx + 1);
+
+                // бежим по всем знакоместам с конца строки до знакоместа точки и двигаем их справо на 1 символ
+                // при этом если offset > 1, то там был мусора и мы сначала заполняем все нулями
+
                 if(offset > 1) {
+                    c = '0';
+                    offset--;
+                    dbg_printf("     garbage in buffer replaced by 0\n", i);
+                }
+
+                // дальше думаем, нужны ли нам нули справа
+                if (i == tv->p - 1) {
+                    // один разряд после точки точно должен быть 0
+                    zr = 1;
+                }
+
+                if (c == '0') {
+                    if (zr == 0) {
+                        c = ' ';
+                        dbg_printf("     char %d changed to [%c] was [0], zr %d\n", idx, c, zr);
+                    }
+                } else if (c == ' ') {
+                    // разряды вообще могли кончится, так что тут будут пробелы заполненые на этапе dec_to_str_right_aligned
                     if (zr) {
                         c = '0';
-                    } else {
-                        c = ' ';
+                        dbg_printf("     char %d changed to [%c] was [ ], zr %d\n", idx, c, zr);
                     }
-                    offset--;
-                    dbg_printf("    char changed to [%c]\n", c);
                 } else {
-                    if (c == '0') {
-                        if (zr == 0) {
-                            if (i < tv->p - 1) {
-                                // test 26
-                                c = ' ';
-                                dbg_printf("    char changed to [%c]\n", c);
-                            }
-                        }
-                    } else {
-                        zr = 1;
-                        if (c == ' ') {
-                            // test 28
-                            c = '0';
-                        }
-                    }
+                    // встретили значачащий разряд, левее до точки будем заполнять нулями
+                    zr = 1;
                 }
+
                 str[idx + 1] = c;
             }
             str[len - tv->p - 1] = '.';
 
-            if (str[len - tv->p] == ' ') {
-                // test 27
-                str[len - tv->p] = '0';
-            }
+            // test 28 - если у нас не осталось значаших разрядов слева от нуля, то добавим туда 0
             if (str[len - tv->p - 2] == ' ') {
-                // test 28
                 str[len - tv->p - 2] = '0';
             }
 
