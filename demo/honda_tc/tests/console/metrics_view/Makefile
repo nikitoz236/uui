@@ -1,6 +1,6 @@
 LIB = ../../../../../lib
 
-all: metrics_view_test_run
+TEST_NAME = test_metrics_view
 
 INC += ../../../logic
 INC += $(LIB)/common
