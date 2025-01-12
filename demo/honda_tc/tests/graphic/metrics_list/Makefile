@@ -5,6 +5,8 @@ INC += $(PROJECT)/widgets
 INC += $(PROJECT)/widgets/common
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 SRC += $(PROJECT)/widgets/widget_metric_list_item.c
+SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+
 # SRC += $(PROJECT)/widgets/common/widget_metric_list.c
 
 INC += $(PROJECT)/view

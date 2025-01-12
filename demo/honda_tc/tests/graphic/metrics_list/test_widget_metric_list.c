@@ -1,25 +1,55 @@
 #include <stdio.h>
 #include "emu_tc.h"
 
+#include "widget_screen_switch.h"
 #include "widget_selectable_list.h"
 #include "widget_metric_list_item.h"
 
+uint8_t screen_selector = 0;
+extern font_t font_5x7;
+
 ui_node_desc_t ui = {
-    .widget = &__widget_selectable_list,
-    .cfg = &(__widget_selectable_list_cfg_t){
-        .ui_node = &(ui_node_desc_t){
-            .widget = &__widget_metric_list_item_bool,
-            // .cfg = &(__widget_metric_list_item_cfg_t){
-            //     .color_text = 0xfffa75,
-            //     .color_value = 0x66CFAB,
-            //     .color_raw = 0xff4450,
-            //     .color_unit = 0x00ff00,
-            //     .color_bg = 0
-            // }
+    .widget = &__widget_screen_switch,
+    .cfg = &(__widget_screen_switch_cfg_t){
+        .selector_ptr = &screen_selector,
+        .screens_num = 2,
+        .title_cfg = &(text_field_t){
+            .fcfg = &(lcd_font_cfg_t){
+                .font = &font_5x7,
+                .gaps = { .x = 2, .y = 2 },
+                .scale = 2
+            },
+            .a = ALIGN_LIUI,
+            .padding = { .x = 2, .y = 2 }
         },
-        .margin = { .x = 0, .y = 0 },
-        .num = METRIC_BOOL_ID_NUM,
-        .different_nodes = 0
+        .titles = (const char *[]){
+            "Debug Metrics Real",
+            "Debug Metrics Bool"
+        },
+        .screens_list = (ui_node_desc_t[]){
+            {
+                .widget = &__widget_selectable_list,
+                .cfg = &(__widget_selectable_list_cfg_t){
+                    .ui_node = &(ui_node_desc_t){
+                        .widget = &__widget_metric_list_item_real,
+                    },
+                    .margin = { .x = 0, .y = 0 },
+                    .num = METRIC_VAR_ID_NUM,
+                    .different_nodes = 0
+                }
+            },
+            {
+                .widget = &__widget_selectable_list,
+                .cfg = &(__widget_selectable_list_cfg_t){
+                    .ui_node = &(ui_node_desc_t){
+                        .widget = &__widget_metric_list_item_bool,
+                    },
+                    .margin = { .x = 0, .y = 0 },
+                    .num = METRIC_BOOL_ID_NUM,
+                    .different_nodes = 0
+                }
+            },
+        }
     }
 };
 
