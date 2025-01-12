@@ -44,6 +44,11 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
                     >1234536            offset +3
                     >123453.6           перекладываем 6-> 7, ставим точку в 6, но еще нужно заполнить пробелами 8 и 9, 0 в 10
 
+                    >01234567890        l 10, p 3, f 0
+                    >      3456
+                    >  3456             offset +4
+                    >  3456.0           незнаю что делать. просто пробел поменял на 0 после точки
+
                 тут конечно магия и подгон под тесты, осощнание на поверхности.
             */
 
@@ -66,8 +71,10 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
                 } else {
                     if (c == '0') {
                         if (zr == 0) {
-                            c = ' ';
-                            // printf("    char changed to [%c]\n", c);
+                            if (i < tv->p - 1) {
+                                c = ' ';
+                                // printf("    char changed to [%c]\n", c);
+                            }
                         }
                     } else {
                         zr = 1;
@@ -76,6 +83,9 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
                 str[idx + 1] = c;
             }
             str[tv->l - tv->p - 1] = '.';
+            if (str[tv->l - tv->p] == ' ') {
+                str[tv->l - tv->p] = '0';
+            }
             str[tv->l] = 0;
         }
     }
