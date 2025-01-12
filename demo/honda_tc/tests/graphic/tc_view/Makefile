@@ -28,6 +28,19 @@ SRC += $(PROJECT)/logic/trip_integrate.c
 INC += ..
 SRC += $(LIB)/graphic/forms/forms_split.c
 
+
+# systick.h
+INC += $(LIB)/hw/include/
+SRC += $(LIB)/emu/hw/systick.c
+SRC += $(LIB)/emu/hw/rtc.c
+
+INC += $(LIB)/common/
+SRC += $(LIB)/common/str_val.c
+SRC += $(LIB)/common/str_val_buf.c
+SRC += $(LIB)/common/val_text.c
+SRC += $(LIB)/common/val_mod.c
+
+
 #depricated
 SRC += $(LIB)/graphic/align_forms.c
 
