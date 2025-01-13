@@ -7,6 +7,11 @@ typedef enum {
     VAL_SIZE_32
 } val_size_t;
 
+typedef struct {
+    val_size_t vs : 2;
+    uint8_t s : 1;
+} val_rep_t;
+
 static inline unsigned val_ptr_to_usnigned(const void * ptr, val_size_t size)
 {
     switch (size) {
