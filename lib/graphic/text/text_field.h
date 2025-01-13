@@ -31,3 +31,8 @@ static inline xy_t text_field_size_px(const text_field_t * cfg)
 {
     return size_add_padding(lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->padding);
 }
+
+static inline xy_t text_field_text_pos(const form_t * f, const text_field_t * cfg)
+{
+    return align_form_pos(f, lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->a, cfg->padding);
+}
