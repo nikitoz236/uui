@@ -41,3 +41,4 @@ static inline void align_form(const form_t * pf, form_t * af, align_t a, xy_t pa
 }
 
 xy_t size_add_padding(xy_t size, xy_t padding);
+xy_t size_sub_padding(xy_t size, xy_t padding);

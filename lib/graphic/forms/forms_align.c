@@ -25,7 +25,15 @@ xy_t align_form_pos(const form_t * pf, xy_t s, align_t a, xy_t padding)
 xy_t size_add_padding(xy_t size, xy_t padding)
 {
     return (xy_t){
-        .x = size.x + padding.x * 2,
-        .y = size.y + padding.y * 2
+        .x = size.x + (padding.x * 2),
+        .y = size.y + (padding.y * 2)
+    };
+}
+
+xy_t size_sub_padding(xy_t size, xy_t padding)
+{
+    return (xy_t){
+        .x = size.x - (padding.x * 2),
+        .y = size.y - (padding.y * 2)
     };
 }
