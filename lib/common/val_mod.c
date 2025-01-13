@@ -3,12 +3,12 @@
 #define OVF_ADD(val, max, min, step) \
     (val) += (step); \
     if ((val) > (max)) { \
-        (val) -= ((max) - (min)); \
+        (val) -= ((max) - (min) + 1); \
     }
 
 #define OVF_SUB(val, max, min, step) \
     if ((val) < ((min) + (step))) { \
-        (val) += ((max) - (min)); \
+        (val) += ((max) - (min) + 1 ); \
     } \
     (val) -= (step)
 
