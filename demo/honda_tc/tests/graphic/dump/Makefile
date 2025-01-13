@@ -10,11 +10,16 @@ INC += .
 SRC += widget_tc_dump.c
 
 
+
+INC += $(PROJECT)/widgets/common
+SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+
 # dlc_poll.h
 INC += ../../../logic/
 SRC += ../emu_dlc_data.c
 SRC += ../../../logic/honda_dlc_units.c
 
+SRC += $(LIB)/graphic/forms/forms_split.c
 
 # systick.h
 INC += $(LIB)/hw/include/
