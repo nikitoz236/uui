@@ -91,11 +91,12 @@ void dlc_dump_request(honda_unit_t unit)
     dump_unit = unit;
 }
 
-unsigned dlc_dump_get_new_data(uint8_t * data, unsigned * address)
+unsigned dlc_dump_get_new_data(uint8_t * data, unsigned * address, honda_unit_t * unit)
 {
     unsigned len = dump_len;
     if (dump_len) {
         *address = dump_addr;
+        *unit = dump_unit;
         str_cp(data, dump_data, dump_len);
         dump_len = 0;
     }

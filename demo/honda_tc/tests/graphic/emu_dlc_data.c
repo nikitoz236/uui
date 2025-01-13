@@ -69,11 +69,12 @@ void dlc_dump_request(honda_unit_t unit)
     current_address = 0;
 }
 
-unsigned dlc_dump_get_new_data(uint8_t * data, unsigned * address)
+unsigned dlc_dump_get_new_data(uint8_t * data, unsigned * address, honda_unit_t * unit)
 {
     if (current_address < honda_units_map[current_unit].len) {
         // printf("DLC EMU read %s dump from %d\n", honda_dlc_unit_name(current_unit), current_address);
         *address = current_address;
+        *unit = current_unit;
         str_cp(data, &honda_units_map[current_unit].data[current_address], 16);
 
         int r = rand();

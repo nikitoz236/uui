@@ -99,7 +99,8 @@ int main() {
 
         uint8_t dump[16];
         unsigned address = 0;
-        unsigned len = dlc_dump_get_new_data(dump, &address);
+        honda_unit_t unit = HONDA_UNIT_COUNT;
+        unsigned len = dlc_dump_get_new_data(dump, &address, &unit);
 
         if (len) {
             printf("DLC dump new data ready, addr %d, len %d\n", address, len);
