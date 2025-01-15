@@ -22,50 +22,52 @@ uint32_t tv_u32_0 = 0;
 
 struct {
     val_text_t tv;
+    val_rep_t rep;
     void * ptr;
     char * es;
+    unsigned l;
     unsigned el;
 } tests[] = {
     //                                                                                                                         1234567890123456789
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 1, .p = 0, .l =  4, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_s8_p,        .es = "  45"                },      //    1
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 1, .p = 0, .l =  4, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_s8_m,        .es = "- 12"                },      //    2
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 0, .l =  4, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u8_1,        .es = "   3"                },      //    3
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 0, .l =  4, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u8_2,        .es = " 243"                },      //    4
+    { .rep = { .vs = VAL_SIZE_8,  .s = 1 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  4, .ptr = &tv_s8_p,    .es = "  45"                },      //    1
+    { .rep = { .vs = VAL_SIZE_8,  .s = 1 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  4, .ptr = &tv_s8_m,    .es = "- 12"                },      //    2
+    { .rep = { .vs = VAL_SIZE_8,  .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  4, .ptr = &tv_u8_1,    .es = "   3"                },      //    3
+    { .rep = { .vs = VAL_SIZE_8,  .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  4, .ptr = &tv_u8_2,    .es = " 243"                },      //    4
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 0, .l = 12, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u8_2,        .es = "         243"        },      //    5
+    { .rep = { .vs = VAL_SIZE_8,  .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l = 12, .ptr = &tv_u8_2,    .es = "         243"        },      //    5
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_16, .s = 1, .p = 0, .l =  6, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_s16_p,       .es = " 31334"              },      //    6
-    { .tv = { .t = DEC, .vs = VAL_SIZE_16, .s = 1, .p = 0, .l =  6, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_s16_m,       .es = "- 5314"              },      //    7
-    { .tv = { .t = DEC, .vs = VAL_SIZE_16, .s = 0, .p = 0, .l =  6, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u16_1,       .es = "    34"              },      //    8
-    { .tv = { .t = DEC, .vs = VAL_SIZE_16, .s = 0, .p = 0, .l =  6, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u16_2,       .es = " 54321"              },      //    9
+    { .rep = { .vs = VAL_SIZE_16, .s = 1 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  6, .ptr = &tv_s16_p,   .es = " 31334"              },      //    6
+    { .rep = { .vs = VAL_SIZE_16, .s = 1 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  6, .ptr = &tv_s16_m,   .es = "- 5314"              },      //    7
+    { .rep = { .vs = VAL_SIZE_16, .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  6, .ptr = &tv_u16_1,   .es = "    34"              },      //    8
+    { .rep = { .vs = VAL_SIZE_16, .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  6, .ptr = &tv_u16_2,   .es = " 54321"              },      //    9
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 1, .p = 0, .l = 10, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_s32_p,       .es = "   1234536"          },      //   10
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 1, .p = 0, .l = 10, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_s32_m,       .es = "-    12356"          },      //   11
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 0, .l = 10, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u32_1,       .es = "      3456"          },      //   12
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 0, .l = 10, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u32_2,       .es = "4294967290"          },      //   13
+    { .rep = { .vs = VAL_SIZE_32, .s = 1 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_s32_p,   .es = "   1234536"          },      //   10
+    { .rep = { .vs = VAL_SIZE_32, .s = 1 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_s32_m,   .es = "-    12356"          },      //   11
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_u32_1,   .es = "      3456"          },      //   12
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_u32_2,   .es = "4294967290"          },      //   13
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 1, .p = 0, .l = 10, .zl = 1, .zr = 0, .f = X1}, .ptr = &tv_s32_p,       .es = "0001234536"          },      //   14
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 1, .p = 0, .l = 10, .zl = 1, .zr = 0, .f = X1}, .ptr = &tv_s32_m,       .es = "-000012356"          },      //   15
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 0, .l = 10, .zl = 1, .zr = 0, .f = X1}, .ptr = &tv_u32_1,       .es = "0000003456"          },      //   16
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 0, .l = 10, .zl = 1, .zr = 0, .f = X1}, .ptr = &tv_u32_2,       .es = "4294967290"          },      //   17
+    { .rep = { .vs = VAL_SIZE_32, .s = 1 }, .tv = { .p = 0, .zl = 1, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_s32_p,   .es = "0001234536"          },      //   14
+    { .rep = { .vs = VAL_SIZE_32, .s = 1 }, .tv = { .p = 0, .zl = 1, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_s32_m,   .es = "-000012356"          },      //   15
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 0, .zl = 1, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_u32_1,   .es = "0000003456"          },      //   16
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 0, .zl = 1, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_u32_2,   .es = "4294967290"          },      //   17
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 0, .l = 12, .zl = 1, .zr = 0, .f = X1}, .ptr = &tv_u8_2,        .es = "000000000243"        },      //   18
+    { .rep = { .vs = VAL_SIZE_8,  .s = 0 }, .tv = { .p = 0, .zl = 1, .zr = 0, .f = X1},    .l = 12, .ptr = &tv_u8_2,    .es = "000000000243"        },      //   18
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 0, .l =  7, .zl = 0, .zr = 0, .f = X1}, .ptr = &tv_u32_2,       .es = "@967290"             },      //   19
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 0, .zl = 0, .zr = 0, .f = X1},    .l =  7, .ptr = &tv_u32_2,   .es = "@967290"             },      //   19
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_s32_p,   .es = "  1234.536"          },      //   20
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 1, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_s32_p,   .es = "    1234.5"          },      //   21
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X10},    .ptr = &tv_s32_p,   .es = "123453.6  "          },      //   22
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 1, .f = X10},    .ptr = &tv_s32_p,   .es = "123453.600"          },      //   23
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_p,   .es = "  9765.4  "          },      //   24
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 2, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_p,   .es = "   9765.4 "          },      //   25
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_s32_p,   .es = "  1234.536"          },      //   20
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 1, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_s32_p,   .es = "    1234.5"          },      //   21
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X10},   .l = 10, .ptr = &tv_s32_p,   .es = "123453.6  "          },      //   22
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 1, .f = X10},   .l = 10, .ptr = &tv_s32_p,   .es = "123453.600"          },      //   23
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_u32_p,   .es = "  9765.4  "          },      //   24
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 2, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_u32_p,   .es = "   9765.4 "          },      //   25
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X100},   .ptr = &tv_u32_p,   .es = " 97654.0  "          },      //   26
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1},     .ptr = &tv_u32_1,   .es = "  3456.0  "          },      //   27
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X100},  .l = 10, .ptr = &tv_u32_p,   .es = " 97654.0  "          },      //   26
+    { .rep = { .vs = VAL_SIZE_32, .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X1},    .l = 10, .ptr = &tv_u32_1,   .es = "  3456.0  "          },      //   27
 
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 0, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u8_1,    .es = "     0.003"          },      //   27
-    { .tv = { .t = DEC, .vs = VAL_SIZE_8,  .s = 1, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_s8_m,    .es = "-    0.012"          },      //   29
-    { .tv = { .t = DEC, .vs = VAL_SIZE_32, .s = 1, .p = 3, .l = 10, .zl = 0, .zr = 0, .f = X1000},  .ptr = &tv_u32_0,   .es = "     0.0  "          },      //   30
+    { .rep = { .vs = VAL_SIZE_8,  .s = 0 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_u8_1,    .es = "     0.003"          },      //   27
+    { .rep = { .vs = VAL_SIZE_8,  .s = 1 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_s8_m,    .es = "-    0.012"          },      //   29
+    { .rep = { .vs = VAL_SIZE_32, .s = 1 }, .tv = { .p = 3, .zl = 0, .zr = 0, .f = X1000}, .l = 10, .ptr = &tv_u32_0,   .es = "     0.0  "          },      //   30
 };
 
 
@@ -79,15 +81,15 @@ int main()
     for (unsigned i = 0; i < ARRAY_SIZE(tests); i++) {
         char str[20];
         unsigned res = 0;
-        unsigned exp_len = str_len(tests[i]     .es, 20);
+        unsigned exp_len = str_len(tests[i].es, 20);
 
-        val_text_to_str(str, tests[i].ptr, &tests[i].tv);
+        val_text_ptr_to_str(str, tests[i].ptr, tests[i].rep, tests[i].tv, tests[i].l);
 
         unsigned res_len = str_len(str, 20);
         if (res_len != exp_len) {
             res = 1;
         }
-        if (str_cmp(str, tests[i]       .es, exp_len) == 0) {
+        if (str_cmp(str, tests[i].es, exp_len) == 0) {
             res = 1;
         }
 

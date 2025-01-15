@@ -49,3 +49,23 @@ static inline void val_ptr_from_signed(void * ptr, val_size_t size, int val)
         case VAL_SIZE_32: *(int32_t *)ptr = val; break;
     }
 }
+
+static inline unsigned val_unpack(const void * ptr, val_rep_t rep, unsigned * neg)
+{
+    unsigned val;
+    unsigned n = 0;
+    if (rep.s) {
+        int val_signed = val_ptr_to_signed(ptr, rep.vs);
+        if (val_signed < 0) {
+            val_signed = -val_signed;
+            n = 1;
+        }
+        val = val_signed;
+    } else {
+        val = val_ptr_to_usnigned(ptr, rep.vs);
+    }
+    if (neg) {
+        *neg = n;
+    }
+    return val;
+}

@@ -4,30 +4,19 @@
 // #define dbg_printf(...) printf(__VA_ARGS__)
 #define dbg_printf(...)
 
-void val_text_to_str(char * str, const void * val, const val_text_t * tv)
+void val_text_ptr_to_str(char * str, const void * ptr, val_rep_t rep, val_text_t vt, unsigned len)
 {
-    unsigned n = 0;
-
-    unsigned val_for_str;
-    if (tv->s) {
-        int val_signed = val_ptr_to_signed(val, tv->vs);
-        if (val_signed < 0) {
-            val_signed = -val_signed;
-            n = 1;
-        }
-        val_for_str = val_signed;
-    } else {
-        val_for_str = val_ptr_to_usnigned(val, tv->vs);
-    }
-
-    if (n) {
+    unsigned str_end_idx = len;
+    unsigned neg = 0;
+    unsigned val_for_str = val_unpack(ptr, rep, &neg);
+    if (neg) {
         str[0] = '-';
         str++;
+        len--;
     }
 
-    unsigned len = tv->l - n;
-    if (tv->p == 0) {
-        dec_to_str_right_aligned(val_for_str, str, len, tv->zl);
+    if (vt.p == 0) {
+        dec_to_str_right_aligned(val_for_str, str, len, vt.zl);
     } else {
         /*
             например у нас 10 знакомест и число 1234536
@@ -55,13 +44,13 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
             тут конечно магия и подгон под тесты, осощнание на поверхности.
         */
 
-        int offset = tv->p - tv->f + 1;         // положительный сдвиг влево, отрицательный вправо
-        dec_to_str_right_aligned(val_for_str, str, len - offset, tv->zl);
-        dbg_printf("\nval text point %d, f %d, len %d offset %d, result str before add point >%s<\n", tv->p, tv->f, len, offset, str);
+        int offset = vt.p - vt.f + 1;         // положительный сдвиг влево, отрицательный вправо
+        dec_to_str_right_aligned(val_for_str, str, len - offset, vt.zl);
+        dbg_printf("\nval text point %d, f %d, len %d offset %d, result str before add point >%s<\n", vt.p, vt.f, len, offset, str);
 
 
-        unsigned zr = tv->zr;
-        for (unsigned i = 0; i < tv->p; i++) {
+        unsigned zr = vt.zr;
+        for (unsigned i = 0; i < vt.p; i++) {
             unsigned idx = len - i - 2;         // почему 2 ? одна из них это точка, вторая непонятно, это то куда сдвинется знак
             char c = str[idx];
             dbg_printf("  -- move char %c from %d to %d\n", c, idx, idx + 1);
@@ -76,7 +65,7 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
             }
 
             // дальше думаем, нужны ли нам нули справа
-            if (i == tv->p - 1) {
+            if (i == vt.p - 1) {
                 // один разряд после точки точно должен быть 0
                 zr = 1;
             }
@@ -99,13 +88,13 @@ void val_text_to_str(char * str, const void * val, const val_text_t * tv)
 
             str[idx + 1] = c;
         }
-        str[len - tv->p - 1] = '.';
+        str[len - vt.p - 1] = '.';
 
         // test 28 - если у нас не осталось значаших разрядов слева от нуля, то добавим туда 0
-        if (str[len - tv->p - 2] == ' ') {
-            str[len - tv->p - 2] = '0';
+        if (str[len - vt.p - 2] == ' ') {
+            str[len - vt.p - 2] = '0';
         }
 
-        str[tv->l] = 0;
+        str[str_end_idx] = 0;
     }
 }
