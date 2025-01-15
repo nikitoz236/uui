@@ -46,6 +46,7 @@ SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
 SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/val_mod.c
+SRC += $(LIB)/common/date_time.c
 
 TEST_NAME = test_widget_route_list
 

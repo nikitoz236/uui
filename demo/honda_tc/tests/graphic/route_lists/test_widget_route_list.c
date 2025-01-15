@@ -6,6 +6,11 @@
 
 #include "routes.h"
 
+int time_zone_get(void)
+{
+    return 5 * 60 * 60;
+}
+
 uint8_t selector = 0;
 
 ui_node_desc_t ui = {

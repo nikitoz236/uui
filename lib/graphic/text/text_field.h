@@ -14,9 +14,15 @@ typedef struct {
 
 typedef struct {
     const text_field_t * tfcfg;
-    char * text;
+    union {
+        const char * text;
+        const char * (*to_str)(unsigned idx);
+    };
     xy_t pos;
     uint16_t len;
+    val_text_t vt;
+    val_rep_t rep;
+    uint16_t offset;
 } text_field_label_t;
 
 typedef struct {
