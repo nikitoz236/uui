@@ -1,7 +1,7 @@
-LIB = ../../lib
+LIB = ../../../lib
 
 INC += $(LIB)/common
 
-bit_fields_test_run:
+TEST_NAME = test_bit_fields
 
 include $(LIB)/emu/test_console.mk
