@@ -1,15 +1,15 @@
 #pragma once
 
 #include <stdint.h>
+#include "periph_header.h"
 #include "pwm.h"
-#include "stm32f10x.h"
-#include "stm32f10x_rcc.h"
-#include "stm32f10x_gpio.h"
+#include "pclk.h"
+#include "gpio.h"
 
 struct pwm_cfg {
+    gpio_pin_cfg_t * gpio;
     TIM_TypeDef * tim;
-    hw_pclk_t tim_pclk;
-    gpio_pin_t gpio;
+    pclk_t tim_pclk;
     uint8_t ch;
     uint16_t max_val;
     unsigned freq;
