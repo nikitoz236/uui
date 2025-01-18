@@ -7,7 +7,7 @@
     - описанием переферии для настройки таблицы векторов
 */
 
-#include "config.h"
+#include "periph_header.h"
 
 #define VECTOR_CORTEX_NUM               16
 #define VECTOR_TABLE_SIZE               (VECTOR_CORTEX_NUM + VECTOR_PERIPH_NUM)

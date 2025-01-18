@@ -1,4 +1,4 @@
-#include "stm32f10x.h"
+#include "periph_header.h"
 #include "irq_vectors.h"
 #include "bit_fields.h"
 
@@ -99,4 +99,3 @@ static inline void dma_disable_irq_full(unsigned ch)
 {
     dma_channel(ch)->CCR &= ~DMA_CCR1_TCIE;
 }
-
