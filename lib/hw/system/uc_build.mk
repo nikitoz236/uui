@@ -30,8 +30,19 @@ include $(wildcard $(BUILD_DIR)/*.d)
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf $(BUILD_DIR)
 	$(BIN) $< $@
 
+OPT += -lgcc
+OPT += -Wall
+# OPT += -fno-builtin
+OPT += -nostdlib
+# OPT += -mthumb
+# OPT += -Wl,--gc-sections
+# OPT += -specs=nano.specs
+OPT += -Wl,-Map,"$(BUILD_DIR)/map_file"
+# OPT += -g
+# OPT += -MMD
+
 $(BUILD_DIR)/$(TARGET).elf: $(SRC) $(BUILD_DIR)/stack_size.ld Makefile
-	$(CC) $(SRC) $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(addprefix -T, $(LD_FILES)) $(OPT) -Wall -fno-builtin -nostdlib -MMD -Wl,-Map,"$(BUILD_DIR)/map_file" $(MCU) -o $@
+	$(CC) $(SRC) $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(addprefix -T, $(LD_FILES)) $(OPT) $(MCU) -o $@
 	$(SZ) $@
 
 $(BUILD_DIR)/stack_size.ld: $(BUILD_DIR)
