@@ -1,9 +1,11 @@
+#pragma once
+
 // описание тактирования периферии
 enum plck_bus {
     PCLK_BUS_APB1 = 0,      // for rcc apb_div array indexes
     PCLK_BUS_APB2 = 1,
     PCLK_BUS_AHB,
-    PCLK_IOP,
+    PCLK_BUS_IOP,
 };
 
 typedef struct {
