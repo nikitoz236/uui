@@ -22,23 +22,6 @@ unsigned f_apb_calc(apb_div_t div)
     return rcc_ctx.f_hclk / d;
 }
 
-void hw_rcc_pclk_ctrl(const pclk_t * pclk, unsigned state)
-{
-    static __IO uint32_t * const rcc_enr[] = {
-        [PCLK_BUS_APB1] = &RCC->APB1ENR,
-        [PCLK_BUS_APB2] = &RCC->APB2ENR,
-        [PCLK_BUS_AHB] = &RCC->AHBENR
-    };
-
-    __IO uint32_t * const rcc_enr_reg = rcc_enr[pclk->bus];
-
-    if (state) {
-        *rcc_enr_reg |= pclk->mask;
-    } else {
-        *rcc_enr_reg &= ~pclk->mask;
-    }
-}
-
 unsigned pclk_f_hclk(void)
 {
     return rcc_ctx.f_hclk;
