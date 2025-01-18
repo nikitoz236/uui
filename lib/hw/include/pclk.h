@@ -1,8 +1,8 @@
 // описание тактирования периферии
 enum plck_bus {
+    PCLK_BUS_APB1 = 0,      // for rcc apb_div array indexes
+    PCLK_BUS_APB2 = 1,
     PCLK_BUS_AHB,
-    PCLK_BUS_APB1,
-    PCLK_BUS_APB2,
     PCLK_IOP,
 };
 
