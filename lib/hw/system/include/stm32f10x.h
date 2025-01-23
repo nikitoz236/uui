@@ -1234,7 +1234,7 @@ typedef struct
  
 typedef struct
 {
-  __IO uint16_t SR;
+  __IO uint16_t ISR;
   uint16_t  RESERVED0;
   __IO uint16_t DR;
   uint16_t  RESERVED1;
