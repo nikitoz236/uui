@@ -16,7 +16,11 @@ static inline void flash_set_acr(unsigned f)
     //  001 One wait state,  if 24 MHz < SYSCLK <= 48 MHz
     //  010 Two wait states, if 48 MHz < SYSCLK <= 72 MHz
     FLASH->ACR &= ~FLASH_ACR_LATENCY;
-    FLASH->ACR |= FLASH_ACR_LATENCY_0 * ((f - 1) / 24000000);
+
+    // в файле stm32f10x.h FLASH_ACR_LATENCY_0 = 0 и обозначает 000 Zero wait state
+    // в остальных нормальных заголовках FLASH_ACR_LATENCY_0 = 1 и обозначет 0 бит
+
+    FLASH->ACR |= 1 * ((f - 1) / 24000000);
 }
 
 static inline void rcc_run_hsi(void)
