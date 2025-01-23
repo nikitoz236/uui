@@ -1,8 +1,8 @@
-#include "stm32f10x.h"
-#include "hw_rcc.h"
+#include "periph_header.h"
 #include "time_units.h"
 #include "irq_vectors.h"
 #include "time_moment.h"
+#include "pclk.h"
 
 volatile unsigned uptime_ms = 0;
 static unsigned systicks_in_ms;
@@ -17,7 +17,7 @@ void init_systick(void)
 {
     NVIC_SetHandler(SysTick_IRQn, &systick_irq_handler);
     NVIC_EnableIRQ(SysTick_IRQn);
-    systicks_in_ms = hw_rcc_f_hclk() / MS_IN_S;
+    systicks_in_ms = pclk_f_hclk() / MS_IN_S;
     systicks_in_us = systicks_in_ms / US_IN_MS;
     SysTick->LOAD = systicks_in_ms - 1;
     SysTick->VAL = 0;
