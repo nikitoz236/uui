@@ -15,7 +15,8 @@ static inline void flash_set_acr(unsigned f)
     //  000 Zero wait state, if 0      < SYSCLK <= 24 MHz
     //  001 One wait state,  if 24 MHz < SYSCLK <= 48 MHz
     //  010 Two wait states, if 48 MHz < SYSCLK <= 72 MHz
-    FLASH->ACR |= FLASH_ACR_LATENCY * ((f - 1) / 24000000);
+    FLASH->ACR &= ~FLASH_ACR_LATENCY;
+    FLASH->ACR |= FLASH_ACR_LATENCY_0 * ((f - 1) / 24000000);
 }
 
 static inline void rcc_run_hsi(void)
