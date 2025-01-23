@@ -17,10 +17,11 @@ SRC += stm32_usart_test.c
 SRC += hw_cfg.c
 
 SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
+SRC += $(LIB)/hw/uc_hw/stm_rcc_common.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
+SRC += $(LIB)/hw/uc_hw/stm_usart.c
 
-SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
+# SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
 
 INC += $(LIB)/hw/drivers
 

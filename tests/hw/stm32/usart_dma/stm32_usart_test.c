@@ -29,34 +29,25 @@ const gpio_pin_t debug_gpio_list[] = {
 
 const char wf[] = {"Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light."};
 uint8_t rx_data[16] = {};
+#include "stm_rcc_common.h"
 
 int main(void)
 {
-    //  000 Zero wait state, if 0 < SYSCLK≤ 24 MHz
-    //  001 One wait state, if 24 MHz < SYSCLK ≤ 48 MHz
-    //  010 Two wait states, if 48 MHz < SYSCLK ≤ 72 MHz
-    FLASH->ACR |= FLASH_ACR_LATENCY * 2;
-    FLASH->ACR |= FLASH_ACR_PRFTBE;
+    rcc_apply_cfg(&hw_rcc_cfg);
 
-    hw_rcc_apply_cfg(&hw_rcc_cfg);
+    pclk_ctrl(&PCLK_AFIO, 1);
 
-    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
     AFIO->MAPR |= AFIO_MAPR_TIM1_REMAP_PARTIALREMAP;
     AFIO->MAPR |= AFIO_MAPR_TIM3_REMAP_PARTIALREMAP;
 
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    pclk_ctrl(&PCLK_IOPA, 1);
+    pclk_ctrl(&PCLK_IOPB, 1);
+    pclk_ctrl(&PCLK_IOPC, 1);
 
-    const hw_pclk_t dma_pclk = {
-        .mask = RCC_AHBENR_DMA1EN,
-        .bus = PCLK_BUS_AHB
-    };
+    pclk_ctrl(&PCLK_DMA1, 1);
 
-    hw_rcc_pclk_ctrl(&dma_pclk, 1);
-
-    init_systick();
+    // init_systick();
     __enable_irq();
 
     for (unsigned i = 0; i < ARRAY_SIZE(debug_gpio_list); i++) {
@@ -71,13 +62,35 @@ int main(void)
     }
 
     gpio_set_state(&debug_gpio_list[0], 1);
-    delay_ms(100);
-    gpio_set_state(&debug_gpio_list[0], 0);
+
+    // while (1) {};
+
+    // delay_ms(100);
+    // gpio_set_state(&debug_gpio_list[0], 0);
 
     usart_set_cfg(&debug_usart);
 
     dpn("Hey bitch!");
     dpn("this is stm32 usart test project!");
+
+    dn();
+    dpn("hey!!!");
+    dp("SYS CLOCK: ");
+    dpd(pclk_f_hclk(), 10);
+    dp("   FLASH ACR: ");
+    dpx(FLASH->ACR, 4);
+    dn();
+
+
+    uint32_t * ptr = (uint32_t*)RCC;
+
+    dpn("RCC:");
+    for (unsigned i = 0; i < (sizeof(RCC_TypeDef) / sizeof(uint32_t)); i++) {
+        dpx(*ptr, 4);
+        dn();
+        ptr++;
+    }
+
 
 
     // ну тут мы напарываемся на то что у нас dpxd странно работает, так как отправка дма без промежуточного буфера

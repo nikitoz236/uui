@@ -24,7 +24,7 @@ const usart_cfg_t debug_usart = {
     .rx_dma = {
         .dma_ch = 5,
     },
-    .pclk = &(hw_pclk_t){PCLK_BUS_APB2, RCC_APB2ENR_USART1EN},
+    .pclk = PCLK_USART1,
     .irqn = USART1_IRQn
 };
 
