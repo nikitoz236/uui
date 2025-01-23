@@ -19,6 +19,7 @@ struct hw_rcc_cfg {
     } sysclk_src;
     uint8_t pll_div;                    // PLLM
     uint8_t pll_mul;                    // PLMN
+    uint8_t pll_sys_div;                // PLLR
     hclk_div_t hclk_div;
     apb_div_t apb_div[APB_BUS_DIV_NUM];
 };
