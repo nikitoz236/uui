@@ -1,5 +1,5 @@
 #include "periph_header.h"
-#include "stm32f10x_usart.h"
+#include "stm_usart.h"
 #include "str_utils.h"
 #include "stm_dma.h"
 #include "irq_vectors.h"
