@@ -30,7 +30,7 @@ const usart_cfg_t debug_usart = {
         .size = DEBUG_USART_TX_BUF_SIZE,
         .rb = &debug_usart_dma_tx_ctx.rb
     },
-    .pclk = & (hw_pclk_t) {PCLK_BUS_APB2, RCC_APB2ENR_USART1EN},
+    .pclk = PCLK_USART1,
     .irqn = USART1_IRQn
 };
 

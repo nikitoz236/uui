@@ -31,29 +31,19 @@ const char wf[] = {"Dark spruce forest frowned on either side the frozen waterwa
 
 int main(void)
 {
-    //  000 Zero wait state, if 0 < SYSCLK≤ 24 MHz
-    //  001 One wait state, if 24 MHz < SYSCLK ≤ 48 MHz
-    //  010 Two wait states, if 48 MHz < SYSCLK ≤ 72 MHz
-    FLASH->ACR |= FLASH_ACR_LATENCY * 2;
-    FLASH->ACR |= FLASH_ACR_PRFTBE;
+    rcc_apply_cfg(&hw_rcc_cfg);
 
-    hw_rcc_apply_cfg(&hw_rcc_cfg);
+    pclk_ctrl(&PCLK_AFIO, 1);
 
-    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
     AFIO->MAPR |= AFIO_MAPR_TIM1_REMAP_PARTIALREMAP;
     AFIO->MAPR |= AFIO_MAPR_TIM3_REMAP_PARTIALREMAP;
 
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    pclk_ctrl(&PCLK_IOPA, 1);
+    pclk_ctrl(&PCLK_IOPB, 1);
+    pclk_ctrl(&PCLK_IOPC, 1);
 
-    const hw_pclk_t dma_pclk = {
-        .mask = RCC_AHBENR_DMA1EN,
-        .bus = PCLK_BUS_AHB
-    };
-
-    hw_rcc_pclk_ctrl(&dma_pclk, 1);
+    pclk_ctrl(&PCLK_DMA1, 1);
 
     init_systick();
     __enable_irq();
