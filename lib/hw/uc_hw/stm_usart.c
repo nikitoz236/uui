@@ -1,7 +1,7 @@
 #include "periph_header.h"
 #include "stm32f10x_usart.h"
 #include "str_utils.h"
-#include "dma.h"
+#include "stm_dma.h"
 #include "irq_vectors.h"
 
 #define __DBGPIO_USART(n, x);
