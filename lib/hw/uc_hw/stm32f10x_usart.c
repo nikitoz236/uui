@@ -1,3 +1,4 @@
+#include "periph_header.h"
 #include "stm32f10x_usart.h"
 #include "str_utils.h"
 #include "dma.h"
@@ -17,8 +18,8 @@
 
 static inline void usart_tx_byte(const usart_cfg_t * usart, char c)
 {
-    while ((usart->usart->SR & USART_SR_TXE) == 0) {};
-    usart->usart->DR = c;
+    while ((usart->usart->ISR & USART_ISR_TXE) == 0) {};
+    usart->usart->TDR = c;
 }
 
 static inline void usart_tx_blocking(const usart_cfg_t * usart, const void * data, unsigned len)
@@ -171,12 +172,12 @@ void dma_usart1_tx_handler(void)
 
 void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
 {
-    usart->usart->BRR = hw_rcc_f_pclk(usart->pclk) / baud;
+    usart->usart->BRR = pclk_f(&usart->pclk) / baud;
 }
 
 void usart_set_cfg(const usart_cfg_t * usart)
 {
-    hw_rcc_pclk_ctrl(usart->pclk, 1);
+    pclk_ctrl(&usart->pclk, 1);
 
     usart->usart->CR1 = 0;
     usart->usart->CR2 = 0;
@@ -189,8 +190,8 @@ void usart_set_cfg(const usart_cfg_t * usart)
         if (usart->rx_dma.dma_ch != 0) {
             unsigned dma_rx_ch = usart->rx_dma.dma_ch;
             dma_channel(dma_rx_ch)->CCR = 0;
-            dma_channel(dma_rx_ch)->CCR |= DMA_CCR1_MINC;
-            dma_set_periph_rx(dma_rx_ch, (void *)&usart->usart->DR);
+            dma_enable_mem_inc(dma_rx_ch);
+            dma_set_periph_rx(dma_rx_ch, (void *)&usart->usart->RDR);
             usart->usart->CR3 |= USART_CR3_DMAR;
             if (usart->rx_dma.size != 0) {
 
@@ -205,15 +206,15 @@ void usart_set_cfg(const usart_cfg_t * usart)
         if (usart->tx_dma.dma_ch != 0) {
             unsigned dma_tx_ch = usart->tx_dma.dma_ch;
             dma_channel(dma_tx_ch)->CCR = 0;
-            dma_channel(dma_tx_ch)->CCR |= DMA_CCR1_MINC;
-            dma_set_periph_tx(dma_tx_ch, (void *)&usart->usart->DR);
+            dma_enable_mem_inc(dma_tx_ch);
+            dma_set_periph_tx(dma_tx_ch, (void *)&usart->usart->TDR);
             usart->usart->CR3 |= USART_CR3_DMAT;
 
             if (usart->tx_dma.size != 0) {
                 usart1_cfg = usart;
                 usart->tx_dma.rb->head = 0;
                 usart->tx_dma.rb->tail = 0;
-                dma_channel(dma_tx_ch)->CCR |= DMA_CCR1_TCIE;
+                dma_enable_irq_full(dma_tx_ch);
                 dma_set_handler(dma_tx_ch, dma_usart1_tx_handler);
                 dma_enable_nvic_irq(dma_tx_ch);
             }
