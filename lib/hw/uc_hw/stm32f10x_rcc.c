@@ -1,25 +1,11 @@
-#include "stm32f10x.h"
+#include "periph_header.h"
 #include "stm32f10x_rcc.h"
+#include "stm_rcc_common.h"
+#include "pclk.h"
 
-static void rcc_run_hsi(void)
-{
-    // Enable HSI
-    RCC->CR |= RCC_CR_HSION;
+extern rcc_ctx_t rcc_ctx;
 
-    // WAIT start HSI
-    while ((RCC->CR & RCC_CR_HSIRDY) == 0) {};
-}
-
-static void rcc_run_hse(void)
-{
-    // Enable HSE
-    RCC->CR |= RCC_CR_HSEON;
-
-    // WAIT start HSE
-    while ((RCC->CR & RCC_CR_HSERDY) == 0) {};
-}
-
-static void rcc_set_pllmul(int pll_mull)
+static void rcc_set_pllmul(unsigned pll_mull)
 {
     if ((pll_mull > 16) || (pll_mull < 2)) {
         return;
@@ -28,38 +14,6 @@ static void rcc_set_pllmul(int pll_mull)
     // Set PLLMUL
     RCC->CFGR &= ~RCC_CFGR_PLLMULL;
     RCC->CFGR |= RCC_CFGR_PLLMULL_0 * (pll_mull - 2);
-}
-
-static void rcc_run_pll(void)
-{
-    // Enable PLL
-    RCC->CR |= RCC_CR_PLLON;
-
-    // WAIT start PLL
-    while ((RCC->CR & RCC_CR_PLLRDY) == 0) {};
-}
-
-static void rcc_set_sysclk_src(sysclk_src_t src)
-{
-    uint32_t tmp;
-
-    if (src > SYSCLK_SRC_PLL) {
-        return;
-    }
-
-    // Select SYSCLK froom PLL
-    tmp = RCC->CFGR;
-    tmp &= ~RCC_CFGR_SW;
-    tmp |= src * RCC_CFGR_SW_0;
-    RCC->CFGR = tmp;
-
-    // WAIT SYSCLK switching
-    while ((RCC->CFGR & RCC_CFGR_SWS) != (src * RCC_CFGR_SWS_0)) {};
-}
-
-static void rcc_set_pll_src_hsi_div2(void)
-{
-
 }
 
 static void rcc_set_pll_src_prediv(unsigned prediv)
@@ -77,74 +31,56 @@ static void rcc_set_pll_src_prediv(unsigned prediv)
     RCC->CFGR |= RCC_CFGR_PLLXTPRE_HSE_Div2 * (prediv - 1);
 }
 
-static const hw_rcc_cfg_t * clock_cfg;
-static unsigned f_sysclk = 8000000;     // HSI
-static unsigned f_hclk = 8000000;
-
-static unsigned f_hclk_calc(hclk_div_t div)
+static void rcc_set_apb_div(unsigned bus, apb_div_t div)
 {
-    static uint16_t factors[] = { 2, 4, 8, 16, 64, 128, 256, 512 };
-    unsigned d = 1;
-    if (div != HCLK_DIV1) {
-        d = factors[div - 8];
-    }
-    return f_sysclk / d;
+    static const uint32_t apb_divs_fields[] = {
+        RCC_CFGR_PPRE1_0,
+        RCC_CFGR_PPRE2_0
+    };
+
+    RCC->CFGR &= ~(0x7 * apb_divs_fields[bus]);
+    RCC->CFGR |= (div & 0x7) * apb_divs_fields[bus];
 }
 
-static unsigned f_apb_calc(apb_div_t div)
+void rcc_apply_cfg(const hw_rcc_cfg_t * cfg)
 {
-    unsigned d = 1;
-    if (div != APB_DIV1) {
-        d = (1 << (div - 3));
-    }
-    return f_hclk / d;
-}
-
-void hw_rcc_apply_cfg(const hw_rcc_cfg_t * cfg)
-{
-    clock_cfg = cfg;
-    if (clock_cfg->sysclk_src == SYSCLK_SRC_PLL) {
-        if (clock_cfg->pll_src == PLL_SRC_PREDIV) {
+    rcc_ctx.clock_cfg = cfg;
+    if (cfg->sysclk_src == SYSCLK_SRC_PLL) {
+        if (cfg->pll_src == PLL_SRC_PREDIV) {
             rcc_run_hse();
-            rcc_set_pll_src_prediv(clock_cfg->pll_prediv);
-        } else if (clock_cfg->pll_src == PLL_SRC_HSI_DIV2) {
-            rcc_set_pll_src_hsi_div2();
+            rcc_set_pll_src_prediv(cfg->pll_prediv);
+        } else if (cfg->pll_src == PLL_SRC_HSI_DIV2) {
+            // rcc_set_pll_src_hsi_div2();
         }
-        rcc_set_pllmul(clock_cfg->pll_mul);
+        rcc_set_pllmul(cfg->pll_mul);
         rcc_run_pll();
-        f_sysclk = clock_cfg->hse_val * clock_cfg->pll_mul / clock_cfg->pll_prediv;
-    } else if (clock_cfg->sysclk_src == SYSCLK_SRC_HSE) {
+        rcc_ctx.f_sysclk = (cfg->hse_val * cfg->pll_mul) / cfg->pll_prediv;
+    } else if (cfg->sysclk_src == SYSCLK_SRC_HSE) {
         rcc_run_hse();
-        f_sysclk = clock_cfg->hse_val;
-    } else if (clock_cfg->sysclk_src == SYSCLK_SRC_HSI) {
+        rcc_ctx.f_sysclk = cfg->hse_val;
+    } else if (cfg->sysclk_src == SYSCLK_SRC_HSI) {
         rcc_run_hsi();
-        f_sysclk = 8000000;
+        rcc_ctx.f_sysclk = HSI_VALUE;
         // может чтото еще ??
     }
-    rcc_set_sysclk_src(clock_cfg->sysclk_src);
 
-    RCC->CFGR &= ~(0xF * RCC_CFGR_HPRE_0);
-    RCC->CFGR |= clock_cfg->hclk_div * RCC_CFGR_HPRE_0;
+    rcc_ctx.f_hclk = f_hclk_calc(cfg->hclk_div);
+    flash_set_acr(rcc_ctx.f_hclk);
 
-    f_hclk = f_hclk_calc(cfg->hclk_div);
+    rcc_set_sysclk_src(cfg->sysclk_src);
+    rcc_set_hclk_div(cfg->hclk_div);
 
-    for (unsigned i = 0; i < PCLK_APB_BUS_NUM; i++) {
-        static const uint32_t apb_divs_fields[] = {
-            RCC_CFGR_PPRE1_0,
-            RCC_CFGR_PPRE2_0
-        };
-
-        RCC->CFGR &= ~(0x7 * apb_divs_fields[i]);
-        RCC->CFGR |= clock_cfg->apb_div[i] * apb_divs_fields[i];
+    for (unsigned i = 0; i < APB_BUS_DIV_NUM; i++) {
+        rcc_set_apb_div(i, cfg->apb_div[i]);
     }
 }
 
-void hw_rcc_pclk_ctrl(const hw_pclk_t * pclk, unsigned state)
+void pclk_ctrl(const pclk_t * pclk, unsigned state)
 {
     static __IO uint32_t * const rcc_enr[] = {
-        &RCC->APB1ENR,
-        &RCC->APB2ENR,
-        &RCC->AHBENR
+        [PCLK_BUS_APB1] = &RCC->APB1ENR,
+        [PCLK_BUS_APB2] = &RCC->APB2ENR,
+        [PCLK_BUS_AHB] = &RCC->AHBENR,
     };
 
     __IO uint32_t * const rcc_enr_reg = rcc_enr[pclk->bus];
@@ -156,20 +92,19 @@ void hw_rcc_pclk_ctrl(const hw_pclk_t * pclk, unsigned state)
     }
 }
 
-unsigned hw_rcc_f_hclk(void)
+unsigned pclk_f(const pclk_t * pclk)
 {
-    return f_hclk;
+    unsigned apb_bus_idx = pclk->bus - PCLK_BUS_APB1;
+    if (apb_bus_idx >= APB_BUS_DIV_NUM) {
+        return f_apb_calc(APB_DIV1);
+    }
+    return f_apb_calc(rcc_ctx.clock_cfg->apb_div[apb_bus_idx]);
 }
 
-unsigned hw_rcc_f_pclk(const hw_pclk_t * pclk)
+unsigned pclk_f_timer(const pclk_t * pclk)
 {
-    return f_apb_calc(clock_cfg->apb_div[pclk->bus]);
-}
-
-unsigned hw_rcc_f_timer(const hw_pclk_t * pclk)
-{
-    unsigned f_timer = hw_rcc_f_pclk(pclk);
-    if (clock_cfg->apb_div[pclk->bus] != APB_DIV1) {
+    unsigned f_timer = pclk_f(pclk);
+    if (rcc_ctx.clock_cfg->apb_div[pclk->bus - PCLK_BUS_APB1] != APB_DIV1) {
         f_timer *= 2;
     }
     return f_timer;
