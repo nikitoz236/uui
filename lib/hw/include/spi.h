@@ -7,10 +7,9 @@ struct spi_cfg;
 typedef struct spi_cfg spi_cfg_t;
 
 typedef struct {
+    gpio_t * cs_pin;
     const spi_cfg_t * spi;
-    gpio_pin_t cs_pin;
-    gpio_cfg_t * cs_pin_cfg;
-} spi_slave_cfg_t;
+} spi_dev_cfg_t;
 
 enum spi_gpio_list {
     SPI_PIN_SCK,
@@ -24,14 +23,18 @@ enum spi_gpio_list {
     SPI_PIN_NUM_4_PIN_RX_TX_CS = SPI_PIN_CS + 1,
 };
 
+static inline void init_spi_dev(const spi_dev_cfg_t * cfg)
+{
+    init_gpio(cfg->cs_pin);
+    gpio_set_state(cfg->cs_pin, 1);
+}
+
 void init_spi(const spi_cfg_t * cfg);
 unsigned spi_is_busy(const spi_cfg_t * cfg);
 void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len);
 
-
 void spi_write_8(const spi_cfg_t * cfg, uint8_t c);
 void spi_write_16(const spi_cfg_t * cfg, uint16_t c);
-
 
 void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len);
 void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len);
