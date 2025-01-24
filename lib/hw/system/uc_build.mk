@@ -2,7 +2,7 @@
 INC += $(LIB)/hw/system/include
 INC += $(LIB)/hw/system/cmsis
 INC += $(LIB)/hw/include
-INC += $(LIB)/hw/uc_hw
+# INC += $(LIB)/hw/uc_hw
 
 SRC += $(LIB)/hw/system/startup.c
 
