@@ -1,17 +1,6 @@
-#include "stm32f10x.h"
-#include "stm32f10x_gpio.h"
+#include "periph_gpio.h"
 
-static GPIO_TypeDef * gpio_ports[] = {
-    [GPIO_PORT_A] = GPIOA,
-    [GPIO_PORT_B] = GPIOB,
-    [GPIO_PORT_C] = GPIOC,
-    [GPIO_PORT_D] = GPIOD,
-    [GPIO_PORT_E] = GPIOE,
-    [GPIO_PORT_F] = GPIOF,
-    [GPIO_PORT_G] = GPIOG,
-};
-
-void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg)
+static void gpio_set_cfg(gpio_pin_t pin, const gpio_cfg_t * cfg)
 {
     union cr_field {
         struct {
@@ -46,10 +35,10 @@ void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg)
         }
     }
 
-    GPIO_TypeDef * port = gpio_ports[pin->port];
-    unsigned pin_mode_shift = pin->pin * 4;
+    GPIO_TypeDef * port = __gpio_port(pin);
+    unsigned pin_mode_shift = pin.pin * 4;
     __IO uint32_t * ctrl_reg;
-    if (pin->pin < 8) {
+    if (pin.pin < 8) {
         ctrl_reg = &port->CRL;
     } else {
         ctrl_reg = &port->CRH;
@@ -59,30 +48,21 @@ void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg)
     *ctrl_reg &= ~(0xF << pin_mode_shift);
     *ctrl_reg |= cr.value << pin_mode_shift;
     if (odr_set) {
-        port->ODR |= 1 << pin->pin;
+        port->ODR |= 1 << pin.pin;
     }
 }
 
-void gpio_set_state(const gpio_pin_t * pin, unsigned state)
+void init_gpio(const gpio_t * gpio)
 {
-    GPIO_TypeDef * port = gpio_ports[pin->port];
-    if (state) {
-        port->BSRR = 1 << pin->pin;
-    } else {
-        port->BRR = 1 << pin->pin;
-    }
+    gpio_set_cfg(gpio->gpio, &gpio->cfg);
 }
 
-unsigned gpio_get_state(const gpio_pin_t * pin)
+void gpio_set_state(const gpio_t * gpio, unsigned state)
 {
-    GPIO_TypeDef * port = gpio_ports[pin->port];
-    if (port->IDR & (1 << pin->pin)) {
-        return 1;
-    }
-    return 0;
+    stm_gpio_set_state(gpio->gpio, state);
 }
 
-void gpio_configure(const gpio_pin_cfg_t * pin_cfg)
+unsigned gpio_get_state(const gpio_t * gpio)
 {
-    gpio_set_cfg(&pin_cfg->gpio, &pin_cfg->cfg);
+    return stm_gpio_get_state(gpio->gpio);
 }

@@ -2,13 +2,33 @@
 #include "periph_header.h"
 #include "rcc.h"
 
-struct hw_rcc_cfg;
+// typedef enum {
+//     HCLK_DIV1 = 0,
+//     HCLK_DIV2 = 8,
+//     HCLK_DIV4 = 9,
+//     HCLK_DIV8 = 10,
+//     HCLK_DIV16 = 11,
+//     HCLK_DIV64 = 12,
+//     HCLK_DIV128 = 13,
+//     HCLK_DIV256 = 14,
+//     HCLK_DIV512 = 15,
+// } hclk_div_t;
+
+// typedef enum {
+//     APB_DIV1 = 0,
+//     APB_DIV2 = 4,
+//     APB_DIV4 = 5,
+//     APB_DIV8 = 6,
+//     APB_DIV16 = 7,
+// } apb_div_t;
 
 typedef struct {
-    const hw_rcc_cfg_t * clock_cfg;
+    const rcc_cfg_t * clock_cfg;
     unsigned f_sysclk;
     unsigned f_hclk;
 } rcc_ctx_t;
+
+extern rcc_ctx_t rcc_ctx;
 
 static inline void flash_set_acr(unsigned f)
 {
@@ -67,5 +87,21 @@ static inline void rcc_set_hclk_div(hclk_div_t div)
     RCC->CFGR |= (RCC_CFGR_HPRE_0 * div) & RCC_CFGR_HPRE;
 }
 
-unsigned f_hclk_calc(hclk_div_t div);
-unsigned f_apb_calc(apb_div_t div);
+static inline unsigned f_hclk_calc(hclk_div_t div)
+{
+    static uint16_t factors[] = { 2, 4, 8, 16, 64, 128, 256, 512 };
+    unsigned d = 1;
+    if (div != HCLK_DIV1) {
+        d = factors[div - HCLK_DIV2];
+    }
+    return rcc_ctx.f_sysclk / d;
+}
+
+static inline unsigned f_apb_calc(apb_div_t div)
+{
+    unsigned d = 1;
+    if (div != APB_DIV1) {
+        d = (1 << (div - 3));
+    }
+    return rcc_ctx.f_hclk / d;
+}

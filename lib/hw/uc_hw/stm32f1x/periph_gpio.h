@@ -1,8 +1,8 @@
 #pragma once
 #include "gpio.h"
-#include <stdint.h>
+#include "../stm_gpio.h"
 
-struct gpio_cfg {
+typedef struct __attribute__((packed)) {
     enum {
         GPIO_MODE_ANALOG,
         GPIO_MODE_INPUT,
@@ -23,9 +23,9 @@ struct gpio_cfg {
         GPIO_PULL_UP,
         GPIO_PULL_DOWN,
     } pull : 2;
-};
+} gpio_cfg_t;
 
-struct gpio_pin_cfg {
+struct __attribute__((packed)) gpio {
     gpio_pin_t gpio;
     gpio_cfg_t cfg;
 };

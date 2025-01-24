@@ -23,8 +23,8 @@ typedef enum {
 } apb_div_t;
 
 // структура с общим конфигом
-struct hw_rcc_cfg;
-typedef struct hw_rcc_cfg hw_rcc_cfg_t;
+struct rcc_cfg;
+typedef struct rcc_cfg rcc_cfg_t;
 
 // применение конфига блока rcc
-void rcc_apply_cfg(const hw_rcc_cfg_t * cfg);
+void rcc_apply_cfg(const rcc_cfg_t * cfg);

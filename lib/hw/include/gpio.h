@@ -1,34 +1,15 @@
 #pragma once
-#include <stdint.h>
 
-enum gpio_port {
-    GPIO_EMPTY = 0,
-    GPIO_PORT_A,
-    GPIO_PORT_B,
-    GPIO_PORT_C,
-    GPIO_PORT_D,
-    GPIO_PORT_E,
-    GPIO_PORT_F,
-    GPIO_PORT_G,
-};
+struct gpio;
+typedef struct gpio gpio_t;
 
-// TODO check sizeof
-struct gpio_pin {
-    enum gpio_port port : 4;
-    uint8_t pin : 4;
-};
+void init_gpio(const gpio_t * gpio);
+void gpio_set_state(const gpio_t * gpio, unsigned state);
+unsigned gpio_get_state(const gpio_t * gpio);
 
-typedef struct gpio_pin gpio_pin_t;
+struct gpio_list;
+typedef struct gpio_list gpio_list_t;
 
-struct gpio_cfg;
-typedef struct gpio_cfg gpio_cfg_t;
-
-void gpio_set_cfg(const gpio_pin_t * pin, const gpio_cfg_t * cfg);
-
-struct gpio_pin_cfg;
-typedef struct gpio_pin_cfg gpio_pin_cfg_t;
-
-void gpio_configure(const gpio_pin_cfg_t * pin_cfg);
-
-void gpio_set_state(const gpio_pin_t * pin, unsigned state);
-unsigned gpio_get_state(const gpio_pin_t * pin);
+void init_gpio_list(const gpio_list_t * gpio_list);
+void gpio_list_set_state(const gpio_list_t * gpio_list, unsigned idx, unsigned state);
+unsigned gpio_list_get_state(const gpio_list_t * gpio_list, unsigned idx);
