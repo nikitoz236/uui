@@ -1,6 +1,7 @@
+#include "periph_header.h"
 #include "spi.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
+#include "stm_gpio.h"
+#include "pclk.h"
 
 typedef enum {
     SPI_DIV_2 = 0,
@@ -19,10 +20,9 @@ typedef enum {
 
 struct spi_cfg {
     SPI_TypeDef * spi;
-    hw_pclk_t pclk;
+    gpio_t * pin_list[SPI_PIN_NUM];
+    pclk_t pclk;
     spi_clk_div_t clock_div;
     uint8_t dma_tx_ch;
     uint8_t dma_rx_ch;
-    gpio_pin_t pin_list[SPI_PIN_NUM];
-    gpio_cfg_t pin_cfg[SPI_PIN_NUM];
 };

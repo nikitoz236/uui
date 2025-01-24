@@ -1,15 +1,12 @@
-#include "stm32f10x.h"
 #include "stm32f10x_spi.h"
-#include "dma.h"
+#include "stm_dma.h"
 
 void init_spi(const spi_cfg_t * cfg)
 {
-    hw_rcc_pclk_ctrl(&cfg->pclk, 1);
+    pclk_ctrl(&cfg->pclk, 1);
 
     for (unsigned i = 0; i < SPI_PIN_NUM; i++) {
-        if (cfg->pin_list[i].port != GPIO_EMPTY) {
-            gpio_set_cfg(&cfg->pin_list[i], &cfg->pin_cfg[i]);
-        }
+        init_gpio(cfg->pin_list[i]);
     }
 
     cfg->spi->CR1 = 0;
@@ -44,7 +41,6 @@ void init_spi(const spi_cfg_t * cfg)
 */
 
     cfg->spi->CR1 |= SPI_CR1_SPE;
-
 }
 
 unsigned spi_is_busy(const spi_cfg_t * cfg)
