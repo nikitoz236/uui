@@ -29,3 +29,9 @@ struct __attribute__((packed)) gpio {
     gpio_pin_t gpio;
     gpio_cfg_t cfg;
 };
+
+struct gpio_list {
+    gpio_cfg_t cfg;
+    uint8_t count;
+    gpio_pin_t * pin_list;
+};

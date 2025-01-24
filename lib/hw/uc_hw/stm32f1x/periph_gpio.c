@@ -66,3 +66,20 @@ unsigned gpio_get_state(const gpio_t * gpio)
 {
     return stm_gpio_get_state(gpio->gpio);
 }
+
+void init_gpio_list(const gpio_list_t * gpio_list)
+{
+    for (unsigned i = 0; i < gpio_list->count; i++) {
+        gpio_set_cfg(gpio_list->pin_list[i], &gpio_list->cfg);
+    }
+}
+
+void gpio_list_set_state(const gpio_list_t * gpio_list, unsigned idx, unsigned state)
+{
+    stm_gpio_set_state(gpio_list->pin_list[idx], state);
+}
+
+unsigned gpio_list_get_state(const gpio_list_t * gpio_list, unsigned idx)
+{
+    return stm_gpio_get_state(gpio_list->pin_list[idx]);
+}
