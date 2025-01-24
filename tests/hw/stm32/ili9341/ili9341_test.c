@@ -17,49 +17,44 @@
     CH4 - CAN_TX    PB9
     CH5 - LCD_DC    PA11
     CH6 - LCD_SCL   PA5
-    CH7 - LCD_SDO   PA6
+    CH7 - LCD_SDO   PA6     / RST
     CH8 - LCD_SDI   PA7
 
  */
 
-const gpio_pin_t debug_gpio_list[] = {
-    { GPIO_PORT_C, 13 },
-    { GPIO_PORT_B, 8 },
-    { GPIO_PORT_B, 9 }
+const gpio_t led = {
+    .gpio = { GPIO_PORT_C, 13 },
+    .cfg = (gpio_cfg_t){
+        .mode = GPIO_MODE_OUTPUT,
+        .speed = GPIO_SPEED_HIGH,
+        .type = GPIO_TYPE_PP
+    }
 };
-
-const char wf[] = {"Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light."};
 
 int main(void)
 {
-    //  000 Zero wait state, if 0 < SYSCLK≤ 24 MHz
-    //  001 One wait state, if 24 MHz < SYSCLK ≤ 48 MHz
-    //  010 Two wait states, if 48 MHz < SYSCLK ≤ 72 MHz
-    FLASH->ACR |= FLASH_ACR_LATENCY * 2;
-    FLASH->ACR |= FLASH_ACR_PRFTBE;
+    rcc_apply_cfg(&rcc_cfg);
 
-    hw_rcc_apply_cfg(&hw_rcc_cfg);
+    pclk_ctrl(&PCLK_AFIO, 1);
 
-    RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
     AFIO->MAPR |= AFIO_MAPR_TIM1_REMAP_PARTIALREMAP;
     AFIO->MAPR |= AFIO_MAPR_TIM3_REMAP_PARTIALREMAP;
 
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
-    RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+    pclk_ctrl(&PCLK_IOPA, 1);
+    pclk_ctrl(&PCLK_IOPB, 1);
+    pclk_ctrl(&PCLK_IOPC, 1);
 
-    const hw_pclk_t dma_pclk = {
-        .mask = RCC_AHBENR_DMA1EN,
-        .bus = PCLK_BUS_AHB
-    };
+    pclk_ctrl(&PCLK_DMA1, 1);
 
-    hw_rcc_pclk_ctrl(&dma_pclk, 1);
     init_systick();
     __enable_irq();
 
+    init_gpio(&led);
+
     init_lcd_hw(&lcd_cfg);
-    lcd_bl(4);
+    lcd_bl(5);
+
     init_lcd(&lcd_cfg);
 
     lcd_rect(4, 5, 310, 228, 0x1234);

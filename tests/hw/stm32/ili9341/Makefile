@@ -14,15 +14,16 @@ DEF += STM32F10X_MD
 
 INC += .
 
-SRC += ili9341_test.c
+SRC += $(TARGET).c
 SRC += hw_cfg.c
 
-SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
-# SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
-# SRC += $(LIB)/hw/uc_hw/stm32f10x_rtc.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_pwm.c
+INC += $(LIB)/hw/uc_hw
+INC += $(LIB)/hw/uc_hw/stm32f1x
+
+SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_rcc.c
+SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_gpio.c
+SRC += $(LIB)/hw/uc_hw/systick.c
+SRC += $(LIB)/hw/uc_hw/stm_pwm.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_spi.c
 
 INC += $(LIB)/hw/api/
@@ -43,11 +44,6 @@ SRC += $(LIB)/graphic/lcd_text.c
 
 INC += $(LIB)/graphic/lcd_color
 SRC += $(LIB)/graphic/lcd_color/lcd_text_color.c
-
-
-
-
-
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 
