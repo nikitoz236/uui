@@ -7,10 +7,10 @@
 #include "gpio.h"
 
 struct pwm_cfg {
-    gpio_pin_cfg_t * gpio;
     TIM_TypeDef * tim;
-    pclk_t tim_pclk;
-    uint8_t ch;
-    uint16_t max_val;
+    gpio_t * gpio;
+    pclk_t pclk;
     unsigned freq;
+    uint16_t max_val;
+    uint8_t ch;
 };

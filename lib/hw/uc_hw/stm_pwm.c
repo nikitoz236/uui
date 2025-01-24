@@ -18,20 +18,20 @@ static void timer_configure_output(TIM_TypeDef * timer, unsigned ch, unsigned mo
 
 void pwm_set_freq(const pwm_cfg_t * cfg, unsigned f)
 {
-    unsigned t_psc = pclk_f_timer(&cfg->tim_pclk) / (cfg->max_val * 2 * f);
+    unsigned t_psc = pclk_f_timer(&cfg->pclk) / (cfg->max_val * 2 * f);
     cfg->tim->PSC = t_psc - 1;
 }
 
 void pwm_set_ccr(const pwm_cfg_t * cfg, unsigned val)
 {
-    __IO uint32_t * ccr = &cfg->tim->CCR1;
+    __IO uint32_t * ccr = (__IO uint32_t *)&cfg->tim->CCR1;
     ccr[cfg->ch] = val;
 }
 
 void init_pwm(const pwm_cfg_t * cfg)
 {
-    pclk_ctrl(&cfg->tim_pclk, 1);
-    gpio_configure(cfg->gpio);
+    pclk_ctrl(&cfg->pclk, 1);
+    init_gpio(cfg->gpio);
 
     cfg->tim->BDTR |= TIM_BDTR_MOE;
     cfg->tim->ARR = cfg->max_val -1;
