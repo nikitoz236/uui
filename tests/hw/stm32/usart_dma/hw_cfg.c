@@ -3,14 +3,14 @@
 const usart_cfg_t debug_usart = {
     .usart = USART1,
     .default_baud = 115200,
-    .rx_pin = &(gpio_pin_cfg_t) {
+    .rx_pin = &(gpio_t) {
         .gpio = {GPIO_PORT_A, 10},
         .cfg = {
             .mode = GPIO_MODE_INPUT,
             .pull = GPIO_PULL_NONE,
         }
     },
-    .tx_pin = & (gpio_pin_cfg_t) {
+    .tx_pin = & (gpio_t) {
         .gpio = {GPIO_PORT_A, 9},
         .cfg = {
             .mode = GPIO_MODE_AF,
@@ -28,7 +28,7 @@ const usart_cfg_t debug_usart = {
     .irqn = USART1_IRQn
 };
 
-const hw_rcc_cfg_t hw_rcc_cfg = {
+const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
     .pll_src = PLL_SRC_PREDIV,
     .pll_prediv = 1,

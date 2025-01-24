@@ -13,23 +13,24 @@ DEF += STM32F10X_MD
 
 INC += .
 
-SRC += stm32_usart_test.c
+SRC += $(TARGET).c
 SRC += hw_cfg.c
 
-SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
-SRC += $(LIB)/hw/uc_hw/stm_rcc_common.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
+INC += $(LIB)/hw/uc_hw
 SRC += $(LIB)/hw/uc_hw/stm_usart.c
 
 # SRC += $(LIB)/hw/uc_hw/stm32f10x_systick.c
-
-INC += $(LIB)/hw/drivers
 
 INC += $(LIB)/common
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_utils.c
 SRC += $(LIB)/common/str_val_buf.c
 
-# GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
+PERIPH = $(LIB)/hw/uc_hw/stm32f1x
+
+INC += $(PERIPH)
+
+SRC += $(PERIPH)/periph_rcc.c
+SRC += $(PERIPH)/periph_gpio.c
 
 include $(LIB)/hw/system/uc_build.mk

@@ -21,25 +21,30 @@ void __debug_usart_tx_data(const char * s, unsigned len)
     CH7 - LCD_DC    PA11
  */
 
-const gpio_pin_t debug_gpio_list[] = {
-    { GPIO_PORT_C, 13 },
-    { GPIO_PORT_B, 8 },
-    { GPIO_PORT_B, 9 }
+const gpio_list_t debug_gpio_list = {
+    .cfg = {
+        .mode = GPIO_MODE_OUTPUT,
+        .speed = GPIO_SPEED_HIGH,
+        .type = GPIO_TYPE_PP,
+    },
+    .count = 3,
+    .pin_list = (gpio_pin_t[]){
+        { GPIO_PORT_C, 13 },
+        { GPIO_PORT_B, 8 },
+        { GPIO_PORT_B, 9 }
+    }
 };
 
 const char wf[] = {"Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light."};
 uint8_t rx_data[16] = {};
-#include "stm_rcc_common.h"
 
 int main(void)
 {
-    rcc_apply_cfg(&hw_rcc_cfg);
+    rcc_apply_cfg(&rcc_cfg);
 
     pclk_ctrl(&PCLK_AFIO, 1);
 
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
-    AFIO->MAPR |= AFIO_MAPR_TIM1_REMAP_PARTIALREMAP;
-    AFIO->MAPR |= AFIO_MAPR_TIM3_REMAP_PARTIALREMAP;
 
     pclk_ctrl(&PCLK_IOPA, 1);
     pclk_ctrl(&PCLK_IOPB, 1);
@@ -50,18 +55,9 @@ int main(void)
     // init_systick();
     __enable_irq();
 
-    for (unsigned i = 0; i < ARRAY_SIZE(debug_gpio_list); i++) {
-        const gpio_cfg_t cfg = {
-            .mode = GPIO_MODE_OUTPUT,
-            .speed = GPIO_SPEED_HIGH,
-            .type = GPIO_TYPE_PP,
-            .pull = GPIO_PULL_NONE,
-        };
-        gpio_set_cfg(&debug_gpio_list[i], &cfg);
-        gpio_set_state(&debug_gpio_list[i], 0);
-    }
+    init_gpio_list(&debug_gpio_list);
 
-    gpio_set_state(&debug_gpio_list[0], 1);
+    gpio_list_set_state(&debug_gpio_list, 0, 1);
 
     // while (1) {};
 
@@ -99,6 +95,7 @@ int main(void)
 
     dp("test array str: "); dp(ta); dp(" dump: "); dpxd(ta, 1, 8); dn();
 
+    dp("size of gpio_t: "); dpd(sizeof(gpio_t), 4); dn();
 
     while (1) {
         usart_rx(&debug_usart, rx_data, 6);
