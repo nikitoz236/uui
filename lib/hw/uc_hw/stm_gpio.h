@@ -14,8 +14,9 @@ enum {
 };
 
 typedef struct __attribute__((packed)) {
-    uint8_t port;
     uint8_t pin;
+    uint8_t port : 4;
+    uint8_t default_state : 1;
 } gpio_pin_t;
 
 static inline GPIO_TypeDef * __gpio_port(gpio_pin_t gpio)
