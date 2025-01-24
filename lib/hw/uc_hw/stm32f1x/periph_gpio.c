@@ -54,7 +54,9 @@ static void gpio_set_cfg(gpio_pin_t pin, const gpio_cfg_t * cfg)
 
 void init_gpio(const gpio_t * gpio)
 {
-    gpio_set_cfg(gpio->gpio, &gpio->cfg);
+    if (gpio) {
+        gpio_set_cfg(gpio->gpio, &gpio->cfg);
+    }
 }
 
 void gpio_set_state(const gpio_t * gpio, unsigned state)
