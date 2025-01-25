@@ -22,10 +22,24 @@ const gpio_t led = {
         .port = GPIO_PORT_C,
         .pin = 13
     },
-    .cfg = (gpio_cfg_t){
+    .cfg = {
         .mode = GPIO_MODE_OUTPUT,
         .speed = GPIO_SPEED_HIGH,
         .type = GPIO_TYPE_PP
+    }
+};
+
+const gpio_list_t debug_gpio_list = {
+    .cfg = {
+        .mode = GPIO_MODE_OUTPUT,
+        .speed = GPIO_SPEED_HIGH,
+        .type = GPIO_TYPE_PP,
+    },
+    .count = 3,
+    .pin_list = (gpio_pin_t[]){
+        { GPIO_PORT_C, 13 },
+        { GPIO_PORT_B, 8 },
+        { GPIO_PORT_B, 9 }
     }
 };
 
@@ -44,8 +58,11 @@ int main(void)
     pclk_ctrl(&PCLK_DMA1, 1);
     __enable_irq();
 
-    init_gpio(&led);
-    gpio_set_state(&led, 1);
+    // init_gpio(&led);
+    // gpio_set_state(&led, 1);
+
+    init_gpio_list(&debug_gpio_list);
+    gpio_list_set_state(&debug_gpio_list, 0, 1);
 
     while (1) {};
 
