@@ -1,6 +1,6 @@
 #include "periph_gpio.h"
 
-static void gpio_set_cfg(gpio_pin_t pin, const gpio_cfg_t * cfg)
+static void gpio_set_cfg(gpio_pin_t pin, gpio_cfg_t cfg)
 {
     union cr_field {
         struct {
@@ -13,22 +13,22 @@ static void gpio_set_cfg(gpio_pin_t pin, const gpio_cfg_t * cfg)
     union cr_field cr = {};
     unsigned odr_set = 0;
 
-    if (cfg->mode >= GPIO_MODE_OUTPUT) {
+    if (cfg.mode >= GPIO_MODE_OUTPUT) {
         // OUTPUT
-        cr.mode = cfg->speed;
-        if (cfg->type == GPIO_TYPE_OD) {
+        cr.mode = cfg.speed;
+        if (cfg.type == GPIO_TYPE_OD) {
             cr.cnf |= 1;
         }
-        if (cfg->mode == GPIO_MODE_AF) {
+        if (cfg.mode == GPIO_MODE_AF) {
             cr.cnf |= 2;
         }
     } else {
-        if (cfg->mode == GPIO_MODE_INPUT) {
-            if (cfg->pull == GPIO_PULL_NONE) {
+        if (cfg.mode == GPIO_MODE_INPUT) {
+            if (cfg.pull == GPIO_PULL_NONE) {
                 cr.cnf |= 1;
             } else {
                 cr.cnf |= 2;
-                if (cfg->pull == GPIO_PULL_UP) {
+                if (cfg.pull == GPIO_PULL_UP) {
                     odr_set = 1;
                 }
             }
@@ -55,7 +55,7 @@ static void gpio_set_cfg(gpio_pin_t pin, const gpio_cfg_t * cfg)
 void init_gpio(const gpio_t * gpio)
 {
     if (gpio) {
-        gpio_set_cfg(gpio->gpio, &gpio->cfg);
+        gpio_set_cfg(gpio->gpio, gpio->cfg);
     }
 }
 
@@ -72,7 +72,7 @@ unsigned gpio_get_state(const gpio_t * gpio)
 void init_gpio_list(const gpio_list_t * gpio_list)
 {
     for (unsigned i = 0; i < gpio_list->count; i++) {
-        gpio_set_cfg(gpio_list->pin_list[i], &gpio_list->cfg);
+        gpio_set_cfg(gpio_list->pin_list[i], gpio_list->cfg);
     }
 }
 
