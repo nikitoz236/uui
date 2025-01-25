@@ -8,7 +8,7 @@
 
 struct pwm_cfg {
     TIM_TypeDef * tim;
-    gpio_t * gpio;
+    const gpio_t * gpio;
     pclk_t pclk;
     unsigned freq;
     uint16_t max_val;
