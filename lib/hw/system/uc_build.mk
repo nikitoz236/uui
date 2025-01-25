@@ -38,7 +38,7 @@ OPT += -nostdlib
 # OPT += -Wl,--gc-sections
 # OPT += -specs=nano.specs
 OPT += -Wl,-Map,"$(BUILD_DIR)/map_file"
-# OPT += -g
+OPT += -g3
 # OPT += -MMD
 
 $(BUILD_DIR)/$(TARGET).elf: $(SRC) $(BUILD_DIR)/stack_size.ld Makefile
@@ -99,7 +99,8 @@ reset:
 	-c "reset run" \
 	-c "exit"
 
-swd_dbg:
+swd_dbg: $(BUILD_DIR)/$(TARGET).elf
+	$(shell gnome-terminal -- arm-none-eabi-gdb $< -ex "target remote localhost:3333")
 	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
 	-f target/$(OPENOCD_TARGET).cfg
 
