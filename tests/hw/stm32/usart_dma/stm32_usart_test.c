@@ -35,6 +35,18 @@ const gpio_list_t debug_gpio_list = {
     }
 };
 
+const gpio_t led = {
+    .gpio = {
+        .port = GPIO_PORT_C,
+        .pin = 13
+    },
+    .cfg = {
+        .mode = GPIO_MODE_OUTPUT,
+        .speed = GPIO_SPEED_HIGH,
+        .type = GPIO_TYPE_PP
+    }
+};
+
 const char wf[] = {"Dark spruce forest frowned on either side the frozen waterway. The trees had been stripped by a recent wind of their white covering of frost, and they seemed to lean towards each other, black and ominous, in the fading light."};
 uint8_t rx_data[16] = {};
 
@@ -55,11 +67,14 @@ int main(void)
     // init_systick();
     __enable_irq();
 
+    // init_gpio(&led);
+    // gpio_set_state(&led, 1);
+
+    // init_gpio(&debug_usart.rx_pin);
+    // init_gpio(&debug_usart.tx_pin);
+
     init_gpio_list(&debug_gpio_list);
-
     gpio_list_set_state(&debug_gpio_list, 0, 1);
-
-    // while (1) {};
 
     // delay_ms(100);
     // gpio_set_state(&debug_gpio_list[0], 0);

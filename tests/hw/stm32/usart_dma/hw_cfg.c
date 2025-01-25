@@ -3,15 +3,21 @@
 const usart_cfg_t debug_usart = {
     .usart = USART1,
     .default_baud = 115200,
-    .rx_pin = &(gpio_t) {
-        .gpio = {GPIO_PORT_A, 10},
+    .rx_pin = &(const gpio_t) {
+        .gpio = {
+            .port = GPIO_PORT_A,
+            .pin = 10
+        },
         .cfg = {
             .mode = GPIO_MODE_INPUT,
             .pull = GPIO_PULL_NONE,
         }
     },
-    .tx_pin = & (gpio_t) {
-        .gpio = {GPIO_PORT_A, 9},
+    .tx_pin = &(const gpio_t) {
+        .gpio = {
+            .port = GPIO_PORT_A,
+            .pin = 9
+        },
         .cfg = {
             .mode = GPIO_MODE_AF,
             .speed = GPIO_SPEED_HIGH,
