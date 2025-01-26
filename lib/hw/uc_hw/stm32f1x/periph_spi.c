@@ -1,4 +1,4 @@
-#include "stm32f10x_spi.h"
+#include "periph_spi.h"
 #include "stm_dma.h"
 
 void init_spi(const spi_cfg_t * cfg)
@@ -72,6 +72,18 @@ void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len)
     if (cfg->dma_tx_ch) {
         dma_set_size(cfg->dma_tx_ch, dma_size);
     }
+}
+
+uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t tx_data)
+{
+    uint8_t * dr = (uint8_t*)&cfg->spi->DR;
+    uint8_t rx_data = *dr;
+    while ((cfg->spi->SR & SPI_SR_TXE) == 0) {};
+    *dr = tx_data;
+    // while ((cfg->spi->SR & SPI_SR_RXNE) == 0) {};
+    while (spi_is_busy(cfg)) {};
+    rx_data = *dr;
+    return rx_data;
 }
 
 void spi_write_8(const spi_cfg_t * cfg, uint8_t c)

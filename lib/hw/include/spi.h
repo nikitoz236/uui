@@ -29,9 +29,21 @@ static inline void init_spi_dev(const spi_dev_cfg_t * cfg)
     gpio_set_state(cfg->cs_pin, 1);
 }
 
+static inline void spi_dev_select(const spi_dev_cfg_t * cfg)
+{
+    gpio_set_state(cfg->cs_pin, 0);
+}
+
+static inline void spi_dev_unselect(const spi_dev_cfg_t * cfg)
+{
+    gpio_set_state(cfg->cs_pin, 1);
+}
+
 void init_spi(const spi_cfg_t * cfg);
 unsigned spi_is_busy(const spi_cfg_t * cfg);
 void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len);
+
+uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c);
 
 void spi_write_8(const spi_cfg_t * cfg, uint8_t c);
 void spi_write_16(const spi_cfg_t * cfg, uint16_t c);
