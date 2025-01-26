@@ -25,7 +25,7 @@ void pwm_set_freq(const pwm_cfg_t * cfg, unsigned f)
 void pwm_set_ccr(const pwm_cfg_t * cfg, unsigned val)
 {
     __IO uint32_t * ccr = (__IO uint32_t *)&cfg->tim->CCR1;
-    ccr[cfg->ch] = val;
+    ccr[cfg->ch - 1] = val;
 }
 
 void init_pwm(const pwm_cfg_t * cfg)
@@ -36,7 +36,7 @@ void init_pwm(const pwm_cfg_t * cfg)
     cfg->tim->BDTR |= TIM_BDTR_MOE;
     cfg->tim->ARR = cfg->max_val -1;
     pwm_set_ccr(cfg, 0);
-    timer_configure_output(cfg->tim, cfg->ch, 6);
+    timer_configure_output(cfg->tim, cfg->ch - 1, 6);
     pwm_set_freq(cfg, cfg->freq);
     cfg->tim->CR1 |= TIM_CR1_CEN;
 }

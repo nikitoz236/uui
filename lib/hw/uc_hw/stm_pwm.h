@@ -12,5 +12,5 @@ struct pwm_cfg {
     pclk_t pclk;
     unsigned freq;
     uint16_t max_val;
-    uint8_t ch;
+    uint8_t ch;     // 1 ... 4 like in datasheet
 };
