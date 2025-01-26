@@ -1,0 +1,115 @@
+#pragma once
+#include <stdint.h>
+#include "spi.h"
+
+typedef const struct {
+    spi_dev_cfg_t spi_dev;
+    gpio_t * lock;
+    gpio_t * detect;
+} sd_cfg_t;
+
+
+struct __attribute__((packed)) sd_cid {
+    uint8_t mid;             // Manufacturer ID
+    uint16_t oid;            // OEM/Application ID
+    uint8_t prn[5];          // Product name
+    uint8_t prv;             // Product revision
+    uint32_t psn;            // Product serial number
+    uint16_t mdt;            // Manufacturing date (12 bit)
+    uint8_t crc;             // CRC7 checksum (7 bit, lsb - always 1 )
+};
+
+struct __attribute__((packed)) sd_csd_v1 {
+    unsigned reserved_1 : 1;
+    unsigned crc7 : 7;
+    unsigned reserved_2 : 2;
+    unsigned file_format : 2;
+    unsigned tmp_write_protect : 1;
+    unsigned perm_write_protect : 1;
+    unsigned copy : 1;
+    unsigned file_format_grp : 1;
+    unsigned reserved_3 : 5;
+    unsigned write_bl_partial : 1;
+    unsigned write_bl_len : 4;
+    unsigned r2w_factor : 3;
+    unsigned reserved_4 : 2;
+    unsigned wp_grp_enable : 1;
+    unsigned wb_grp_size : 7;
+    unsigned sector_size : 7;
+    unsigned erase_blk_en : 1;
+    unsigned c_size_mult : 3;
+    unsigned vdd_w_curr_max : 3;
+    unsigned vdd_w_curr_min : 3;
+    unsigned vdd_r_curr_max : 3;
+    unsigned vdd_r_curr_min : 3;
+    unsigned c_size : 12;
+    unsigned reserved_5 : 2;
+    unsigned dsr_imp : 1;
+    unsigned read_blk_misalign : 1;
+    unsigned write_blk_misalign : 1;
+    unsigned read_bl_partial : 1;
+    unsigned read_bl_len : 4;
+    unsigned ccc : 12;
+    unsigned tran_speed : 8;
+    unsigned nsac : 8;
+    unsigned taac : 8;
+    unsigned reserved_6 : 6;
+    unsigned scd_structure : 2;
+};
+
+struct __attribute__((packed)) sd_csd_v2 {
+    unsigned reserved_1 : 1;
+    unsigned crc7 : 7;
+    unsigned reserved_2 : 2;
+    unsigned file_format : 2;
+    unsigned tmp_write_protect : 1;
+    unsigned perm_write_protect : 1;
+    unsigned copy : 1;
+    unsigned file_format_grp : 1;
+    unsigned reserved_3 : 5;
+    unsigned write_bl_partial : 1;
+    unsigned write_bl_len : 4;
+    unsigned r2w_factor : 3;
+    unsigned reserved_4 : 2;
+    unsigned wp_grp_enable : 1;
+    unsigned wb_grp_size : 7;
+    unsigned sector_size : 7;
+    unsigned erase_blk_en : 1;
+    unsigned reserved_5 : 1;
+    unsigned c_size : 22;
+    unsigned reserved_6 : 6;
+    unsigned dsr_imp : 1;
+    unsigned read_blk_misalign : 1;
+    unsigned write_blk_misalign : 1;
+    unsigned read_bl_partial : 1;
+    unsigned read_bl_len : 4;
+    unsigned ccc : 12;
+    unsigned tran_speed : 8;
+    unsigned nsac : 8;
+    unsigned taac : 8;
+    unsigned reserved_7 : 6;
+    unsigned scd_structure : 2;
+};
+
+enum sd_type {
+    SD_TYPE_NOT_INITIALISATED = 0,
+    SD_TYPE_MMC,
+    SD_TYPE_SDSC,
+    SD_TYPE_SDHC
+};
+
+enum sd_type init_sd(sd_cfg_t * cfg);
+// void sd_readCSD(u8 * buffer);
+// void sd_readCID(u8 * buffer);
+// void sd_printCID(u8 * buffer);
+// void sd_read_sector(u8 * buffer, u32 sector_addr);
+// u8 sd_write_sector(u8 * buffer, u32 sector_addr);
+// u8 sd_detect(void);
+
+static inline unsigned sd_detect(sd_cfg_t * cfg)
+{
+    if (gpio_get_state(cfg->detect)) {
+        return 0;
+    }
+    return 1;
+}
