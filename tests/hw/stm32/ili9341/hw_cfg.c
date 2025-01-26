@@ -67,7 +67,35 @@ const lcd_cfg_t lcd_cfg = {
                 .type = GPIO_TYPE_PP
             },
         },
-        .spi = &spi_cfg,
+        .spi = &(spi_cfg_t){
+            .spi = SPI1,
+            .dma_tx_ch = 3,
+        .pclk = PCLK_SPI1,
+            .pin_list = {
+                [SPI_PIN_SCK] = &(gpio_t){ .gpio = {GPIO_PORT_A, 5}, .cfg = { .mode = GPIO_MODE_AF, .type = GPIO_TYPE_PP, .speed = GPIO_SPEED_HIGH }},
+                [SPI_PIN_MISO] = &(gpio_t){ .gpio = {GPIO_PORT_A, 6}, .cfg = { .mode = GPIO_MODE_AF, .pull = GPIO_PULL_NONE }},
+                [SPI_PIN_MOSI] = &(gpio_t){ .gpio = {GPIO_PORT_A, 7}, .cfg = { .mode = GPIO_MODE_AF, .type = GPIO_TYPE_PP, .speed = GPIO_SPEED_HIGH }},
+            },
+            // .clock_div = SPI_DIV_64
+            .clock_div = SPI_DIV_2
+        },
     },
-    .bl = &lcd_bl_cfg,
+    .bl = &(pwm_cfg_t){
+        .freq = 40000,
+        .max_val = 10,
+        .ch = 2,
+        .tim = TIM3,
+        .pclk = PCLK_TIM3,
+        .gpio = &(gpio_t){
+            .gpio = {
+                .port = GPIO_PORT_B,
+                .pin = 5
+            },
+            .cfg = {
+                .mode = GPIO_MODE_AF,
+                .speed = GPIO_SPEED_HIGH,
+                .type = GPIO_TYPE_PP
+            }
+        }
+    },
 };

@@ -35,17 +35,17 @@ int main(void)
 {
     rcc_apply_cfg(&rcc_cfg);
 
-    pclk_ctrl(&PCLK_AFIO, 1);
+    pclk_ctrl(&(pclk_t)PCLK_AFIO, 1);
 
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
     AFIO->MAPR |= AFIO_MAPR_TIM1_REMAP_PARTIALREMAP;
     AFIO->MAPR |= AFIO_MAPR_TIM3_REMAP_PARTIALREMAP;
 
-    pclk_ctrl(&PCLK_IOPA, 1);
-    pclk_ctrl(&PCLK_IOPB, 1);
-    pclk_ctrl(&PCLK_IOPC, 1);
+    pclk_ctrl(&(pclk_t)PCLK_IOPA, 1);
+    pclk_ctrl(&(pclk_t)PCLK_IOPB, 1);
+    pclk_ctrl(&(pclk_t)PCLK_IOPC, 1);
 
-    pclk_ctrl(&PCLK_DMA1, 1);
+    pclk_ctrl(&(pclk_t)PCLK_DMA1, 1);
 
     init_systick();
     __enable_irq();
