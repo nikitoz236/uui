@@ -17,6 +17,8 @@ static uint8_t send_cmd(spi_cfg_t * cfg, uint8_t cmd, uint32_t data, uint8_t crc
         spi_write_8(cfg, cmd_buf[i]);
     }
 
+    dp("  send cmd to sd: "); dpxd(cmd_buf, 1, 6); dn();
+
     unsigned count = 0;
     while (count < 1000) {
         uint8_t answ = spi_exchange_8(cfg, 0xFF);
@@ -45,14 +47,12 @@ enum sd_type init_sd(sd_cfg_t * cfg)
     }
     spi_dev_select(&cfg->spi_dev);
 
-    send_cmd(cfg->spi_dev.spi, 0, 0, 0x95);
-    resp = wait_answer_r1(cfg->spi_dev.spi);
+    resp = send_cmd(cfg->spi_dev.spi, 0, 0, 0x95);
     if (resp == 0xFF) {
         return SD_TYPE_NOT_INITIALISATED;
     }
 
-    send_cmd(cfg->spi_dev.spi, 8, 0x1AA, 0x87);
-    resp = wait_answer_r1(cfg->spi_dev.spi);
+    resp = send_cmd(cfg->spi_dev.spi, 8, 0x1AA, 0x87);
     if (resp == 0xFF) {
         return SD_TYPE_NOT_INITIALISATED;
     }
@@ -63,6 +63,24 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         return SD_TYPE_MMC;
     }
 
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+
+
     spi_write_8(cfg->spi_dev.spi, 0xFF);
     spi_write_8(cfg->spi_dev.spi, 0xFF);
     spi_write_8(cfg->spi_dev.spi, 0xFF);
@@ -70,13 +88,13 @@ enum sd_type init_sd(sd_cfg_t * cfg)
 
     //read OCR
     dpn("SD read OCR");
-    send_cmd(cfg->spi_dev.spi, 58, 0, 0);
-    resp = wait_answer_r1(cfg->spi_dev.spi);
+    resp = send_cmd(cfg->spi_dev.spi, 58, 0, 0);
     if (resp == 0xFF) {
         return SD_TYPE_NOT_INITIALISATED;
     }
 
     uint8_t type = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  read sd type, send to sd FF, resp: "); dpx(type, 1); dn();
 
     spi_write_8(cfg->spi_dev.spi, 0xFF);
     spi_write_8(cfg->spi_dev.spi, 0xFF);
@@ -86,14 +104,17 @@ enum sd_type init_sd(sd_cfg_t * cfg)
     unsigned count = 0;
     while (count < 1000) {
         send_cmd(cfg->spi_dev.spi, 55, 0, 0);
-        wait_answer_r1(cfg->spi_dev.spi);
-        send_cmd(cfg->spi_dev.spi, 41, 0x40000000, 0xFF);
-        if (wait_answer_r1(cfg->spi_dev.spi) == 0x00) {
+        resp = send_cmd(cfg->spi_dev.spi, 41, 0x40000000, 0xFF);
+        if (resp == 0x00) {
             dp("SD card initialized in "); dpd(count, 3); dp(" tries"); dn();
             break;
         }
         count++;
     }
+
+    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+
     if (count >= 1000) {
         return SD_TYPE_NOT_INITIALISATED;
     }
