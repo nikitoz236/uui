@@ -87,7 +87,8 @@ void lcd_pwr(unsigned val)
 {
     if (val) {
         lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x11}); // Sleep Out
-        delay_ms(10);
+        // данное время всетаки влияет, 10 мс мало. на экране картинка рассыпается. было 120.
+        delay_ms(40);
         lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x29}); // Display on
     } else {
         lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x10}); // Enter Sleep Mode
