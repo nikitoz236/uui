@@ -1,6 +1,16 @@
 #include "lcd_spi.h"
 #include "delay_blocking.h"
 
+/*
+
+http://uglyduck.vajn.icu/PDF/lcd/Nokia1202/STE2007.pdf
+http://mylcd.sourceforge.net/files/pcf8814.pdf
+
+
+не реализован фрейм буффер, и функции отрисовки
+
+*/
+
 #define LCD_CMD_RESET                   0xE2
 #define LCD_CMD_DISPLAY_ON              0xAF
 #define LCD_CMD_DISPLAY_OFF             0xAD

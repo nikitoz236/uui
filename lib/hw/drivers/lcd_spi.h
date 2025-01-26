@@ -3,9 +3,11 @@
 #include "spi.h"
 #include "pwm.h"
 
+// больше вероятность что не будет DC, черм RESET
+
 enum {
+    LCD_RST,
     LCD_DC,
-    LCD_RST
 };
 
 struct lcd_cfg {
