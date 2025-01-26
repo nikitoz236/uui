@@ -57,8 +57,11 @@ size: $(BUILD_DIR)/$(TARGET).elf
 clean:
 	-rm -rf $(BUILD_DIR)
 
-asm:
-	$(OD) -D $(BUILD_DIR)/$(TARGET).elf | less
+asm: $(BUILD_DIR)/$(TARGET).elf
+	$(OD) -D $< | less
+
+hex_dump: $(BUILD_DIR)/$(TARGET).bin
+	xxd -g1 $< | less
 
 flash_reset: $(FLASH_TARGET)
 	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
