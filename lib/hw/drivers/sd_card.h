@@ -99,12 +99,12 @@ enum sd_type {
 };
 
 enum sd_type init_sd(sd_cfg_t * cfg);
-// void sd_readCSD(u8 * buffer);
-// void sd_readCID(u8 * buffer);
+void sd_read_cid(sd_cfg_t * cfg, struct sd_cid * cid);
+void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buffer, unsigned len);
+
+// void sd_read_scd(uint8_t * buffer);
 // void sd_printCID(u8 * buffer);
-// void sd_read_sector(u8 * buffer, u32 sector_addr);
 // u8 sd_write_sector(u8 * buffer, u32 sector_addr);
-// u8 sd_detect(void);
 
 static inline unsigned sd_detect(sd_cfg_t * cfg)
 {
