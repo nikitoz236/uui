@@ -1,3 +1,7 @@
+/*
+    STM32F1 gpio inplementation
+*/
+
 #include "periph_gpio.h"
 
 static void gpio_set_cfg(gpio_pin_t pin, gpio_cfg_t cfg)

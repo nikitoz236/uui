@@ -1,3 +1,7 @@
+/*
+    STM32F1 gpio inplementation
+*/
+
 #pragma once
 #include "gpio.h"
 #include "../stm_gpio.h"
@@ -31,7 +35,7 @@ struct __attribute__((packed)) gpio {
 };
 
 struct gpio_list {
-    gpio_pin_t * pin_list;
+    const gpio_pin_t * pin_list;
     gpio_cfg_t cfg;
     uint8_t count;
 };
