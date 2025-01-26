@@ -37,7 +37,7 @@ const gpio_list_t leds = {
 };
 
 const pwm_cfg_t pwm_led = {
-    .ch = 1 - 1,
+    .ch = 1,
     .freq = 1000,
     .max_val = 10,
     .pclk = PCLK_TIM1,
@@ -65,7 +65,7 @@ int main()
     // gpio_list_set_state(&leds, 1, 1);
 
     init_pwm(&pwm_led);
-    pwm_set_ccr(&pwm_led, 4);
+    pwm_set_ccr(&pwm_led, 1);
 
     while (1) {};
 
