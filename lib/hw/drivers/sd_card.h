@@ -8,6 +8,7 @@ typedef const struct {
     gpio_t * detect;
 } sd_cfg_t;
 
+#define SD_SECTOR_SIZE          512
 
 struct __attribute__((packed)) sd_cid {
     uint8_t mid;             // Manufacturer ID
@@ -100,7 +101,8 @@ enum sd_type {
 
 enum sd_type init_sd(sd_cfg_t * cfg);
 void sd_read_cid(sd_cfg_t * cfg, struct sd_cid * cid);
-void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buffer, unsigned len);
+void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buf);
+uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * buf);
 
 // void sd_read_scd(uint8_t * buffer);
 // void sd_printCID(u8 * buffer);

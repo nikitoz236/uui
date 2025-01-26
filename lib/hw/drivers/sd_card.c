@@ -63,22 +63,22 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         return SD_TYPE_MMC;
     }
 
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
 
 
     spi_write_8(cfg->spi_dev.spi, 0xFF);
@@ -112,8 +112,8 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         count++;
     }
 
-    resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
+    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
 
     if (count >= 1000) {
         return SD_TYPE_NOT_INITIALISATED;
@@ -155,8 +155,59 @@ void sd_read_cid(sd_cfg_t * cfg, struct sd_cid * cid)
     read_data(cfg, (uint8_t*)cid, sizeof(struct sd_cid));
 }
 
-void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buffer, unsigned len)
+void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buf)
 {
     send_cmd(cfg, 17, sector_addr, 0);
-    read_data(cfg, buffer, len);
+    read_data(cfg, buf, SD_SECTOR_SIZE);
+}
+
+uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * buf)
+{
+    send_cmd(cfg, 24, sector_addr, 0);
+
+    spi_write_8(cfg->spi_dev.spi, 0xFF);
+    spi_write_8(cfg->spi_dev.spi, DATA_TOKEN);
+    for (unsigned i = 0; i < SD_SECTOR_SIZE; i++) {
+        spi_write_8(cfg->spi_dev.spi, buf[i]);
+    }
+    spi_write_8(cfg->spi_dev.spi, 0xFF);    // crc - not used
+    spi_write_8(cfg->spi_dev.spi, 0xFF);
+
+    uint8_t status = 0xFF;
+    /*
+        незнаю что там происходит ниже
+        вроде как карта должна ответить 0x05, после этого возвращать нули пока будет занята. однако прилетает странное
+
+        FF 00 00 00 00 00 00 00 00 7F FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+        тоесть 5ки не было, сразу пошли нули, а потом вообще 7F
+        в итоге просто ждем пока не будет 0xFF
+
+
+    unsigned count = 0;
+    while (count < 40) {
+        status = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+        if ((status & 0x11) == 1) {
+            dp("write data sector: "); dpx(sector_addr, 4); dp(" status: "); dpx(status, 1); dp(" num try: "); dpd(count, 8); dn();
+            break;
+        }
+
+        dpx(status, 1);
+        dp(" ");
+        // for(volatile unsigned i = 0; i < 10000000; i++) {};
+        count++;
+    }
+
+    if (count >= 40) {
+        dpn("\nwrite data sector timeout");
+        return 0xFF;
+    }
+
+    */
+
+    // wait card busy
+    while (spi_exchange_8(cfg->spi_dev.spi, 0xFF) == 0x00) {};
+
+    dpn("write data sector finished");
+
+    return status;
 }
