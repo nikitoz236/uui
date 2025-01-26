@@ -1,11 +1,10 @@
 #pragma once
 #include <stdint.h>
-#include "periph_header.h"
 #include "rcc.h"
 
 #define APB_BUS_DIV_NUM                 1
 
-struct hw_rcc_cfg {
+struct rcc_cfg {
     unsigned hse_val;
     enum {
         PLL_SRC_HSI_DIV2,

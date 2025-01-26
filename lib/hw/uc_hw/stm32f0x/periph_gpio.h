@@ -1,9 +1,12 @@
-#pragma once
-#include <stdint.h>
-#include "periph_header.h"
-#include "gpio.h"
+/*
+    STM32F0 gpio inplementation
+*/
 
-struct gpio_cfg {
+#pragma once
+#include "gpio.h"
+#include "../stm_gpio.h"
+
+typedef struct {
     enum {
         GPIO_MODE_INPUT     = 0,
         GPIO_MODE_OUTPUT    = 1,
@@ -25,9 +28,15 @@ struct gpio_cfg {
         GPIO_TYPE_OD        = 1,
     } type : 2;
     uint8_t af : 4;
-};
+} gpio_cfg_t;
 
-struct gpio_pin_cfg {
+struct __attribute__((packed)) gpio {
     gpio_pin_t gpio;
     gpio_cfg_t cfg;
+};
+
+struct gpio_list {
+    const gpio_pin_t * pin_list;
+    gpio_cfg_t cfg;
+    uint8_t count;
 };
