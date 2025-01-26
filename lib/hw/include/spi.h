@@ -4,11 +4,11 @@
 #include "gpio.h"
 
 struct spi_cfg;
-typedef struct spi_cfg spi_cfg_t;
+typedef const struct spi_cfg spi_cfg_t;
 
 typedef struct {
     gpio_t * cs_pin;
-    const spi_cfg_t * spi;
+    spi_cfg_t * spi;
 } spi_dev_cfg_t;
 
 enum spi_gpio_list {

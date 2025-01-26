@@ -35,7 +35,7 @@ struct __attribute__((packed)) gpio {
 };
 
 struct gpio_list {
-    const gpio_pin_t * pin_list;
+    gpio_pin_t * pin_list;
     gpio_cfg_t cfg;
     uint8_t count;
 };

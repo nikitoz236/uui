@@ -8,6 +8,9 @@
 static void gpio_set_cfg(gpio_pin_t pin, gpio_cfg_t cfg)
 {
     GPIO_TypeDef * port = __gpio_port(pin);
+    if (port == 0) {
+        return;
+    }
     port->MODER &= ~(3 << (pin.pin * 2));
     port->MODER |= cfg.mode << (pin.pin * 2);
 

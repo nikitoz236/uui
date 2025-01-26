@@ -13,8 +13,8 @@ struct dma_rb_desc {
 
 struct usart_cfg {
     USART_TypeDef * usart;
-    const gpio_t * rx_pin;        // тут указатели изза того что не известна реализация структур надо подумать как сэкономить место
-    const gpio_t * tx_pin;
+    gpio_t * rx_pin;        // тут указатели изза того что не известна реализация структур надо подумать как сэкономить место
+    gpio_t * tx_pin;
     uint32_t default_baud;
 
     struct dma_rb_desc tx_dma;

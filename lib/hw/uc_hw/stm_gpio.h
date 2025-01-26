@@ -13,7 +13,7 @@ enum {
     GPIO_PORT_G,
 };
 
-typedef struct __attribute__((packed)) {
+typedef const struct __attribute__((packed)) {
     uint8_t port : 4;
     uint8_t pin : 4;
     // uint8_t port : 4;
