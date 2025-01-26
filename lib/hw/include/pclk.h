@@ -10,7 +10,7 @@ enum plck_bus {
 
 typedef struct {
     enum plck_bus bus;
-    unsigned mask;
+    uint32_t mask;
 } pclk_t;
 
 // управление тактированием периферии
