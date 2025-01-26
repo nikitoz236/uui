@@ -8,7 +8,7 @@ volatile unsigned uptime_ms = 0;
 static unsigned systicks_in_ms;
 static unsigned systicks_in_us;
 
-void systick_irq_handler(void)
+static void systick_irq_handler(void)
 {
     uptime_ms++;
 }
@@ -21,7 +21,7 @@ void init_systick(void)
     systicks_in_us = systicks_in_ms / US_IN_MS;
     SysTick->LOAD = systicks_in_ms - 1;
     SysTick->VAL = 0;
-    SysTick->CTRL = SysTick_CTRL_CLKSOURCE + SysTick_CTRL_TICKINT + SysTick_CTRL_ENABLE;
+    SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk + SysTick_CTRL_TICKINT_Msk + SysTick_CTRL_ENABLE_Msk;
 }
 
 void time_moment_save(time_moment_t * tm)
