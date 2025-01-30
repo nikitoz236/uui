@@ -180,20 +180,38 @@ int main(void)
 
         dp("CID: "); dpxd(&cid, 1, sizeof(cid)); dn();
 
+        dp("    Manufacturer ID:                        "); dpx(cid.mid, 1);        dn();
+        dp("    OEM/Application ID:                     "); dpx(cid.oid, 2);        dn();
+        dp("    Product name:                           "); dpxd(cid.prn, 1, 5);    dn();
+        dp("    Product revision:                       "); dpx(cid.prv, 1);        dn();
+        dp("    Product serial number:                  "); dpx(cid.psn, 4);        dn();
+        dp("    Manufacturing date (12 bit):            "); dpx(cid.mdt, 2);        dn();
+        dp("    CRC7 checksum (7 bit, lsb - always 1 ): "); dpx(cid.crc, 1);        dn();
+
+        struct sd_csd csd;
+        sd_read_csd(&sd, &csd);
+        dp("CSD: "); dpxd(&cid, 1, sizeof(csd)); dn();
+        dp("    CSD structure:                          "); dpd(csd.csd_structure, 1); dn();
 
         sd_read_sector(&sd, 0, buf);
         print_buf(0);
 
-        if (buf[0x103] != 0x39) {
-            buf[0x103] = 0x39;
-            sd_write_sector(&sd, 0, buf);
+        dp("size of sd_cid: "); dpd(sizeof(struct sd_cid), 4); dn();
+        dp("size of sd_csd: "); dpd(sizeof(struct sd_csd), 4); dn();
+        dp("size of sd_csd_v1: "); dpd(sizeof(struct sd_csd_v1), 4); dn();
+        dp("size of sd_csd_v2: "); dpd(sizeof(struct sd_csd_v2), 4); dn();
 
-            sd_read_sector(&sd, 1, buf);
-            print_buf(1);
 
-            sd_read_sector(&sd, 0, buf);
-            print_buf(0);
-        }
+        // if (buf[0x103] != 0x39) {
+        //     buf[0x103] = 0x39;
+        //     sd_write_sector(&sd, 0, buf);
+
+        //     sd_read_sector(&sd, 1, buf);
+        //     print_buf(1);
+
+        //     sd_read_sector(&sd, 0, buf);
+        //     print_buf(0);
+        // }
 
     } else {
         dpn("SD card not detected");

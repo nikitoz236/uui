@@ -20,27 +20,92 @@ struct __attribute__((packed)) sd_cid {
     uint8_t crc;             // CRC7 checksum (7 bit, lsb - always 1 )
 };
 
-struct __attribute__((packed)) sd_csd_v1 {
+struct __attribute__((packed)) sd_csd {
     unsigned reserved_1 : 1;
     unsigned crc7 : 7;
+
     unsigned reserved_2 : 2;
     unsigned file_format : 2;
     unsigned tmp_write_protect : 1;
     unsigned perm_write_protect : 1;
     unsigned copy : 1;
     unsigned file_format_grp : 1;
+
     unsigned reserved_3 : 5;
     unsigned write_bl_partial : 1;
     unsigned write_bl_len : 4;
     unsigned r2w_factor : 3;
     unsigned reserved_4 : 2;
     unsigned wp_grp_enable : 1;
+
+    uint8_t hz[6];
+
+    // unsigned wb_grp_size : 7;
+    // unsigned sector_size : 7;
+    // unsigned erase_blk_en : 1;
+
+    // union {
+    //     struct __attribute__((packed)) {
+    //         unsigned c_size_mult : 3;
+    //         unsigned vdd_w_curr_max : 3;
+    //         unsigned vdd_w_curr_min : 3;
+
+    //         unsigned vdd_r_curr_max : 3;
+    //         unsigned vdd_r_curr_min : 3;
+    //         unsigned c_size : 12;
+    //         unsigned reserved_5 : 2;
+    //     } v1;
+    //     struct __attribute__((packed)) {
+    //         unsigned reserved_5 : 1;
+
+    //         unsigned c_size : 22;
+    //         unsigned reserved_6 : 6;
+    //     } v2;
+    // };
+
+    // unsigned dsr_imp : 1;
+    // unsigned read_blk_misalign : 1;
+    // unsigned write_blk_misalign : 1;
+    // unsigned read_bl_partial : 1;
+
+    unsigned read_bl_len : 4;
+    unsigned ccc : 12;
+
+    unsigned tran_speed : 8;
+
+    unsigned nsac : 8;
+
+    unsigned taac : 8;
+
+    unsigned reserved_6 : 6;
+    unsigned csd_structure : 2;
+};
+
+struct __attribute__((packed)) sd_csd_v1 {
+    unsigned reserved_1 : 1;
+    unsigned crc7 : 7;
+
+    unsigned reserved_2 : 2;
+    unsigned file_format : 2;
+    unsigned tmp_write_protect : 1;
+    unsigned perm_write_protect : 1;
+    unsigned copy : 1;
+    unsigned file_format_grp : 1;
+
+    unsigned reserved_3 : 5;
+    unsigned write_bl_partial : 1;
+    unsigned write_bl_len : 4;
+    unsigned r2w_factor : 3;
+    unsigned reserved_4 : 2;
+    unsigned wp_grp_enable : 1;
+
     unsigned wb_grp_size : 7;
     unsigned sector_size : 7;
     unsigned erase_blk_en : 1;
     unsigned c_size_mult : 3;
     unsigned vdd_w_curr_max : 3;
     unsigned vdd_w_curr_min : 3;
+
     unsigned vdd_r_curr_max : 3;
     unsigned vdd_r_curr_min : 3;
     unsigned c_size : 12;
@@ -49,11 +114,16 @@ struct __attribute__((packed)) sd_csd_v1 {
     unsigned read_blk_misalign : 1;
     unsigned write_blk_misalign : 1;
     unsigned read_bl_partial : 1;
+
     unsigned read_bl_len : 4;
     unsigned ccc : 12;
+
     unsigned tran_speed : 8;
+
     unsigned nsac : 8;
+
     unsigned taac : 8;
+
     unsigned reserved_6 : 6;
     unsigned scd_structure : 2;
 };
@@ -61,28 +131,33 @@ struct __attribute__((packed)) sd_csd_v1 {
 struct __attribute__((packed)) sd_csd_v2 {
     unsigned reserved_1 : 1;
     unsigned crc7 : 7;
+
     unsigned reserved_2 : 2;
     unsigned file_format : 2;
     unsigned tmp_write_protect : 1;
     unsigned perm_write_protect : 1;
     unsigned copy : 1;
     unsigned file_format_grp : 1;
+
     unsigned reserved_3 : 5;
     unsigned write_bl_partial : 1;
     unsigned write_bl_len : 4;
     unsigned r2w_factor : 3;
     unsigned reserved_4 : 2;
     unsigned wp_grp_enable : 1;
+
     unsigned wb_grp_size : 7;
     unsigned sector_size : 7;
     unsigned erase_blk_en : 1;
     unsigned reserved_5 : 1;
+
     unsigned c_size : 22;
     unsigned reserved_6 : 6;
     unsigned dsr_imp : 1;
     unsigned read_blk_misalign : 1;
     unsigned write_blk_misalign : 1;
     unsigned read_bl_partial : 1;
+
     unsigned read_bl_len : 4;
     unsigned ccc : 12;
     unsigned tran_speed : 8;
@@ -100,6 +175,7 @@ enum sd_type {
 };
 
 enum sd_type init_sd(sd_cfg_t * cfg);
+void sd_read_csd(sd_cfg_t * cfg, struct sd_csd * csd);
 void sd_read_cid(sd_cfg_t * cfg, struct sd_cid * cid);
 void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buf);
 uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * buf);

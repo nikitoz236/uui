@@ -155,6 +155,12 @@ void sd_read_cid(sd_cfg_t * cfg, struct sd_cid * cid)
     read_data(cfg, (uint8_t*)cid, sizeof(struct sd_cid));
 }
 
+void sd_read_csd(sd_cfg_t * cfg, struct sd_csd * csd)
+{
+    send_cmd(cfg, 9, 0, 0);
+    read_data(cfg, (uint8_t*)csd, sizeof(struct sd_csd));
+}
+
 void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buf)
 {
     send_cmd(cfg, 17, sector_addr, 0);
