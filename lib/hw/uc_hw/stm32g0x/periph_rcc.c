@@ -1,11 +1,10 @@
-#include "periph_header.h"
-#include "stm32g0x_rcc.h"
-#include "stm_rcc_common.h"
+#include "../stm_rcc_common.h"
+#include "periph_rcc.h"
 #include "pclk.h"
 
-#define HSI_VALUE                       16000000
+rcc_ctx_t rcc_ctx;
 
-extern rcc_ctx_t rcc_ctx;
+#define HSI_VALUE                       16000000
 
 static void rcc_set_pll_mul(unsigned mul)
 {
@@ -40,7 +39,7 @@ static void rcc_set_apb_div(unsigned bus, apb_div_t div)
     RCC->CFGR |= (div & 0x7) * apb_divs_fields[bus];
 }
 
-void rcc_apply_cfg(const hw_rcc_cfg_t * cfg)
+void rcc_apply_cfg(const rcc_cfg_t * cfg)
 {
     rcc_ctx.clock_cfg = cfg;
     if (cfg->sysclk_src == SYSCLK_SRC_PLL) {
@@ -118,4 +117,9 @@ unsigned pclk_f_timer(const pclk_t * pclk)
         f_timer *= 2;
     }
     return f_timer;
+}
+
+unsigned pclk_f_hclk(void)
+{
+    return rcc_ctx.f_hclk;
 }

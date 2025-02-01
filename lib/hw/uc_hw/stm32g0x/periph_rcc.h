@@ -4,7 +4,7 @@
 
 #define APB_BUS_DIV_NUM                 1
 
-struct hw_rcc_cfg {
+struct rcc_cfg {
     unsigned hse_val;
     enum {
         PLL_SRC_HSI16 = 2,
