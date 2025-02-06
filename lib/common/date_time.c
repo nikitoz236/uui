@@ -1,8 +1,4 @@
 #include "date_time.h"
-#include "str_utils.h"
-
-#include "str_utils.h"
-#include "str_val.h"
 
 #define LIST_NAME(name)             #name
 
@@ -39,7 +35,7 @@ unsigned days_in_month(unsigned month, unsigned year)
     return d;
 }
 
-unsigned day_of_week(date_t * d)
+unsigned day_of_week(const date_t * d)
 {
     uint16_t y = d->y;
     uint8_t m;
@@ -69,7 +65,7 @@ unsigned days_to_s(unsigned days)
     return days * SEC_IN_DAY;
 }
 
-unsigned days_from_date(date_t * d)
+unsigned days_from_date(const date_t * d)
 {
     uint8_t year = (d->y - YEAR_START);
     unsigned days = year * 365;
@@ -131,7 +127,7 @@ void time_from_s(time_t * t, unsigned s)
     t->h = s % HOURS_IN_DAY;
 }
 
-unsigned time_to_s(time_t * t)
+unsigned time_to_s(const time_t * t)
 {
     return t->s + t->m * SEC_IN_MIN + t->h * SEC_IN_HOUR;
 }
@@ -141,34 +137,14 @@ unsigned time_sec_in_day_from_s(unsigned s)
     return s % SEC_IN_DAY;
 }
 
-unsigned time_change_in_s(time_t * t, unsigned s)
+unsigned time_change_in_s(const time_t * t, unsigned s)
 {
     return days_to_s(days_from_s(s)) + time_to_s(t);
 }
 
-unsigned date_change_in_s(date_t * d, unsigned s)
+unsigned date_change_in_s(const date_t * d, unsigned s)
 {
     return days_to_s(days_from_date(d)) + (s % SEC_IN_DAY);
-}
-
-void date_yy_to_str(date_t * d, char * c);
-void date_yyyy_to_str(date_t * d, char * c);
-
-
-void time_hh_mm_to_str(time_t * t, char * str)
-{
-    dec_to_str_right_aligned(t->h, &str[0], 2, 1);
-    dec_to_str_right_aligned(t->m, &str[3], 2, 1);
-    str[2] = ':';
-    str[5] = 0;
-}
-
-void time_hh_mm_ss_to_str(time_t * t, char * str)
-{
-    time_hh_mm_to_str(t, str);
-    dec_to_str_right_aligned(t->s, &str[6], 2, 1);
-    str[5] = ':';
-    str[8] = 0;
 }
 
 const char * day_of_week_name(unsigned d)
@@ -195,14 +171,4 @@ const char * month_name(unsigned m)
     }
 
     return month_names[m];
-}
-
-void date_dd_mname_yyyy_to_str(date_t * d, char * str)
-{
-    dec_to_str_right_aligned(d->d, &str[0], 2, 1);
-    str_cp(&str[3], month_name(d->m), 3);
-    dec_to_str_right_aligned(d->y, &str[7], 4, 1);
-    str[2] = ' ';
-    str[6] = ' ';
-    str[11] = 0;
 }
