@@ -4,6 +4,8 @@
 #include "str_utils.h"
 #include "storage.h"
 
+#include "dp.h"
+
 #define ROUTES_FILE_ID              800
 
 #define TRIP_HISTORY_FILE_ID        840
@@ -22,13 +24,13 @@ static inline uint16_t route_file_id(route_t route)
 const char * route_name(route_t route)
 {
     #define __ROUTE_NAMES(id, name) name
-    const char * route_names[] = {
+    static const char * route_names[] = {
         __ROUTE_DESC(__ROUTE_NAMES)
     };
     return route_names[route];
 }
 
-unsigned trip_get_value(route_value_t value_type)
+static unsigned trip_get_value(route_value_t value_type)
 {
     switch (value_type) {
         case ROUTE_VALUE_DIST:  return trip_get_dist_m();
@@ -43,7 +45,7 @@ unsigned trip_get_value(route_value_t value_type)
     }
 }
 
-unsigned total_get_value(route_value_t value_type)
+static unsigned total_get_value(route_value_t value_type)
 {
     if (value_type == ROUTE_VALUE_SINCE) {
         return 0;
@@ -52,7 +54,7 @@ unsigned total_get_value(route_value_t value_type)
     return start + trip_get_value(value_type);
 }
 
-unsigned calc_cons_dist(unsigned dist, unsigned fuel)
+static unsigned calc_cons_dist(unsigned dist, unsigned fuel)
 {
     // ml/m = l/km = 100 l/100km
     if (dist) {
@@ -61,7 +63,7 @@ unsigned calc_cons_dist(unsigned dist, unsigned fuel)
     return 0;
 }
 
-unsigned calc_cons_time(unsigned time, unsigned fuel)
+static unsigned calc_cons_time(unsigned time, unsigned fuel)
 {
     // ml/s = 3600 ml/h
     if (time) {
@@ -146,7 +148,7 @@ static void save_trip_to_history(void)
     if (trip_history_last_index >= TRIP_HISTORY_RECORDS) {
         trip_history_last_index = 0;
     }
-    printf("save trip to history to file %d\n", file_id);
+    dp("save trip to history to file "); dpd(file_id, 5); dn();
     storage_write_file(file_id, trip_data, sizeof(trip_data));
 }
 
@@ -188,19 +190,19 @@ void route_reset(route_t route)
 
 static void route_starts_load(void)
 {
+    dpn("\nroute load");
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
         unsigned len = 0;
         const void * file_ptr = storage_search_file(route_file_id(i), &len);
         if (file_ptr) {
             str_cp(&route_start[i], file_ptr, sizeof(route_start[0]));
-            printf("route %s loaded: dist %d fuel %d time %d since %d\n",
-                route_name(i),
-                route_start[i][ROUTE_VALUE_DIST],
-                route_start[i][ROUTE_VALUE_FUEL],
-                route_start[i][ROUTE_VALUE_TIME],
-                route_start[i][ROUTE_VALUE_SINCE]
-            );
+            dp("  route "); dpl(route_name(i), 12); dp(" loaded. dist: "); dpd(route_start[i][ROUTE_VALUE_DIST], 10);
+            dp(" fuel: "); dpd(route_start[i][ROUTE_VALUE_FUEL], 10);
+            dp(" time: "); dpd(route_start[i][ROUTE_VALUE_TIME], 10);
+            dp(" since: "); dpd(route_start[i][ROUTE_VALUE_SINCE], 10);
+            dn();
         } else {
+            dp("route "); dpl(route_name(i), 12); dpn(" - file not found");
             route_reset_counters(i);
         }
     }
@@ -222,7 +224,7 @@ static void trip_history_load(void)
     if (last_since == 0) {
         trip_history_last_index = TRIP_HISTORY_LAST_SLOT;
     }
-    printf("trip history last index %d\n", trip_history_last_index);
+    dp("trip history last index "); dpd(trip_history_last_index, 2); dn();
 }
 
 void route_load(void)
