@@ -7,6 +7,8 @@ typedef enum {
     VAL_SIZE_32
 } val_size_t;
 
+
+// value representation - то как переменная представлена в памяти
 typedef struct {
     val_size_t vs : 2;
     uint8_t s : 1;
