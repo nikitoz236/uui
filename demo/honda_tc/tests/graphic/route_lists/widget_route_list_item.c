@@ -11,6 +11,8 @@
 #include "date_time.h"
 #include "time_zone.h"
 
+#include "event_list.h"
+
 /*
     достаточно типичная ситуация - горизонтальный элемент
     как выглядит работа с ним
@@ -30,6 +32,7 @@ typedef struct {
     uint8_t time_m;
     time_t since_t;
     date_t since_d;
+    uint8_t restart_engaged;
 } ctx_t;
 
 extern const font_t font_5x7;
@@ -46,6 +49,44 @@ const text_field_t tf = {
 
 /*
     можно coord_t сделать знаковым, тогда можно вектора сдвиги делать итд, выравнивать по правому краю итд
+
+
+    чем ты тут вообще занимаешься
+
+    я хочу удобный инструментарий для рисования виджета
+
+    а именно
+
+    расположение статичных текстов по координатам.
+        тут есть общие свойства
+            текстовое поле со шрифтом и начальными координатами
+                например шрифт
+            координаты знакоместа
+            цвет, выделение
+
+    расположение переменнх по координатам, тут сложнее
+        общие свойства + цвет может отличаться
+        свойства отрисовки значения
+        как получить значение
+
+    тут как будто надо 2 структуры ?
+
+
+
+
+    интересная мысль 1 - выравниания. можно сделать отрицательные значения координат для выравнивания по правому / нижнему краю
+
+    что делаем с листабельным текстом ?
+
+
+
+    было бы охуенно если у меня была таблица, просто бегу по количеству ее элементов
+
+    для каждого элемента я знаю как его получить снаружи ??? например
+
+    дальше я могу понять нужно ли его отрисовывать
+    дальше могу перерисовать если нужно
+
 */
 
 enum {
@@ -88,7 +129,7 @@ const struct label labels[] = {
 };
 
 const struct label label_restart = {
-      .color = 0xFF0000, .tl = { .tfcfg = &tf, .pos = { .x = 14, .y = 0 }, .text = "OK to RESTART", }
+      .color = 0xFF0000, .tl = { .tfcfg = &tf, .pos = { .x = 14, .y = 0 }, .text = "OK to RESTART", .len = 13 }
 };
 
 const struct label labels_vals[] = {
@@ -125,11 +166,12 @@ const struct label labels_route_time[] = {
 
 /*
 vscode показывает символы начиная с 1, графика с 0
-
+--------------------------------------------------
 JOURNEY     RESTART? (OK)       time: 124562:34:23
 start: 21 DEC 2024 13:34:23   dist: 1245673.343 km
 avg speed: 253.45 km/h         fuel: 2334567.233 L
 cons: 37.56 L/h 37.56 L/100km   odo: 345674.324 km
+--------------------------------------------------
 */
 
 static void print_label(const struct label * l, xy_t pos, unsigned idx, unsigned active, void * ctx)
@@ -243,8 +285,12 @@ static void draw(ui_element_t * el)
     print_labels(el);
     ctx_t * ctx = (ctx_t *)el->ctx;
     route_t r = el->idx;
+    ctx->time_h = -1;
+    ctx->time_m = -1;
+    ctx->time_s = -1;
     ctx->since_d = (date_t){ .y = -1, .m = -1, .d = -1 };
     ctx->since_t = (time_t){ .h = -1, .m = -1, .s = -1 };
+    ctx->restart_engaged = 0;
     for (route_value_t t = 0; t < ROUTE_VALUE_NUM; t++) {
         unsigned v = route_get_value(r, t);
         ctx->rv[t] = v;
@@ -252,10 +298,31 @@ static void draw(ui_element_t * el)
     }
 }
 
+static unsigned process(ui_element_t * el, unsigned event)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    if (event == EVENT_BTN_OK) {
+        if (ctx->restart_engaged) {
+            printf("reset route %d\n", el->idx);
+            route_reset(el->idx);
+            ctx->restart_engaged = 0;
+            lcd_color_text_raw_print(0, label_restart.tl.tfcfg->fcfg, &(color_scheme_t){ .bg = bg[el->active] }, &ctx->tp, 0, &label_restart.tl.pos, label_restart.tl.len);
+            update(el);
+        } else {
+            ctx->restart_engaged = 1;
+            print_label(&label_restart, ctx->tp, 0, el->active, ctx);
+        }
+        return 1;
+    }
+    return 0;
+}
+
 const widget_desc_t widget_route_list_item = {
     .calc = calc,
     .extend = extend,
+    .update = update,
     .draw = draw,
     .select = draw,
+    .process_event = process,
     .ctx_size = sizeof(ctx_t),
 };
