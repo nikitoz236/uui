@@ -6,6 +6,9 @@
 
 #include "routes.h"
 
+#include "emu_storage.h"
+#include "storage.h"
+
 int time_zone_get(void)
 {
     return 5 * 60 * 60;
@@ -28,6 +31,14 @@ ui_node_desc_t ui = {
 int main()
 {
     printf("test route lists\r\n");
+
+    emu_storage_load();
+
+    storage_init();
+    storage_print_info();
+
+    route_load();
+
     emu_ui_node(&ui);
     return 0;
 }
