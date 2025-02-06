@@ -10,5 +10,7 @@ int main()
     dp("hex val: "); dpx(0xABCD, 2); dn();
     dp("hex dump: "); dpxd(&main, 1, 16); dn();
 
+    dpl("fuck", 7); dpn("<");
+
     return 0;
 }

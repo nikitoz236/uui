@@ -21,9 +21,19 @@ static struct dp_ctx __dp_ctx = {
     // .registred = 1
 };
 
-static inline void __debug_print_str(const char * s)
+static inline void __debug_print_str(const char * s, unsigned l)
 {
-    __debug_usart_tx_data(s, str_len(s, -1));
+    unsigned maxlen = l;
+    if (maxlen == 0) {
+        maxlen = -1;
+    }
+    unsigned len = str_len(s, maxlen);
+    __debug_usart_tx_data(s, len);
+
+    while (len < l) {
+        __debug_usart_tx_data(" ", 1);
+        len++;
+    }
 }
 
 // функция проверят нужно ли выводить сообщения из модуля, если нужно то возвращает 0
@@ -60,12 +70,20 @@ static inline unsigned __debug_start(void)
     return 0;
 }
 
+static inline void dpl(const char * s, unsigned l)
+{
+    if (__debug_start()) {
+        return;
+    }
+    __debug_print_str(s, l);
+}
+
 static inline void dp(const char * s)
 {
     if (__debug_start()) {
         return;
     }
-    __debug_print_str(s);
+    __debug_print_str(s, 0);
 }
 
 static inline void dpn(const char * s)
@@ -73,7 +91,7 @@ static inline void dpn(const char * s)
     if (__debug_start()) {
         return;
     }
-    __debug_print_str(s);
+    __debug_print_str(s, 0);
     __debug_usart_tx_data("\r\n", 2);
     __dp_ctx.started = 0;
 }
