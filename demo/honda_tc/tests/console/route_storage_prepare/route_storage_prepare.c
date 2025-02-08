@@ -55,7 +55,7 @@ int main()
             rsaved[ROUTE_VALUE_TIME] = total_time_s - rdata_time_s(&rdata[i]);
         }
 
-        rsaved[ROUTE_VALUE_SINCE] = since_s;
+        rsaved[ROUTE_VALUE_SINCE_TIME] = since_s;
 
         storage_write_file(800 + i, rsaved, sizeof(rsaved));
     }
