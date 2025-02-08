@@ -41,7 +41,7 @@ typedef enum {
 
     ROUTE_VALUE_SINCE_ODO,       // значение одометра в момент начала
     // ROUTE_VALUE_MOV_TIME         // время в движении (ненулевая скорость)
-    // ROUTE_VALUE_AVG_SPEED,       // средняя скорость за маршрут
+    ROUTE_VALUE_AVG_SPEED,       // средняя скорость за маршрут
             // нужно считать время в движении
 
     ROUTE_VALUE_CONS_DIST,  // расход топлива в мл / 100 км

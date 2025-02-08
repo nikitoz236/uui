@@ -123,9 +123,14 @@ unsigned route_get_value(route_t route, route_value_t value_type)
         unsigned fuel = route_get_value(route, ROUTE_VALUE_FUEL);
         return calc_cons_time(time, fuel);
     }
-    // if (value_type == ROUTE_VALUE_AVG_SPEED) {
-
-    // }
+    if (value_type == ROUTE_VALUE_AVG_SPEED) {
+        unsigned dist = route_get_value(route, ROUTE_VALUE_DIST);
+        unsigned time = route_get_value(route, ROUTE_VALUE_TIME);
+        if (time) {
+            return dist * 3600 / time;
+        }
+        return 0;
+    }
     if (value_type == ROUTE_VALUE_SINCE_ODO) {
         return route_start[route][ROUTE_VALUE_DIST];
     }
