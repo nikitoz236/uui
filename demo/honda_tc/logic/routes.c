@@ -6,6 +6,24 @@
 
 #include "dp.h"
 
+/*
+    план:
+        добаивить параметры, состояние одометра, средняя скорость
+
+        логика что total считает от 0 - с начала момента использования компьютера
+
+        файл настройкой - стартовое состояние одометра
+
+        коррекция по одометру - файл с коэффициентом на который домножаются дистанции чтобы соответствовать одометру на панели приборов
+
+        истории
+            поездки
+            заправки
+            замены масла ?
+
+            для каждой много записей, допустим 20
+*/
+
 #define ROUTES_FILE_ID              800
 
 #define TRIP_HISTORY_FILE_ID        840
@@ -40,14 +58,14 @@ static unsigned trip_get_value(route_value_t value_type)
                 return rtc_get_time_s() - trip_start_s;
             }
             return 0;
-        case ROUTE_VALUE_SINCE: return trip_start_s;
+        case ROUTE_VALUE_SINCE_TIME: return trip_start_s;
         default: return 0;
     }
 }
 
 static unsigned total_get_value(route_value_t value_type)
 {
-    if (value_type == ROUTE_VALUE_SINCE) {
+    if (value_type == ROUTE_VALUE_SINCE_TIME) {
         return 0;
     }
     unsigned start = route_start[ROUTE_TYPE_TOTAL][value_type];
@@ -56,9 +74,30 @@ static unsigned total_get_value(route_value_t value_type)
 
 static unsigned calc_cons_dist(unsigned dist, unsigned fuel)
 {
-    // ml/m = l/km = 100 l/100km
+    // ml/m = l/km = 100 l/100km = 100 000 ml/100km
     if (dist) {
-        return fuel * 100 / dist;
+        if (fuel < 40000) {
+            // 2**32 / 100000 = 42949
+            // то есть топливо до 40 литров можно умножить на 100000 и не потерять точность
+            return fuel * 100000 / dist;
+        } else {
+            fuel *= 100;
+            if (dist > 10000) {
+                // 10 км мы хотя бы можем поделить на 1000
+                dist /= 1000;
+                fuel /= dist;
+            } else if (dist > 100) {
+                // 0.1 км можно поделить на 10
+                dist /= 10;
+                fuel /= dist;
+                fuel *= 100;
+            } else {
+                // наименее точно. просто умножаем результат деления на 1000
+                fuel /= dist;
+                fuel *= 1000;
+            }
+            return fuel;
+        }
     }
     return 0;
 }
@@ -84,13 +123,19 @@ unsigned route_get_value(route_t route, route_value_t value_type)
         unsigned fuel = route_get_value(route, ROUTE_VALUE_FUEL);
         return calc_cons_time(time, fuel);
     }
+    // if (value_type == ROUTE_VALUE_AVG_SPEED) {
+
+    // }
+    if (value_type == ROUTE_VALUE_SINCE_ODO) {
+        return route_start[route][ROUTE_VALUE_DIST];
+    }
     if (route == ROUTE_TYPE_TRIP) {
         return trip_get_value(value_type);
     }
     if (route == ROUTE_TYPE_TOTAL) {
         return total_get_value(value_type);
     }
-    if (value_type == ROUTE_VALUE_SINCE) {
+    if (value_type == ROUTE_VALUE_SINCE_TIME) {
         // ROUTE_TYPE_TRIP и ROUTE_TYPE_TOTAL обрабатывают SINCE сами отдельно
         return route_start[route][value_type];
     }
@@ -179,7 +224,7 @@ static void route_reset_counters(route_t route)
     for (unsigned type = 0; type <= ROUTE_VALUE_TIME; type++) {
         route_start[route][type] = total_get_value(type);
     }
-    route_start[route][ROUTE_VALUE_SINCE] = rtc_get_time_s();
+    route_start[route][ROUTE_VALUE_SINCE_TIME] = rtc_get_time_s();
 }
 
 void route_reset(route_t route)
@@ -199,7 +244,7 @@ static void route_starts_load(void)
             dp("  route "); dpl(route_name(i), 12); dp(" loaded. dist: "); dpd(route_start[i][ROUTE_VALUE_DIST], 10);
             dp(" fuel: "); dpd(route_start[i][ROUTE_VALUE_FUEL], 10);
             dp(" time: "); dpd(route_start[i][ROUTE_VALUE_TIME], 10);
-            dp(" since: "); dpd(route_start[i][ROUTE_VALUE_SINCE], 10);
+            dp(" since: "); dpd(route_start[i][ROUTE_VALUE_SINCE_TIME], 10);
             dn();
         } else {
             dp("route "); dpl(route_name(i), 12); dpn(" - file not found");
@@ -215,8 +260,8 @@ static void trip_history_load(void)
         unsigned len = 0;
         const unsigned * history_data = storage_search_file(TRIP_HISTORY_FILE_ID + i, &len);
         if (history_data) {
-            if (last_since < history_data[ROUTE_VALUE_SINCE]) {
-                last_since = history_data[ROUTE_VALUE_SINCE];
+            if (last_since < history_data[ROUTE_VALUE_SINCE_TIME]) {
+                last_since = history_data[ROUTE_VALUE_SINCE_TIME];
                 trip_history_last_index = i;
             }
         }

@@ -35,17 +35,19 @@ typedef enum {
     ROUTE_VALUE_DIST,       // расстояние в метрах
     ROUTE_VALUE_FUEL,       // израсходованное топливо в мл
     ROUTE_VALUE_TIME,       // моточасы в секундах
-    ROUTE_VALUE_SINCE,      // момент времени начала в секундах
+    ROUTE_VALUE_SINCE_TIME,           // момент времени начала в секундах
 
     // параметры выше сохраняются как файл маршрута через ROUTE_VAL_LOADABLE
 
-    // ROUTE_VALUE_SINCE_TIME,
-    // ROUTE_VALUE_SINCE_ODO,       // значение одометра в момент начала
+    ROUTE_VALUE_SINCE_ODO,       // значение одометра в момент начала
+    // ROUTE_VALUE_MOV_TIME         // время в движении (ненулевая скорость)
     // ROUTE_VALUE_AVG_SPEED,       // средняя скорость за маршрут
+            // нужно считать время в движении
+
     ROUTE_VALUE_CONS_DIST,  // расход топлива в мл / 100 км
     ROUTE_VALUE_CONS_TIME,  // расход топлива в мл / час
     ROUTE_VALUE_NUM,
-    ROUTE_VAL_LOADABLE = ROUTE_VALUE_SINCE + 1
+    ROUTE_VAL_LOADABLE = ROUTE_VALUE_SINCE_TIME + 1
 } route_value_t;
 
 const char * route_name(route_t route);
