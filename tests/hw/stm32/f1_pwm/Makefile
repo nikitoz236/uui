@@ -25,5 +25,8 @@ SRC += $(PERIPH)/periph_gpio.c
 
 INC += $(PERIPH)/..
 SRC += $(PERIPH)/../stm_pwm.c
+SRC += $(PERIPH)/../systick.c
+
+INC += $(LIB)/common
 
 include $(LIB)/hw/system/uc_build.mk

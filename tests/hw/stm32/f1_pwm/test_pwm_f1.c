@@ -2,6 +2,9 @@
 #include "periph_pclk.h"
 #include "periph_rcc.h"
 #include "stm_pwm.h"
+#include "systick.h"
+#include "delay_blocking.h"
+#include "array_size.h"
 
 #include "periph_gpio.h"
 
@@ -19,15 +22,15 @@ const rcc_cfg_t rcc_cfg = {
 };
 
 const pwm_cfg_t pwm_cfg = {
-    .ch = 3 - 1,
-    .freq = 1000,
-    .max_val = 10,
-    .pclk = PCLK_TIM4,
-    .tim = TIM4,
+    .ch = 3,
+    .freq = 4000,
+    .max_val = 200,
+    .pclk = PCLK_TIM3,
+    .tim = TIM3,
     .gpio = &(const gpio_t){
         .gpio = {
             .port = GPIO_PORT_B,
-            .pin = 8,
+            .pin = 0,
         },
         .cfg = {
             .mode = GPIO_MODE_AF,
@@ -37,23 +40,57 @@ const pwm_cfg_t pwm_cfg = {
     }
 };
 
+struct player {
+    uint16_t duration;
+    uint16_t freq;
+    uint8_t lvl;
+};
+
+// struct player sound[] = {
+//     {100, 4000, 5},
+//     {100, 6000, 9},
+//     {100, 2000, 3},
+// };
+
+struct player sound[] = {
+    // {200, 2000, 5},
+    // {300, 2000, 9},
+    // {200, 5000, 3},
+    {100, 230, 100},
+    {100, 280, 100},
+    {100, 800, 100},
+    // {200, 800, 18},
+
+
+};
+
 int main(void)
 {
     rcc_apply_cfg(&rcc_cfg);
 
-    pclk_ctrl(&PCLK_AFIO, 1);
+    pclk_ctrl(&(pclk_t)PCLK_AFIO, 1);
 
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
 
-    pclk_ctrl(&PCLK_IOPA, 1);
-    pclk_ctrl(&PCLK_IOPB, 1);
-    pclk_ctrl(&PCLK_IOPC, 1);
+    pclk_ctrl(&(pclk_t)PCLK_IOPA, 1);
+    pclk_ctrl(&(pclk_t)PCLK_IOPB, 1);
+    pclk_ctrl(&(pclk_t)PCLK_IOPC, 1);
 
-    pclk_ctrl(&PCLK_DMA1, 1);
+    pclk_ctrl(&(pclk_t)PCLK_DMA1, 1);
+    init_systick();
+
     __enable_irq();
 
     init_pwm(&pwm_cfg);
-    pwm_set_ccr(&pwm_cfg, 5);
+    pwm_set_ccr(&pwm_cfg, 2);
+
+    for (unsigned i = 0; i < ARRAY_SIZE(sound); i++) {
+        pwm_set_freq(&pwm_cfg, sound[i].freq);
+        pwm_set_ccr(&pwm_cfg, sound[i].lvl);
+        delay_ms(sound[i].duration);
+    }
+
+    pwm_set_ccr(&pwm_cfg, 0);
 
     while (1) {};
 
