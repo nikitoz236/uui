@@ -26,14 +26,21 @@ const struct rdata rdata[ROUTE_TYPE_NUM_SAVED] = {
     [ROUTE_TYPE_REFILL] =       { .dist = 123456,    .fuel = 11345,   .time_h = 1,    .time_m = 33, .time_s = 12, .since_date = { .y = 2025, .m =  2, .d =  4 }, .since_time = { .h = 14 ,.m = 45, .s = 16 } },
 };
 
+
+unsigned rdata_time_s(const struct rdata * rdata)
+{
+    return rdata->time_h * 3600 + rdata->time_m * 60 + rdata->time_s;
+}
+
 int main()
 {
     printf("prepare routes and history storage file\r\n");
 
     storage_init();
 
+    unsigned total_time_s = rdata_time_s(&rdata[ROUTE_TYPE_TOTAL]);
+
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
-        unsigned time_s = rdata[i].time_h * 3600 + rdata[i].time_m * 60 + rdata[i].time_s;
         unsigned since_s = days_to_s(days_from_date(&rdata[i].since_date)) + time_to_s(&rdata[i].since_time);
 
         unsigned rsaved[ROUTE_VAL_LOADABLE];
@@ -41,11 +48,11 @@ int main()
         if (i == ROUTE_TYPE_TOTAL) {
             rsaved[ROUTE_VALUE_DIST] = rdata[i].dist;
             rsaved[ROUTE_VALUE_FUEL] = rdata[i].fuel;
-            rsaved[ROUTE_VALUE_TIME] = time_s;
+            rsaved[ROUTE_VALUE_TIME] = total_time_s;
         } else {
             rsaved[ROUTE_VALUE_DIST] = rdata[ROUTE_TYPE_TOTAL].dist - rdata[i].dist;
             rsaved[ROUTE_VALUE_FUEL] = rdata[ROUTE_TYPE_TOTAL].fuel - rdata[i].fuel;
-            rsaved[ROUTE_VALUE_TIME] = rdata[ROUTE_TYPE_TOTAL].fuel - time_s;
+            rsaved[ROUTE_VALUE_TIME] = total_time_s - rdata_time_s(&rdata[i]);
         }
 
         rsaved[ROUTE_VALUE_SINCE] = since_s;
