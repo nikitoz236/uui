@@ -69,6 +69,10 @@ void date_from_s(date_t * d, unsigned s);
 void time_from_s(time_t * t, unsigned s);
 unsigned time_to_s(const time_t * t);
 
+static inline unsigned date_time_to_s(const date_t * d, const time_t * t)
+{
+    return days_to_s(days_from_date(d)) + time_to_s(t);
+}
 
 const char * day_of_week_name(unsigned dow);
 const char * month_name(unsigned m);
