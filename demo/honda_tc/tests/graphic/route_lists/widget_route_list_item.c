@@ -100,7 +100,7 @@ struct label {
 };
 
 const struct label labels[] = {
-    { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 31, .y = 0 }, .text = "time:",         } },
+    { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 30, .y = 0 }, .text = "time:",         } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 44, .y = 0 }, .text = ":",             } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 47, .y = 0 }, .text = ":",             } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 0,  .y = 1 }, .text = "start:",        } },
@@ -112,17 +112,17 @@ const struct label labels[] = {
 
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 0,  .y = 2 }, .text = "avg speed:",    } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 18, .y = 2 }, .text = "km/h",          } },
-    { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 11, .y = 2 }, .text = "253.45",        } },
+    // { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 11, .y = 2 }, .text = "253.45",        } },
 
-    { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 31, .y = 3 }, .text = "fuel:",         } },
+    { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 30, .y = 3 }, .text = "fuel:",         } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 49, .y = 3 }, .text = "L",             } },
 
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 0,  .y = 3 }, .text = "cons:",         } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 12, .y = 3 }, .text = "L/h",           } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 22, .y = 3 }, .text = "L/100km",       } },
 
-    { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 32, .y = 1 }, .text = "odo:",          } },
-    { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 37, .y = 1 }, .text = "345674.323",    } },
+    { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 31, .y = 1 }, .text = "odo:",          } },
+    // { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 37, .y = 1 }, .text = "345674.323",    } },
     { .color = 0x555555, .tl = { .tfcfg = &tf, .pos = { .x = 48, .y = 1 }, .text = "km",            } },
 
     { .color = 0x882222, .tl = { .tfcfg = &tf, .pos = { .x = 0,  .y = 0 }, .to_str = route_name }, .type = LABEL_STR_FORM_FUNC_BY_IDX },
@@ -135,6 +135,8 @@ const struct label label_restart = {
 const struct label labels_vals[] = {
     [ROUTE_VALUE_DIST] =        { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 36, .y = 2 }, .len = 11, .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(ctx_t, rv[ROUTE_VALUE_DIST]) }, .type = LABEL_VAL_FORM_OFFSET },
     [ROUTE_VALUE_FUEL] =        { .color = 0x96A4Ad, .tl = { .tfcfg = &tf, .pos = { .x = 37, .y = 3 }, .len = 11, .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(ctx_t, rv[ROUTE_VALUE_FUEL]) }, .type = LABEL_VAL_FORM_OFFSET },
+    [ROUTE_VALUE_SINCE_ODO] =   { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 37, .y = 1 }, .len = 10, .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(ctx_t, rv[ROUTE_VALUE_SINCE_ODO]) }, .type = LABEL_VAL_FORM_OFFSET },
+    [ROUTE_VALUE_AVG_SPEED] =   { .color = 0x96A41d, .tl = { .tfcfg = &tf, .pos = { .x = 11, .y = 2 }, .len = 6,  .vt = { .f = X1000, .p = 2, .zr = 0}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(ctx_t, rv[ROUTE_VALUE_AVG_SPEED]) }, .type = LABEL_VAL_FORM_OFFSET },
     [ROUTE_VALUE_CONS_DIST] =   { .color = 0x12fa44, .tl = { .tfcfg = &tf, .pos = { .x = 16, .y = 3 }, .len = 5,  .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(ctx_t, rv[ROUTE_VALUE_CONS_DIST]) }, .type = LABEL_VAL_FORM_OFFSET },
     [ROUTE_VALUE_CONS_TIME] =   { .color = 0x12fa44, .tl = { .tfcfg = &tf, .pos = { .x = 6,  .y = 3 }, .len = 5, .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(ctx_t, rv[ROUTE_VALUE_CONS_TIME]) }, .type = LABEL_VAL_FORM_OFFSET },
 };
@@ -231,8 +233,8 @@ static void draw_route_val(ctx_t * ctx, route_value_t t, unsigned active)
             ctx->time_h = h;
             print_label(&labels_route_time[LABEL_ROUTE_TIME_H], ctx->tp, 0, active, ctx);
         }
-    } else if (t == ROUTE_VALUE_SINCE) {
-        unsigned since_s = ctx->rv[ROUTE_VALUE_SINCE] + time_zone_get();
+    } else if (t == ROUTE_VALUE_SINCE_TIME) {
+        unsigned since_s = ctx->rv[ROUTE_VALUE_SINCE_TIME] + time_zone_get();
         date_t d;
         date_from_s(&d, since_s);
         time_t t;
@@ -279,6 +281,11 @@ static void update(ui_element_t * el)
     }
 }
 
+/*
+    нужны функции draw_val и draw_val_if_changed (update_val)
+    -1 это какойто колхоз
+*/
+
 static void draw(ui_element_t * el)
 {
     draw_color_form(&el->f, bg[el->active]);
@@ -296,6 +303,7 @@ static void draw(ui_element_t * el)
         ctx->rv[t] = v;
         draw_route_val(ctx, t, el->active);
     }
+    printf("route item %s time %d dist %d avg speed %d\n", route_name(r), ctx->rv[ROUTE_VALUE_TIME], ctx->rv[ROUTE_VALUE_DIST], ctx->rv[ROUTE_VALUE_AVG_SPEED]);
 }
 
 static unsigned process(ui_element_t * el, unsigned event)
