@@ -13,15 +13,16 @@ DEF += STM32F10X_MD
 
 INC += .
 
-SRC += stm32_usart_test.c
+SRC += $(TARGET).c
 SRC += hw_cfg.c
 
-INC += $(LIB)/hw/uc_hw/stm32f10x
-SRC += $(LIB)/hw/uc_hw/stm32f10x/stm32f10x_rcc.c
-SRC += $(LIB)/hw/uc_hw/stm_rcc_common.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
-SRC += $(LIB)/hw/uc_hw/stm_usart.c
+INC += $(LIB)/hw/uc_hw
+INC += $(LIB)/hw/uc_hw/stm32f1x
 
+SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_rcc.c
+SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_gpio.c
+
+SRC += $(LIB)/hw/uc_hw/stm_usart.c
 SRC += $(LIB)/hw/uc_hw/systick.c
 
 INC += $(LIB)/hw/drivers
