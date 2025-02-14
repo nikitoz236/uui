@@ -3,7 +3,7 @@
 #include "stddef.h"
 #include "storage_hw.h"
 
-#define printf(...)
+#include "dp.h"
 
 #define STORAGE_PAGE_MAGIC          0x5A6B
 #define MAX_FILE_OFFSET_IN_PAGE     (FLASH_ATOMIC_ERASE_SIZE - sizeof(file_header_t))
@@ -118,7 +118,8 @@ unsigned page_for_write(unsigned full_file_record_size)
         }
     }
 
-    printf("    search_page_for_write for size %d, max_acceptable %d - page %d\n", full_file_record_size, max_acceptable, page);
+    dp("      search_page_for_write for size "); dpd(full_file_record_size, 5);
+    dp(" max_acceptable "); dpd(max_acceptable, 5); dp(" - page "); dpd(page, 3); dn();
 
     return page;
 }
@@ -171,7 +172,8 @@ static unsigned search_file_in_page(unsigned page, file_id_t id, const file_head
 
     for_each_file_in_page_header(ph) {
         if (file->id == id) {
-            // printf("    search_file_in_page finded file %p id %d ver %d in page %d\n", file, file->id, file->version, page);
+            dp("      search file in page "); dpd(page, 3); dp("  finded file ptr: "); dpx(file, 4);
+            dp("    id: "); dpd(file->id, 5); dp("    ver: "); dpd(file->version, 5); dn();
             if (file_is_crc_correct(file)) {
                 if ((*result_file == 0) ||
                     (is_file_version_newer(*result_file, file))
@@ -241,7 +243,7 @@ static const void * save_file(file_id_t id, const void * data, unsigned len, con
 static void move_usefull_files_from_page(unsigned page)
 {
     // нужно перенести все полезные файлы из страницы page в другую страницу
-    printf("    move_usefull_files_from_page page %d\n", page);
+    dp("    move_usefull_files_from_page page "); dpd(page, 3); dn();
 
     // чтоб данная страница не выбиралась для записи
     storage_ctx[page].used = FLASH_ATOMIC_ERASE_SIZE;
@@ -251,7 +253,8 @@ static void move_usefull_files_from_page(unsigned page)
 
     for_each_file_in_page_header(ph) {
         if (file->len) {
-            printf("            move_usefull_files_from_page file %p id %d ver %d\n", file, file->id, file->version);
+            dp("            move_usefull_files_from_page. file ptr: "); dpx(file, 4);
+            dp(" id: "); dpd(file->id, 5); dp(" ver: "); dpd(file->version, 5); dn();
             // может быть такое что файл перезаписывался несколько раз подряд
             // в этом случае не нужно искать последнюю версию файла повторно
             if ((last_version_of_file == 0) || (last_version_of_file->id != file->id)) {
@@ -275,13 +278,13 @@ static void storage_page_add_header(const page_header_t * ph, unsigned counter)
 
 static void storage_clean_page(unsigned page)
 {
-    printf("    storage_clean_page page %d\n", page);
+    dp("    storage_clean_page page "); dpd(page, 3); dn();
 
     const page_header_t * ph = page_header_from_page(page);
     unsigned cnt = ph->erase_cnt + 1;
     storage_erase_page(page);
 
-    printf("    page erased, write header with counter %d\n", cnt);
+    dp("    page erased, write header with counter "); dpd(cnt, 5); dn();
 
     storage_page_add_header(ph, cnt);
     storage_ctx[page].usefull = 0;
@@ -296,7 +299,7 @@ void storage_prepare_page(void)
         return;
     }
 
-    printf("\n\n\n  storage_prepare_page\n");
+    dp("\n\n\n  storage_prepare_page\n");
     storage_print_info();
 
     unsigned page_for_erase = 0;
@@ -314,10 +317,10 @@ void storage_prepare_page(void)
             min_metric = metric;
             page_for_erase = i;
         }
-        printf("            storage_prepare_page page %d metric %d\n", i, metric);
+        dp("            storage_prepare_page page: "); dpd(i, 3); dp(" metric: "); dpd(metric, 5); dn();
     }
 
-    printf("  storage_prepare_page erase %d\n", page_for_erase);
+    dp("  storage_prepare_page erase "); dpd(page_for_erase, 3); dn();
 
     move_usefull_files_from_page(page_for_erase);
     storage_clean_page(page_for_erase);
@@ -326,7 +329,6 @@ void storage_prepare_page(void)
 
     // storage_print_info();
 }
-
 
 const void * storage_search_file(file_id_t id, unsigned * len)
 {
@@ -342,7 +344,7 @@ const void * storage_search_file(file_id_t id, unsigned * len)
 const void * storage_write_file(file_id_t id, const void * data, unsigned len)
 {
     if (len > FLASH_ATOMIC_ERASE_SIZE - sizeof(page_header_t) - sizeof(file_header_t)) {
-        printf("storage_write_file file %d too big %d\n", id, len);
+        dp("storage_write_file file id: "); dpd(id, 5); dp(" too big, len: "); dpd(len, 5); dn();
         return 0;
     }
     unsigned page = 0;
@@ -396,8 +398,6 @@ void storage_init(void)
         }
     }
 }
-
-#include "dp.h"
 
 void storage_print_info(void)
 {
