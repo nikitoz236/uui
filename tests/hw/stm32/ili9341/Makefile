@@ -22,9 +22,9 @@ INC += $(LIB)/hw/uc_hw/stm32f1x
 
 SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_rcc.c
 SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_gpio.c
+SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_spi.c
 SRC += $(LIB)/hw/uc_hw/systick.c
 SRC += $(LIB)/hw/uc_hw/stm_pwm.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_spi.c
 
 INC += $(LIB)/hw/api/
 INC += $(LIB)/hw/drivers
