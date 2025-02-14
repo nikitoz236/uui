@@ -128,7 +128,7 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
     }
 }
 
-void usart_dma_tx_end(const usart_cfg_t * usart)
+void usart_dma_tx_end_handler(const usart_cfg_t * usart)
 {
     // в прерывании мы оказываемся когда dma досчитает до 0
     // в такой момент нужно либо запустить новую транзакцию если накидали еще данных
@@ -160,14 +160,6 @@ void usart_dma_tx_end(const usart_cfg_t * usart)
     }
     __DBGPIO_DMA_IRQ_END_BUF(0);
     __DBGPIO_DMA_IRQ(0);
-}
-
-
-const usart_cfg_t * usart1_cfg;
-void dma_usart1_tx_handler(void)
-{
-    // проблема. нам нужны здесь некие универсальные хэндлеры которые могут для нескольких усартов подтягивать контекст.
-    usart_dma_tx_end(usart1_cfg);
 }
 
 void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
@@ -211,12 +203,13 @@ void usart_set_cfg(const usart_cfg_t * usart)
             usart->usart->CR3 |= USART_CR3_DMAT;
 
             if (usart->tx_dma.size != 0) {
-                usart1_cfg = usart;
                 usart->tx_dma.rb->head = 0;
                 usart->tx_dma.rb->tail = 0;
-                dma_enable_irq_full(dma_tx_ch);
-                dma_set_handler(dma_tx_ch, dma_usart1_tx_handler);
-                dma_enable_nvic_irq(dma_tx_ch);
+                if (usart->tx_dma_handler) {
+                    dma_set_handler(dma_tx_ch, usart->tx_dma_handler);
+                    dma_enable_irq_full(dma_tx_ch);
+                    dma_enable_nvic_irq(dma_tx_ch);
+                }
             }
         }
     }

@@ -21,8 +21,10 @@ struct usart_cfg {
     struct dma_rb_desc rx_dma;
     pclk_t pclk;
     uint8_t irqn;
-
-    // uint8_t dma_tx_ch;
-    // void (*rx_byte_handler)(uint8_t c);
-    // void (* handler)(void);
+    union {
+        void (*tx_dma_handler)(void);
+        void (*tx_empty_handler)(void);
+    };
 };
+
+void usart_dma_tx_end_handler(const usart_cfg_t * usart);

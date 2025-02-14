@@ -7,6 +7,11 @@ struct {    // TODO тоже в библиотеку
     uint8_t data[DEBUG_USART_TX_BUF_SIZE];
 } debug_usart_dma_tx_ctx;
 
+void debug_usart_dma_hander(void)
+{
+    usart_dma_tx_end_handler(&debug_usart);
+}
+
 const usart_cfg_t debug_usart = {
     .usart = USART1,
     .default_baud = 115200,
@@ -36,6 +41,7 @@ const usart_cfg_t debug_usart = {
         .size = DEBUG_USART_TX_BUF_SIZE,
         .rb = &debug_usart_dma_tx_ctx.rb
     },
+    .tx_dma_handler = debug_usart_dma_hander,
     .pclk = PCLK_USART1,
     .irqn = USART1_IRQn
 };
