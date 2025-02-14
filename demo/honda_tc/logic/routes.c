@@ -29,14 +29,17 @@
 #define TRIP_HISTORY_FILE_ID        840
 #define TRIP_HISTORY_LAST_SLOT      (TRIP_HISTORY_RECORDS - 1)
 
-unsigned route_start[ROUTE_TYPE_NUM_SAVED][ROUTE_VAL_LOADABLE] = {};
-unsigned trip_start_s = 0;
+static unsigned route_start[ROUTE_TYPE_NUM_SAVED][ROUTE_VAL_LOADABLE] = {};
+static unsigned trip_start_s = 0;
+static unsigned total_start_odo = 0;
 
 static uint8_t trip_history_last_index = 0;
 
 static inline uint16_t route_file_id(route_t route)
 {
-    return route + ROUTES_FILE_ID;
+    // 0 : total odo start
+    // 1 : total route start struct
+    return route + ROUTES_FILE_ID + 1;
 }
 
 const char * route_name(route_t route)
@@ -65,10 +68,13 @@ static unsigned trip_get_value(route_value_t value_type)
 
 static unsigned total_get_value(route_value_t value_type)
 {
-    if (value_type == ROUTE_VALUE_SINCE_TIME) {
-        return 0;
+    if (value_type == ROUTE_VALUE_SINCE_ODO) {
+        return total_start_odo;
     }
     unsigned start = route_start[ROUTE_TYPE_TOTAL][value_type];
+    if (value_type == ROUTE_VALUE_DIST) {
+        start += total_start_odo;
+    }
     return start + trip_get_value(value_type);
 }
 
@@ -131,20 +137,27 @@ unsigned route_get_value(route_t route, route_value_t value_type)
         }
         return 0;
     }
-    if (value_type == ROUTE_VALUE_SINCE_ODO) {
-        return route_start[route][ROUTE_VALUE_DIST];
-    }
+
     if (route == ROUTE_TYPE_TRIP) {
         return trip_get_value(value_type);
     }
     if (route == ROUTE_TYPE_TOTAL) {
         return total_get_value(value_type);
     }
+
+    if (value_type == ROUTE_VALUE_SINCE_ODO) {
+        return route_start[route][ROUTE_VALUE_DIST] + total_start_odo;
+    }
+
     if (value_type == ROUTE_VALUE_SINCE_TIME) {
         // ROUTE_TYPE_TRIP и ROUTE_TYPE_TOTAL обрабатывают SINCE сами отдельно
         return route_start[route][value_type];
     }
-    return total_get_value(value_type) - route_start[route][value_type];
+
+    //  ROUTE_VALUE_DIST
+    //  ROUTE_VALUE_FUEL
+    //  ROUTE_VALUE_TIME
+    return route_start[ROUTE_TYPE_TOTAL][value_type] - route_start[route][value_type];
 }
 
 static void route_save(route_t route)
@@ -241,8 +254,16 @@ void route_reset(route_t route)
 static void route_starts_load(void)
 {
     dpn("\nroute load");
+    unsigned len = 0;
+    const unsigned * total_start_odo_ptr = storage_search_file(ROUTES_FILE_ID, &len);
+    if (len == sizeof(unsigned)) {
+        total_start_odo = *total_start_odo_ptr;
+        dp("  total start odo "); dpd(total_start_odo, 10); dn();
+    } else {
+        dp("  total start odo not found\n");
+    }
+
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
-        unsigned len = 0;
         const void * file_ptr = storage_search_file(route_file_id(i), &len);
         if (file_ptr) {
             str_cp(&route_start[i], file_ptr, sizeof(route_start[0]));
@@ -258,27 +279,27 @@ static void route_starts_load(void)
     }
 }
 
-static void trip_history_load(void)
-{
-    unsigned last_since = 0;
-    for (unsigned i = 0; i < TRIP_HISTORY_RECORDS; i++) {
-        unsigned len = 0;
-        const unsigned * history_data = storage_search_file(TRIP_HISTORY_FILE_ID + i, &len);
-        if (history_data) {
-            if (last_since < history_data[ROUTE_VALUE_SINCE_TIME]) {
-                last_since = history_data[ROUTE_VALUE_SINCE_TIME];
-                trip_history_last_index = i;
-            }
-        }
-    }
-    if (last_since == 0) {
-        trip_history_last_index = TRIP_HISTORY_LAST_SLOT;
-    }
-    dp("trip history last index "); dpd(trip_history_last_index, 2); dn();
-}
+// static void trip_history_load(void)
+// {
+//     unsigned last_since = 0;
+//     for (unsigned i = 0; i < TRIP_HISTORY_RECORDS; i++) {
+//         unsigned len = 0;
+//         const unsigned * history_data = storage_search_file(TRIP_HISTORY_FILE_ID + i, &len);
+//         if (history_data) {
+//             if (last_since < history_data[ROUTE_VALUE_SINCE_TIME]) {
+//                 last_since = history_data[ROUTE_VALUE_SINCE_TIME];
+//                 trip_history_last_index = i;
+//             }
+//         }
+//     }
+//     if (last_since == 0) {
+//         trip_history_last_index = TRIP_HISTORY_LAST_SLOT;
+//     }
+//     dp("trip history last index "); dpd(trip_history_last_index, 2); dn();
+// }
 
 void route_load(void)
 {
     route_starts_load();
-    trip_history_load();
+    // trip_history_load();
 }

@@ -15,8 +15,9 @@ struct rdata {
     time_t since_time;
 };
 
+const unsigned odo_start = 245022000;
 const struct rdata rdata[ROUTE_TYPE_NUM_SAVED] = {
-    [ROUTE_TYPE_TOTAL] =        { .dist = 300101123, .fuel = 5000000, .time_h = 5678, .time_m = 34, .time_s = 30, .since_date = { .y = 2022, .m =  1, .d = 21 }, .since_time = { .h = 13, .m = 34, .s = 23 } },
+    [ROUTE_TYPE_TOTAL] =        { .dist = 354101123, .fuel = 5000000, .time_h = 5678, .time_m = 34, .time_s = 30, .since_date = { .y = 2022, .m =  1, .d = 21 }, .since_time = { .h = 13, .m = 34, .s = 23 } },
     [ROUTE_TYPE_TRAVEL] =       { .dist = 3456432,   .fuel = 285123,  .time_h = 119,  .time_m = 12, .time_s = 34, .since_date = { .y = 2024, .m = 11, .d = 13 }, .since_time = { .h = 14, .m =  3, .s = 44 } },
     [ROUTE_TYPE_JOURNEY] =      { .dist = 9912345,   .fuel = 789456,  .time_h = 281,  .time_m = 37, .time_s = 19, .since_date = { .y = 2024, .m =  9, .d =  7 }, .since_time = { .h = 16, .m = 54, .s = 51 } },
     [ROUTE_TYPE_TMP] =          { .dist = 54321,     .fuel = 4001,    .time_h = 1,    .time_m = 28, .time_s = 54, .since_date = { .y = 2025, .m =  2, .d =  6 }, .since_time = { .h = 11, .m = 34, .s = 23 } },
@@ -38,7 +39,10 @@ int main()
 
     storage_init();
 
+    storage_write_file(800, &odo_start, sizeof(odo_start));
+
     unsigned total_time_s = rdata_time_s(&rdata[ROUTE_TYPE_TOTAL]);
+    unsigned total_dist = rdata[ROUTE_TYPE_TOTAL].dist - odo_start;
 
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
         unsigned since_s = days_to_s(days_from_date(&rdata[i].since_date)) + time_to_s(&rdata[i].since_time);
@@ -46,18 +50,26 @@ int main()
         unsigned rsaved[ROUTE_VAL_LOADABLE];
 
         if (i == ROUTE_TYPE_TOTAL) {
-            rsaved[ROUTE_VALUE_DIST] = rdata[i].dist;
+            rsaved[ROUTE_VALUE_DIST] = total_dist;
             rsaved[ROUTE_VALUE_FUEL] = rdata[i].fuel;
             rsaved[ROUTE_VALUE_TIME] = total_time_s;
         } else {
-            rsaved[ROUTE_VALUE_DIST] = rdata[ROUTE_TYPE_TOTAL].dist - rdata[i].dist;
+            rsaved[ROUTE_VALUE_DIST] = total_dist - rdata[i].dist;
             rsaved[ROUTE_VALUE_FUEL] = rdata[ROUTE_TYPE_TOTAL].fuel - rdata[i].fuel;
             rsaved[ROUTE_VALUE_TIME] = total_time_s - rdata_time_s(&rdata[i]);
         }
 
         rsaved[ROUTE_VALUE_SINCE_TIME] = since_s;
 
-        storage_write_file(800 + i, rsaved, sizeof(rsaved));
+        printf("route %1d    dist %10d    fuel %10d    time %10d    since t %10d\r\n",
+            i,
+            rsaved[ROUTE_VALUE_DIST],
+            rsaved[ROUTE_VALUE_FUEL],
+            rsaved[ROUTE_VALUE_TIME],
+            rsaved[ROUTE_VALUE_SINCE_TIME]
+        );
+
+        storage_write_file(801 + i, rsaved, sizeof(rsaved));
     }
 
     storage_print_info();

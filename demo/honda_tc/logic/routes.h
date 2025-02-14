@@ -35,7 +35,7 @@ typedef enum {
     ROUTE_VALUE_DIST,       // расстояние в метрах
     ROUTE_VALUE_FUEL,       // израсходованное топливо в мл
     ROUTE_VALUE_TIME,       // моточасы в секундах
-    ROUTE_VALUE_SINCE_TIME,           // момент времени начала в секундах
+    ROUTE_VALUE_SINCE_TIME, // момент времени начала в секундах
 
     // параметры выше сохраняются как файл маршрута через ROUTE_VAL_LOADABLE
 
