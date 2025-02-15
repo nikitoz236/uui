@@ -1,11 +1,12 @@
-#include <stdint.h>
-#include "stddef.h"
+#include <stddef.h>
 #include "str_utils.h"
 #include "mstimer.h"
 #include "kline.h"
 #include "dlc_poll.h"
 #include "metrics_ecu.h"
 #include "tc.h"
+
+#include "dp.h"
 
 /*
 
@@ -80,7 +81,10 @@ static void dlc_prepare(honda_unit_t unit, uint8_t offset, uint8_t len)
     kline_request.offset = offset;
     kline_request.len = len;
     kline_request.cs = calc_cs((uint8_t *)&kline_request, offsetof(kline_request_t, cs));
-    rx_type = 0;
+
+    rx_type = 0;                    // ожидаемый тип ответ
+
+    kline_rx_buf[1] = 0;            // портим буфер чтобы не обработать его еще раз
 }
 
 void dlc_dump_request(honda_unit_t unit)
@@ -164,7 +168,7 @@ static void dlc_send_request(void)
 
 static void dlc_poll_process_rx_data(void)
 {
-    // printf("DLC poll process rx data\n");
+    dpn("DLC poll process rx data");
     if (check_rx_frame_valid()) {
         if (engine_state == 0) {
             engine_state = 1;
@@ -185,7 +189,7 @@ static void dlc_poll_process_rx_data(void)
 
 static void dlc_poll_process_timeout(void)
 {
-    // printf("DLC poll process timeout\n");
+    dpn("DLC poll process timeout");
     if (engine_state) {
         engine_state = 0;
         tc_engine_set_status(0);
