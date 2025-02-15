@@ -10,6 +10,7 @@
 #include "mstimer.h"
 #include "delay_blocking.h"
 
+#include "api_lcd_color.h"
 
 #include "dlc_poll.h"
 
@@ -83,16 +84,31 @@ int main(void)
     //     delay_ms(100);
     // }
 
+
     usart_set_cfg(&debug_usart);
     usart_set_cfg(&kline_usart);
+
 
     dn();
     dpn("\n\n\nHONDA K-line trip computer");
 
+    init_rtc();
+
     init_lcd_hw(&lcd_cfg);
     lcd_bl(4);
+    init_lcd(&lcd_cfg);
 
-    init_rtc();
+    init_pwm(&buz_cfg);
+
+    pwm_set_freq(&buz_cfg, 600);
+    pwm_set_ccr(&buz_cfg, 10);
+    delay_ms(100);
+    pwm_set_freq(&buz_cfg, 800);
+    delay_ms(100);
+    pwm_set_ccr(&buz_cfg, 0);
+
+    lcd_rect(10, 20, 30, 40, 0xA14C);
+
 
     // unsigned rtc_last = 0;
 

@@ -14,4 +14,4 @@ extern const rcc_cfg_t rcc_cfg;
 extern const usart_cfg_t debug_usart;
 extern const usart_cfg_t kline_usart;
 extern const lcd_cfg_t lcd_cfg;
-
+extern const pwm_cfg_t buz_cfg;

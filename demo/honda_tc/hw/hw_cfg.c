@@ -164,3 +164,23 @@ const lcd_cfg_t lcd_cfg = {
         }
     },
 };
+
+const pwm_cfg_t buz_cfg = {
+    .ch = 2,
+    .ch_n = 1,
+    .freq = 4000,
+    .max_val = 200,
+    .pclk = PCLK_TIM1,
+    .tim = TIM1,
+    .gpio = &(const gpio_t){
+        .gpio = {
+            .port = GPIO_PORT_B,
+            .pin = 0,
+        },
+        .cfg = {
+            .mode = GPIO_MODE_AF,
+            .speed = GPIO_SPEED_HIGH,
+            .type = GPIO_TYPE_PP,
+        }
+    }
+};
