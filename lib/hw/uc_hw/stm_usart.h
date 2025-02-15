@@ -22,9 +22,13 @@ struct usart_cfg {
     pclk_t pclk;
     uint8_t irqn;
     union {
-        void (*tx_dma_handler)(void);
-        void (*tx_empty_handler)(void);
+        void (*rx_dma_irq_handler)(void);
+        void (*rx_byte_handler)(char c);
     };
+    void (*tx_dma_irq_handler)(void);
+    void (*usart_irq_handler)(void);
+
 };
 
-void usart_dma_tx_end_handler(const usart_cfg_t * usart);
+void usart_dma_tx_end_irq_handler(const usart_cfg_t * usart);
+void usart_irq_handler(const usart_cfg_t * usart);

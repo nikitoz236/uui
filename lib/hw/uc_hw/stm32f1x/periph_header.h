@@ -4,6 +4,7 @@
 #define TDR DR
 
 #define USART_ISR_TXE       USART_SR_TXE
+#define USART_ISR_RXNE      USART_SR_RXNE
 
 #define DMA_CCR_EN          DMA_CCR1_EN
 #define DMA_CCR_TCIE        DMA_CCR1_TCIE

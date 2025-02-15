@@ -128,7 +128,7 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
     }
 }
 
-void usart_dma_tx_end_handler(const usart_cfg_t * usart)
+void usart_dma_tx_end_irq_handler(const usart_cfg_t * usart)
 {
     // в прерывании мы оказываемся когда dma досчитает до 0
     // в такой момент нужно либо запустить новую транзакцию если накидали еще данных
@@ -175,11 +175,18 @@ void usart_set_cfg(const usart_cfg_t * usart)
     usart->usart->CR2 = 0;
     usart->usart->CR3 = 0;
 
+    if (usart->usart_irq_handler) {
+        NVIC_SetHandler(usart->irqn, usart->usart_irq_handler);
+        NVIC_EnableIRQ(usart->irqn);
+    }
+
     if (usart->rx_pin != 0) {
         init_gpio(usart->rx_pin);
         usart->usart->CR1 |= USART_CR1_RE;
 
-        if (usart->rx_dma.dma_ch != 0) {
+        if (usart->rx_byte_handler) {
+            usart->usart->CR1 |= USART_CR1_RXNEIE;
+        } else if (usart->rx_dma.dma_ch != 0) {
             unsigned dma_rx_ch = usart->rx_dma.dma_ch;
             dma_channel(dma_rx_ch)->CCR = 0;
             dma_enable_mem_inc(dma_rx_ch);
@@ -205,8 +212,8 @@ void usart_set_cfg(const usart_cfg_t * usart)
             if (usart->tx_dma.size != 0) {
                 usart->tx_dma.rb->head = 0;
                 usart->tx_dma.rb->tail = 0;
-                if (usart->tx_dma_handler) {
-                    dma_set_handler(dma_tx_ch, usart->tx_dma_handler);
+                if (usart->tx_dma_irq_handler) {
+                    dma_set_handler(dma_tx_ch, usart->tx_dma_irq_handler);
                     dma_enable_irq_full(dma_tx_ch);
                     dma_enable_nvic_irq(dma_tx_ch);
                 }
@@ -247,4 +254,13 @@ unsigned usart_is_rx_available(const usart_cfg_t * usart)
         return 0;
     }
     return 1;
+}
+
+void usart_irq_handler(const usart_cfg_t * usart)
+{
+    if (usart->usart->ISR & USART_ISR_RXNE) {
+        if (usart->rx_byte_handler) {
+            usart->rx_byte_handler(usart->usart->RDR);
+        }
+    }
 }
