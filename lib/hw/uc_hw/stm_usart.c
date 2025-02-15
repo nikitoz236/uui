@@ -174,6 +174,7 @@ void usart_set_cfg(const usart_cfg_t * usart)
     usart->usart->CR1 = 0;
     usart->usart->CR2 = 0;
     usart->usart->CR3 = 0;
+    usart->usart->ISR = 0;
 
     if (usart->usart_irq_handler) {
         NVIC_SetHandler(usart->irqn, usart->usart_irq_handler);
