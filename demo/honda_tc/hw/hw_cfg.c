@@ -64,6 +64,13 @@ const usart_cfg_t debug_usart = {
     .irqn = USART1_IRQn
 };
 
+void kline_usart_irq_handler(void)
+{
+    usart_irq_handler(&kline_usart);
+}
+
+void kline_rx_byte_handler(char byte);
+
 const usart_cfg_t kline_usart = {
     .usart = USART3,
     .default_baud = 9600,
@@ -92,12 +99,14 @@ const usart_cfg_t kline_usart = {
         .dma_ch = 2,
         .size = 0,
     },
-    .rx_dma = {
-        .dma_ch = 3,
-        .size = 0,
-    },
+    // .rx_dma = {
+    //     .dma_ch = 3,
+    //     .size = 0,
+    // },
     .pclk = PCLK_USART3,
-//     .irqn = USART3_IRQn
+    .irqn = USART3_IRQn,
+    .usart_irq_handler = kline_usart_irq_handler,
+    .rx_byte_handler = kline_rx_byte_handler
 };
 
 
