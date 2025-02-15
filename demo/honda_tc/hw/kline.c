@@ -16,7 +16,7 @@ void kline_start_transaction(uint8_t * data, unsigned len, uint8_t * response, u
 {
     rx_buf = response;
     rx_idx = 0;
-    rx_len = resp_len + len;
+    rx_len = resp_len;
 
     // usart_rx(&kline_usart, response, resp_len);
     usart_tx(&kline_usart, data, len);

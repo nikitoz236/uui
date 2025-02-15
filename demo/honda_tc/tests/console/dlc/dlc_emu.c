@@ -27,7 +27,7 @@ static const mem_map_t honda_units_map[] = {
         (OBD_RPM / 64),						// 0x00		rpm * 4 high byte
         ((OBD_RPM % 64) * 4),				// 0x01		rpm * 4 low byte
         OBD_SPEED_KMH,						// 0x02		speed km/h
-                        0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x41, 0xA1, 0x00, 0x00, 0x01,
+                          0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x41, 0xA1, 0x00, 0x00, 0x01,
         0x29, 0x6C, 0x30, 0x00, 0x19, 0x13, 0x00, 0x93, 0x84, 0xFF, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00,
         0x83, 0x00, 0x80, 0x00, 0x02, 0x74, 0x54, 0x00, 0x17, 0x61, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x2D, 0x37, 0x00, 0x2D, 0x07, 0x2D, 0x19, 0x19, 0x19, 0x00, 0x03, 0x00, 0x00, 0x00,
@@ -88,6 +88,7 @@ void kline_start_transaction(uint8_t * data, unsigned len, uint8_t * response, u
     } kline_request_t;
 
     kline_request_t * req = (kline_request_t *)data;
+    uint8_t * r = &response[sizeof(kline_request_t)];
     if (req->frame_len != 5) {
         printf("        DLC EMU ERROR. frame_len != 5\n");
         return;
@@ -111,17 +112,17 @@ void kline_start_transaction(uint8_t * data, unsigned len, uint8_t * response, u
         printf("        DLC EMU ERROR. out of read memory\n");
         return;
     }
-    if (resp_len != (req->len + 3)) {
+    if (resp_len != (sizeof(kline_request_t) + req->len + 3)) {
         printf("        DLC EMU ERROR. wrong request len or resp_len\n");
         return;
     }
     if (emu_engine_state) {
         data_requested = 1;
-        response[0] = 0;
-        response[1] = req->len + 3;
-        str_cp(&response[2], &map->data[req->offset], req->len);
-        response[req->len + 2] = calc_cs(response, req->len + 2);
-        mstimer_start_timeout(&timeout, 100);
+        r[0] = 0;
+        r[1] = req->len + 3;
+        str_cp(&r[2], &map->data[req->offset], req->len);
+        r[req->len + 2] = calc_cs(r, req->len + 2);
+        mstimer_start_timeout(&timeout, 200);
     }
 }
 
