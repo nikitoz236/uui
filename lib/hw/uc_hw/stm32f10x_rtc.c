@@ -1,5 +1,5 @@
-#include "stm32f10x.h"
-#include "stm32f10x_rcc.h"
+#include "periph_header.h"
+#include "periph_pclk.h"
 #include "rtc.h"
 #include "dp.h"
 
@@ -19,7 +19,9 @@ static void rtc_exit_configuration_mode(void)
 
 void init_rtc(void)
 {
-    RCC->APB1ENR |= RCC_APB1ENR_BKPEN + RCC_APB1ENR_PWREN;
+    pclk_ctrl(&(pclk_t)PCLK_BKP, 1);
+    pclk_ctrl(&(pclk_t)PCLK_PWR, 1);
+
     PWR->CR |= PWR_CR_DBP;
 
     if ((RCC->BDCR & RCC_BDCR_RTCEN) == 0) {
