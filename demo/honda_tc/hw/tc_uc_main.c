@@ -86,7 +86,8 @@ int main(void)
     usart_set_cfg(&debug_usart);
     usart_set_cfg(&kline_usart);
 
-    dpn("\n\nHONDA K-line trip computer");
+    dn();
+    dpn("\n\n\nHONDA K-line trip computer");
 
     // // init_lcd_hw(&lcd_cfg);
     // // lcd_bl(4);

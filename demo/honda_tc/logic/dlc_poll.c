@@ -140,21 +140,22 @@ static void dlc_next(void)
 
 static void dlc_first(void)
 {
+    dpn("dlc_first");
     current_unit = HONDA_UNIT_ECU;
     dlc_prepare(current_unit, 0, 16);
     next_address = 16;
 }
 
-unsigned check_rx_frame_valid(void)
+unsigned check_rx_frame_valid(uint8_t * data)
 {
-    if (kline_rx_buf[0] != rx_type) {
+    if (data[0] != rx_type) {
         return 0;
     }
-    if (kline_rx_buf[1] != kline_request.len + 3) {
+    if (data[1] != kline_request.len + 3) {
         return 0;
     }
-    uint8_t cs = calc_cs(kline_rx_buf, kline_request.len + 2);
-    if (cs != kline_rx_buf[kline_request.len + 2]) {
+    uint8_t cs = calc_cs(data, kline_request.len + 2);
+    if (cs != data[kline_request.len + 2]) {
         return 0;
     }
     return 1;
@@ -169,7 +170,9 @@ static void dlc_send_request(void)
 static void dlc_poll_process_rx_data(void)
 {
     dpn("DLC poll process rx data");
-    if (check_rx_frame_valid()) {
+    uint8_t * data = &kline_rx_buf[sizeof(kline_request)];
+
+    if (check_rx_frame_valid(data)) {
         if (engine_state == 0) {
             engine_state = 1;
             tc_engine_set_status(1);
@@ -177,10 +180,10 @@ static void dlc_poll_process_rx_data(void)
         if (dump_poll) {
             dump_addr = kline_request.offset;
             dump_len = kline_request.len;
-            str_cp(dump_data, &kline_rx_buf[2], kline_request.len);
+            str_cp(dump_data, &data[2], kline_request.len);
         }
         if (current_unit == HONDA_UNIT_ECU) {
-            metric_ecu_data_ready(kline_request.offset, &kline_rx_buf[2], kline_request.len);
+            metric_ecu_data_ready(kline_request.offset, &data[2], kline_request.len);
         }
         dlc_next();
     }
