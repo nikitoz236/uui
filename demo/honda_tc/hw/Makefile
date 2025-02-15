@@ -12,7 +12,7 @@ OPT = -Os
 DEF += STM32F10X_MD
 SRC += $(TARGET).c
 SRC += hw_cfg.c
-SRC += kline.c 
+SRC += kline.c
 
 INC += .
 INC += $(LIB)/common
@@ -29,6 +29,7 @@ SRC += $(LIB)/hw/uc_hw/stm32f1x/periph_spi.c
 SRC += $(LIB)/hw/uc_hw/systick.c
 SRC += $(LIB)/hw/uc_hw/stm_usart.c
 SRC += $(LIB)/hw/uc_hw/stm_pwm.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_rtc.c
 
 SRC += $(LIB)/hw/drivers/lcd_spi.c
 SRC += $(LIB)/hw/drivers/lcd_ili9341.c

@@ -89,10 +89,10 @@ int main(void)
     dn();
     dpn("\n\n\nHONDA K-line trip computer");
 
-    // // init_lcd_hw(&lcd_cfg);
-    // // lcd_bl(4);
+    init_lcd_hw(&lcd_cfg);
+    lcd_bl(4);
 
-    // init_rtc();
+    init_rtc();
 
     // unsigned rtc_last = 0;
 
