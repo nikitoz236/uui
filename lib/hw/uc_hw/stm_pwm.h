@@ -13,4 +13,5 @@ struct pwm_cfg {
     unsigned freq;
     uint16_t max_val;
     uint8_t ch;     // 1 ... 4 like in datasheet
+    uint8_t ch_n;   // 0 or 1 for N ch
 };
