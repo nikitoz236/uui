@@ -17,3 +17,4 @@ typedef enum {
 const char * honda_dlc_unit_name(honda_unit_t unit);
 uint8_t honda_dlc_unit_address(honda_unit_t unit);
 unsigned honda_dlc_unit_len(honda_unit_t unit);
+unsigned honda_dlc_unit_from_address(uint8_t addr, honda_unit_t * unit);

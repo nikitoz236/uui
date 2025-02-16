@@ -7,6 +7,7 @@ SRC += ./dlc_emu.c
 
 INC += ./$(PROJECT)/logic/
 SRC += ./$(PROJECT)/logic/dlc_poll.c
+SRC += ./$(PROJECT)/logic/honda_dlc_units.c
 
 INC += ./$(LIB)/emu/console/
 SRC += ./$(LIB)/emu/console/console_getc.c

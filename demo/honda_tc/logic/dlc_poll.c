@@ -3,6 +3,7 @@
 #include "mstimer.h"
 #include "kline.h"
 #include "dlc_poll.h"
+#include "dlc_frame.h"
 #include "metrics_ecu.h"
 #include "tc.h"
 
@@ -27,28 +28,9 @@ static mstimer_t timeout = {};
 #define UNIT_RESPONCE_TIMEOUT           200
 #define UNIT_NEXT_POLL_TRY              2000
 
-uint8_t engine_state = 0;
+static uint8_t engine_state = 0;
 
-typedef struct {
-    uint8_t cmd;
-    unsigned len;
-} dlc_unit_desc_t;
-
-static const dlc_unit_desc_t honda_units_desc[] = {
-    [HONDA_UNIT_ECU] = { .cmd = 0x20, .len = 0x100 },
-    [HONDA_UNIT_ABS] = { .cmd = 0xA0, .len = 0x80 },
-    [HONDA_UNIT_SRS] = { .cmd = 0x60, .len = 0x80 },
-};
-
-typedef struct {
-    uint8_t cmd;
-    uint8_t frame_len;
-    uint8_t offset;
-    uint8_t len;
-    uint8_t cs;
-} kline_request_t;
-
-static kline_request_t kline_request = {};
+static kline_request_t dlc_req = {};
 static uint8_t rx_type = 0;
 
 static uint8_t kline_rx_buf[32] = {};
@@ -64,26 +46,17 @@ static honda_unit_t dump_unit = HONDA_UNIT_COUNT;       // no active
 static honda_unit_t current_unit = HONDA_UNIT_ECU;
 static unsigned next_address = 0;
 
-static uint8_t calc_cs(uint8_t * data, unsigned len)
-{
-    uint8_t cs = 0;
-    while (len--) {
-        cs -= *data++;
-    }
-    return cs;
-}
-
 static void dlc_prepare(honda_unit_t unit, uint8_t offset, uint8_t len)
 {
     if (unit >= HONDA_UNIT_COUNT) {
         return;
     }
 
-    kline_request.cmd = honda_units_desc[unit].cmd;
-    kline_request.frame_len = sizeof(kline_request);
-    kline_request.offset = offset;
-    kline_request.len = len;
-    kline_request.cs = calc_cs((uint8_t *)&kline_request, offsetof(kline_request_t, cs));
+    dlc_req.cmd = honda_dlc_unit_address(unit);
+    dlc_req.frame_len = sizeof(kline_request_t);
+    dlc_req.offset = offset;
+    dlc_req.len = len;
+    dlc_req.cs = calc_cs((uint8_t *)&dlc_req, offsetof(kline_request_t, cs));
 
     rx_type = 0;                    // ожидаемый тип ответ
 
@@ -118,9 +91,10 @@ static void dlc_next(void)
         между запросами на дамп обязательно будет вставлен один цикл опроса ECU
     */
     uint8_t len = 16;
-    if (next_address < honda_units_desc[current_unit].len) {
-        if ((next_address + len) >= honda_units_desc[current_unit].len) {
-            len = honda_units_desc[current_unit].len - next_address;
+    unsigned unit_max_addr = honda_dlc_unit_len(current_unit);
+    if (next_address < unit_max_addr) {
+        if ((next_address + len) >= unit_max_addr) {
+            len = unit_max_addr - next_address;
         }
     } else {
         if (dump_poll) {
@@ -150,17 +124,17 @@ static void dlc_first(void)
 
 unsigned check_rx_frame_valid(void)
 {
-    dp("check_rx_frame_valid: "); dpxd(kline_responce, 1, kline_request.len + 3);
+    dp("check_rx_frame_valid: "); dpxd(kline_responce, 1, dlc_req.len + 3);
     if (kline_responce[0] != rx_type) {
         dpn("    wrong rx_type");
         return 0;
     }
-    if (kline_responce[1] != kline_request.len + 3) {
+    if (kline_responce[1] != dlc_req.len + 3) {
         dpn("    wrong len");
         return 0;
     }
-    uint8_t cs = calc_cs(kline_responce, kline_request.len + 2);
-    if (cs != kline_responce[kline_request.len + 2]) {
+    uint8_t cs = calc_cs(kline_responce, dlc_req.len + 2);
+    if (cs != kline_responce[dlc_req.len + 2]) {
         dp("    wrong cs: "); dpx(cs, 1); dn();
         return 0;
     }
@@ -170,7 +144,7 @@ unsigned check_rx_frame_valid(void)
 
 static void dlc_send_request(void)
 {
-    kline_start_transaction((uint8_t *)&kline_request, sizeof(kline_request), kline_rx_buf, sizeof(kline_request_t) + kline_request.len + 3);
+    kline_start_transaction((uint8_t *)&dlc_req, sizeof(kline_request_t), kline_rx_buf, sizeof(kline_request_t) + dlc_req.len + 3);
     mstimer_start_timeout(&timeout, UNIT_RESPONCE_TIMEOUT);
 }
 
@@ -184,12 +158,12 @@ static void dlc_poll_process_rx_data(void)
             tc_engine_set_status(1);
         }
         if (dump_poll) {
-            dump_addr = kline_request.offset;
-            dump_len = kline_request.len;
-            str_cp(dump_data, &kline_responce[2], kline_request.len);
+            dump_addr = dlc_req.offset;
+            dump_len = dlc_req.len;
+            str_cp(dump_data, &kline_responce[2], dlc_req.len);
         }
         if (current_unit == HONDA_UNIT_ECU) {
-            metric_ecu_data_ready(kline_request.offset, &kline_responce[2], kline_request.len);
+            metric_ecu_data_ready(dlc_req.offset, &kline_responce[2], dlc_req.len);
         }
         dlc_next();
     }

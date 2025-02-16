@@ -1,8 +1,9 @@
+#include <stdio.h>
 #include <stdint.h>
 #include "mstimer.h"
 #include "str_utils.h"
 #include "honda_dlc_units.h"
-#include <stdio.h>
+#include "dlc_frame.h"
 
 #define OBD_SPEED_KMH			123
 #define OBD_RPM					4567
@@ -16,14 +17,8 @@ void emu_engine_ctrl(unsigned state)
     emu_engine_state = state;
 }
 
-typedef struct {
-    unsigned len;
-    uint8_t * data;
-    uint8_t cmd;
-} mem_map_t;
-
-static const mem_map_t honda_units_map[] = {
-    [HONDA_UNIT_ECU] = { .cmd = 0x20, .len = 0x100, .data = (uint8_t []){
+static const uint8_t * honda_units_map[] = {
+    [HONDA_UNIT_ECU] = (uint8_t []){
         (OBD_RPM / 64),						// 0x00		rpm * 4 high byte
         ((OBD_RPM % 64) * 4),				// 0x01		rpm * 4 low byte
         OBD_SPEED_KMH,						// 0x02		speed km/h
@@ -43,8 +38,8 @@ static const mem_map_t honda_units_map[] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    } },
-    [HONDA_UNIT_ABS] = { .cmd = 0xA0, .len = 0x80, .data = (uint8_t []){
+    },
+    [HONDA_UNIT_ABS] = (uint8_t []){
         0x00, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF4,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA,
@@ -53,8 +48,8 @@ static const mem_map_t honda_units_map[] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x4C,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x00, 0xCA, 0xFE,
         0x03, 0x0D, 0x02, 0x00, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    } },
-    [HONDA_UNIT_SRS] = { .cmd = 0x60, .len = 0x80, .data = (uint8_t []){
+    },
+    [HONDA_UNIT_SRS] = (uint8_t []){
         0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x10, 0x00, 0x00, 0x03, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -63,65 +58,50 @@ static const mem_map_t honda_units_map[] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x0A, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    } },
+    },
 };
 
 static mstimer_t timeout;
 
-static uint8_t calc_cs(uint8_t * data, unsigned len)
-{
-    uint8_t cs = 0;
-    while (len--) {
-        cs -= *data++;
-    }
-    return cs;
-}
-
 void kline_start_transaction(uint8_t * data, unsigned len, uint8_t * response, unsigned resp_len)
 {
-    typedef struct {
-        uint8_t cmd;
-        uint8_t frame_len;
-        uint8_t offset;
-        uint8_t len;
-        uint8_t cs;
-    } kline_request_t;
-
     kline_request_t * req = (kline_request_t *)data;
-    uint8_t * r = &response[sizeof(kline_request_t)];
-    if (req->frame_len != 5) {
+    uint8_t * resp = &response[sizeof(kline_request_t)];
+
+    if (req->frame_len != sizeof(kline_request_t)) {
         printf("        DLC EMU ERROR. frame_len != 5\n");
         return;
     }
-    if (calc_cs(data, 4) != req->cs) {
+
+    if (calc_cs(data, sizeof(kline_request_t)) != 0) {
         printf("        DLC EMU ERROR. wrong req cs\n");
         return;
     }
-    const mem_map_t * map = 0;
-    for (unsigned i = 0; i < HONDA_UNIT_COUNT; i++) {
-        if (honda_units_map[i].cmd == req->cmd) {
-            map = &honda_units_map[i];
-            break;
-        }
-    }
-    if (map == 0) {
-        printf("        DLC EMU ERROR. unknown cmd\n");
-        return;
-    }
-    if ((req->offset + req->len) > map->len) {
-        printf("        DLC EMU ERROR. out of read memory\n");
-        return;
-    }
+
     if (resp_len != (sizeof(kline_request_t) + req->len + 3)) {
         printf("        DLC EMU ERROR. wrong request len or resp_len\n");
         return;
     }
+
+    honda_unit_t unit;
+    if (honda_dlc_unit_from_address(req->cmd, &unit) == 0) {
+        printf("        DLC EMU ERROR. unknown cmd\n");
+        return;
+    }
+
+    if ((req->offset + req->len) > honda_dlc_unit_len(unit)) {
+        printf("        DLC EMU ERROR. out of read memory\n");
+        return;
+    }
+
+    const uint8_t * map = honda_units_map[unit];
+
     if (emu_engine_state) {
         data_requested = 1;
-        r[0] = 0;
-        r[1] = req->len + 3;
-        str_cp(&r[2], &map->data[req->offset], req->len);
-        r[req->len + 2] = calc_cs(r, req->len + 2);
+        resp[0] = 0;
+        resp[1] = req->len + 3;
+        str_cp(&resp[2], &map[req->offset], req->len);
+        resp[req->len + 2] = calc_cs(resp, req->len + 2);
         mstimer_start_timeout(&timeout, 200);
     }
 }
