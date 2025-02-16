@@ -81,7 +81,7 @@ const usart_cfg_t kline_usart = {
         },
         .cfg = {
             .mode = GPIO_MODE_INPUT,
-            .pull = GPIO_PULL_NONE,
+            .pull = GPIO_PULL_UP,
         }
     },
     .tx_pin = &(const gpio_t) {
@@ -92,7 +92,7 @@ const usart_cfg_t kline_usart = {
         .cfg = {
             .mode = GPIO_MODE_AF,
             .speed = GPIO_SPEED_HIGH,
-            .type = GPIO_TYPE_PP,
+            .type = GPIO_TYPE_OD,
         }
     },
     .tx_dma = {
