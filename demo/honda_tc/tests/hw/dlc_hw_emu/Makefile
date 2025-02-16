@@ -16,6 +16,10 @@ DEF += STM32F051
 INC += .
 
 SRC += $(TARGET).c
+SRC += dlc_parse.c
+
+INC += ../../../logic
+SRC += ../../../logic/honda_dlc_units.c
 
 INC += $(LIB)/hw/uc_hw/stm32f0x
 
