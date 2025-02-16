@@ -22,8 +22,9 @@ BIN = $(CP) -O binary -S
 MCU = $(CPU) -mthumb
 
 OOCD ?= openocd
-OOCD_INTERFACE ?= stlink-v2-1
+OOCD_INTERFACE ?= stlink
 FLASH_TARGET ?= $(BUILD_DIR)/$(TARGET).bin
+OOCD_INTERFACE_FILE ?= interface/$(OOCD_INTERFACE).cfg
 
 include $(wildcard $(BUILD_DIR)/*.d)
 
@@ -64,18 +65,18 @@ hex_dump: $(BUILD_DIR)/$(TARGET).bin
 	xxd -g1 $< | less
 
 flash_reset: $(FLASH_TARGET)
-	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	$(OOCD) -f $(OOCD_INTERFACE_FILE) \
 	-f target/$(OPENOCD_TARGET).cfg \
 	-c "reset_config srst_only srst_nogate connect_assert_srst" \
 	-c "program $(FLASH_TARGET) verify 0x8000000; reset run; exit"
 
 flash: $(FLASH_TARGET)
-	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	$(OOCD) -f $(OOCD_INTERFACE_FILE) \
 	-f target/$(OPENOCD_TARGET).cfg \
 	-c "program $(FLASH_TARGET) verify 0x8000000; reset run; exit"
 
 dump:
-	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	$(OOCD) -f $(OOCD_INTERFACE_FILE) \
 	-f target/$(OPENOCD_TARGET).cfg \
 	-c "init" \
 	-c "reset halt" \
@@ -87,7 +88,7 @@ dump:
 
 erase:
 	@echo ERASE
-	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	$(OOCD) -f $(OOCD_INTERFACE_FILE) \
 	-f target/$(OPENOCD_TARGET).cfg \
 	-c "init" \
 	-c "reset halt" \
@@ -96,7 +97,7 @@ erase:
 
 reset:
 	@echo RESET
-	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	$(OOCD) -f $(OOCD_INTERFACE_FILE) \
 	-f target/$(OPENOCD_TARGET).cfg \
 	-c "init" \
 	-c "reset run" \
@@ -104,7 +105,7 @@ reset:
 
 swd_dbg: $(BUILD_DIR)/$(TARGET).elf
 	$(shell gnome-terminal -- arm-none-eabi-gdb $< -ex "target remote localhost:3333")
-	$(OOCD) -f interface/$(OOCD_INTERFACE).cfg \
+	$(OOCD) -f $(OOCD_INTERFACE_FILE) \
 	-f target/$(OPENOCD_TARGET).cfg
 
 minicom:

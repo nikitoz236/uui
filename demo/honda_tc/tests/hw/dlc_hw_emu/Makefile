@@ -8,7 +8,8 @@ LDSCRIPT = stm32f051x8.ld
 STACK_SIZE = 512
 OPT = -Os
 
-OPENOCD_TARGET ?= stm32f0x
+OPENOCD_TARGET = stm32f0x
+OOCD_INTERFACE_FILE = ./second_stlink.cfg
 
 DEF += STM32F051
 

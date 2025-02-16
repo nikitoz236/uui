@@ -51,7 +51,7 @@ const usart_cfg_t debug_usart = {
             .pin = 10
         },
         .cfg = {
-            .mode = GPIO_MODE_INPUT,
+            .mode = GPIO_MODE_AF,
             .pull = GPIO_PULL_NONE,
             .af = 1
         }
@@ -70,6 +70,20 @@ const usart_cfg_t debug_usart = {
     },
     .pclk = PCLK_USART1,
     .irqn = USART1_IRQn
+};
+
+const gpio_list_t buttons = {
+    .count = 4,
+    .cfg = {
+        .mode = GPIO_MODE_INPUT,
+        .pull = GPIO_PULL_UP,
+    },
+    .pin_list = (gpio_pin_t []){
+        { .port = GPIO_PORT_B, .pin = 0 },      // LU
+        { .port = GPIO_PORT_B, .pin = 1 },      // LD
+        { .port = GPIO_PORT_B, .pin = 3 },      // RU
+        { .port = GPIO_PORT_B, .pin = 4 },      // RD
+    }
 };
 
 void __debug_usart_tx_data(const char * s, unsigned len)
