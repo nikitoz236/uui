@@ -44,8 +44,6 @@ static inline void usart_tx_dma(const usart_cfg_t * usart, const void * data, un
 
 unsigned usart_is_tx_in_progress(const usart_cfg_t * usart);
 
-
-
 void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
 {
     const unsigned buf_size = usart->tx_dma.size;
@@ -61,12 +59,16 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
         }
 
         __DBGPIO_USART_WAIT_AVAILABLE(1);
+
+        dma_disable_irq_full(usart->tx_dma.dma_ch);
         unsigned dma_cnt = dma_get_cnt(usart->tx_dma.dma_ch);
 
         // по сути нужно вычислить 2 значения:
         //  available - сколько мы сейчас данных можем переложить в буфер
         //  len_for_load - сколько данных мы будем перекладывать
         //  cp_len_end - какая часть из этого копируется в конец до переполнения индекса
+        // head - это индекс после которого можно класть новые данные
+        // tail - до этой точки ползет дма
 
         unsigned available = usart->tx_dma.rb->tail;
         if (available <= usart->tx_dma.rb->head) {
@@ -74,6 +76,12 @@ void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
         }
         available -= usart->tx_dma.rb->head;
         available -= dma_cnt;
+
+        dma_enable_irq_full(usart->tx_dma.dma_ch);
+        // ну точно нам нужно атомарно получать available буффера и счетчик без втискивающегося прерывания
+        // можно сделать типа :
+        // unsigned available = rb_available() - dma_get_cnt(usart->tx_dma.dma_ch);
+        // но надо структуру rb_desc_t использовать и поисследовать как выравнивание работает
 
         if (available < len_for_load) {
             // блокируемся
