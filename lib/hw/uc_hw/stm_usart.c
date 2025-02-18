@@ -6,15 +6,21 @@
 
 #define __DBGPIO_USART(n, x);
 
-// extern gpio_pin_t debug_gpio_list[];
-// #define __DBGPIO_USART(n, x)                gpio_set_state(&debug_gpio_list[n], x)
+// extern const gpio_list_t debug_gpio_list;
+// #define __DBGPIO_USART(n, x)                gpio_list_set_state(&debug_gpio_list, n, x)
+
+#define __DBGPIO_USART_IRQ(x)                 __DBGPIO_USART(1, x)
+#define __DBGPIO_USART_IRQ_TXE(x)             __DBGPIO_USART(2, x)
+#define __DBGPIO_USART_RB_PUT(x)              __DBGPIO_USART(0, x)
+#define __DBGPIO_USART_WAIT_RB(x)             __DBGPIO_USART(2, x)
+
 
 #define __DBGPIO_USART_WAIT_AVAILABLE(x)    //  __DBGPIO_USART(1, x)
 #define __DBGPIO_DMA_IRQ(x)                 //  __DBGPIO_USART(2, x)
 #define __DBGPIO_DMA_IRQ_END_BUF(x)         //  __DBGPIO_USART(0, x)
 #define __DBGPIO_USART_START_DMA(x)         //  __DBGPIO_USART(0, x)
-#define __DBGPIO_USART_TX_FUNC(x)           __DBGPIO_USART(1, x)
-#define __DBGPIO_USART_TX_DMA_WAIT_PREV(x)  __DBGPIO_USART(2, x)
+#define __DBGPIO_USART_TX_FUNC(x)           //  __DBGPIO_USART(1, x)
+#define __DBGPIO_USART_TX_DMA_WAIT_PREV(x)  //  __DBGPIO_USART(2, x)
 
 static inline void usart_tx_byte(const usart_cfg_t * usart, char c)
 {
@@ -42,7 +48,11 @@ static inline void usart_tx_dma(const usart_cfg_t * usart, const void * data, un
     dma_start(dma_ch, data, len);
 }
 
+
 unsigned usart_is_tx_in_progress(const usart_cfg_t * usart);
+
+
+
 
 void usart_tx_dma_rb(const usart_cfg_t * usart, const void * data, unsigned len)
 {
@@ -170,6 +180,26 @@ void usart_dma_tx_end_irq_handler(const usart_cfg_t * usart)
     __DBGPIO_DMA_IRQ(0);
 }
 
+void usart_tx_rb(const usart_cfg_t * usart, const void * data, unsigned len)
+{
+    while (len--) {
+        while (rb_is_full(&usart->tx_rb)) {
+            __DBGPIO_USART_WAIT_RB(1);
+        };
+        NVIC_DisableIRQ(usart->irqn);
+        unsigned is_empty = rb_is_empty(&usart->tx_rb);
+        __DBGPIO_USART_RB_PUT(1);
+        rb_put(&usart->tx_rb, *(uint8_t *)data);
+        NVIC_EnableIRQ(usart->irqn);
+        __DBGPIO_USART_RB_PUT(0);
+        __DBGPIO_USART_WAIT_RB(0);
+        data++;
+        if (is_empty) {
+            usart->usart->CR1 |= USART_CR1_TXEIE;
+        }
+    }
+}
+
 void usart_set_baud(const usart_cfg_t * usart, unsigned baud)
 {
     usart->usart->BRR = pclk_f(&usart->pclk) / baud;
@@ -245,7 +275,11 @@ void usart_tx(const usart_cfg_t * usart, const void * data, unsigned len)
             usart_tx_dma(usart, data, len);
         }
     } else {
-        usart_tx_blocking(usart, data, len);
+        if (usart->tx_rb.size) {
+            usart_tx_rb(usart, data, len);
+        } else {
+            usart_tx_blocking(usart, data, len);
+        }
     }
     __DBGPIO_USART_TX_FUNC(0);
 }
@@ -267,9 +301,23 @@ unsigned usart_is_rx_available(const usart_cfg_t * usart)
 
 void usart_irq_handler(const usart_cfg_t * usart)
 {
+    __DBGPIO_USART_IRQ(1);
     if (usart->usart->ISR & USART_ISR_RXNE) {
         if (usart->rx_byte_handler) {
             usart->rx_byte_handler(usart->usart->RDR);
         }
     }
+    if (usart->tx_dma.dma_ch == 0) {
+        if (usart->usart->CR1 & USART_CR1_TXEIE) {
+            __DBGPIO_USART_IRQ_TXE(1);
+            if (usart->usart->ISR & USART_ISR_TXE) {
+                usart->usart->TDR = rb_get(&usart->tx_rb);
+                if (rb_is_empty(&usart->tx_rb)) {
+                    usart->usart->CR1 &= ~USART_CR1_TXEIE;
+                }
+            }
+            __DBGPIO_USART_IRQ_TXE(0);
+        }
+    }
+    __DBGPIO_USART_IRQ(0);
 }

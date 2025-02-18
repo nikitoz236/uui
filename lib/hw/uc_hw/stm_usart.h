@@ -28,6 +28,7 @@ struct usart_cfg {
     void (*tx_dma_irq_handler)(void);
     void (*usart_irq_handler)(void);
 
+    rb_desc_t tx_rb;
 };
 
 void usart_dma_tx_end_irq_handler(const usart_cfg_t * usart);
