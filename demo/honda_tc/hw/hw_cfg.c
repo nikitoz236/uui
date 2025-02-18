@@ -18,7 +18,7 @@ void __debug_usart_tx_data(const char * s, unsigned len)
     usart_tx(&debug_usart, s, len);
 }
 
-#define DEBUG_USART_TX_BUF_SIZE 64
+#define DEBUG_USART_TX_BUF_SIZE 300
 
 struct {    // TODO тоже в библиотеку
     rb_t rb;
@@ -28,6 +28,11 @@ struct {    // TODO тоже в библиотеку
 void debug_usart_dma_hander(void)
 {
     usart_dma_tx_end_irq_handler(&debug_usart);
+}
+
+void debug_usart_irq_handler(void)
+{
+    usart_irq_handler(&debug_usart);
 }
 
 const usart_cfg_t debug_usart = {
@@ -54,11 +59,16 @@ const usart_cfg_t debug_usart = {
             .type = GPIO_TYPE_PP,
         }
     },
-    .tx_dma = {
-        .dma_ch = 4,
-        .size = DEBUG_USART_TX_BUF_SIZE,
-        .rb = &debug_usart_dma_tx_ctx.rb
+    .tx_rb = {
+        .rb = &debug_usart_dma_tx_ctx.rb,
+        .size = DEBUG_USART_TX_BUF_SIZE
     },
+    // .tx_dma = {
+    //     .dma_ch = 4,
+    //     .size = DEBUG_USART_TX_BUF_SIZE,
+    //     .rb = &debug_usart_dma_tx_ctx.rb
+    // },
+    .usart_irq_handler = debug_usart_irq_handler,
     .tx_dma_irq_handler = debug_usart_dma_hander,
     .pclk = PCLK_USART1,
     .irqn = USART1_IRQn

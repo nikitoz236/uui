@@ -40,6 +40,10 @@ SRC += $(LIB)/common/str_utils.c
 
 INC += ../logic
 SRC += ../logic/dlc_poll.c
+SRC += ../logic/honda_dlc_units.c
+# SRC += ../logic/metrics_ecu.c
+# SRC += ../logic/trip_integrate.c
+
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
 

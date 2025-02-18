@@ -32,6 +32,35 @@ void tc_engine_set_status(unsigned state)
     dn();
 }
 
+const gpio_list_t debug_gpio_list = {
+    .count = 3,
+    .cfg = {
+        .mode = GPIO_MODE_OUTPUT,
+        .speed = GPIO_SPEED_HIGH,
+        .type = GPIO_TYPE_PP,
+    },
+    .pin_list = (gpio_pin_t []){
+        { .port = GPIO_PORT_C, .pin = 13 },
+        { .port = GPIO_PORT_B, .pin = 8 },
+        { .port = GPIO_PORT_B, .pin = 9 }
+    }
+};
+
+const gpio_list_t buttons = {
+    .count = 5,
+    .cfg = {
+        .mode = GPIO_MODE_INPUT,
+        .pull = GPIO_PULL_NONE,
+    },
+    .pin_list = (gpio_pin_t []){
+        { .port = GPIO_PORT_B, .pin = 3 },      // LU
+        { .port = GPIO_PORT_A, .pin = 15 },     // LD
+        { .port = GPIO_PORT_B, .pin = 4 },      // RU
+        { .port = GPIO_PORT_B, .pin = 6 },      // RM
+        { .port = GPIO_PORT_B, .pin = 7 },      // RD
+    }
+};
+
 int main(void)
 {
     rcc_apply_cfg(&rcc_cfg);
@@ -48,20 +77,8 @@ int main(void)
 
     pclk_ctrl(&(pclk_t)PCLK_DMA1, 1);
 
-    // gpio_cfg_t led_pin_cfg = {
-    //     .mode = GPIO_MODE_OUTPUT,
-    //     .speed = GPIO_SPEED_LOW,
-    //     .type = GPIO_TYPE_PP,
-    //     .pull = GPIO_PULL_NONE,
-    // };
-
-    // gpio_pin_t led_pin = {
-    //     .port = GPIO_PORT_C,
-    //     .pin = 13,
-    // };
-
-    // gpio_set_cfg(&led_pin, &led_pin_cfg);
-    // gpio_set_state(&led_pin, 0);
+    init_gpio_list(&buttons);
+    init_gpio_list(&debug_gpio_list);
 
     init_systick();
     __enable_irq();
