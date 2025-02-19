@@ -1,5 +1,9 @@
 #include <stdio.h>
+
+#define DP_NAME "main"
 #include "dp.h"
+
+void second_module_dp(void);
 
 int main()
 {
@@ -9,6 +13,10 @@ int main()
     dpn("just next str");
     dp("hex val: "); dpx(0xABCD, 2); dn();
     dp("hex dump: "); dpxd(&main, 1, 16); dn();
+
+    dpl(0, 20); dpn("<");
+
+    second_module_dp();
 
     dpl("fuck", 7); dpn("<");
 

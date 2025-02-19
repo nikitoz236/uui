@@ -1,5 +1,7 @@
 LIB = ../../../lib
 
+SRC += second_module_dp.c
+
 INC += $(LIB)/common
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
