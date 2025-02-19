@@ -317,6 +317,10 @@ static unsigned process(ui_element_t * el, unsigned event)
             lcd_color_text_raw_print(0, label_restart.tl.tfcfg->fcfg, &(color_scheme_t){ .bg = bg[el->active] }, &ctx->tp, 0, &label_restart.tl.pos, label_restart.tl.len);
             update(el);
         } else {
+            if ((el->idx == ROUTE_TYPE_TRIP) || (el->idx == ROUTE_TYPE_TOTAL) || (el->idx == ROUTE_TYPE_DAY)) {
+                return 1;
+            }
+
             ctx->restart_engaged = 1;
             print_label(&label_restart, ctx->tp, 0, el->active, ctx);
         }

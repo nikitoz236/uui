@@ -9,6 +9,9 @@
 #include "emu_storage.h"
 #include "storage.h"
 
+#include "date_time.h"
+#include "rtc.h"
+
 int time_zone_get(void)
 {
     return 5 * 60 * 60;
@@ -31,6 +34,9 @@ ui_node_desc_t ui = {
 int main()
 {
     printf("test route lists\r\n");
+
+    init_rtc();
+    rtc_set_time_s(date_time_to_s(&(date_t){ .y = 2025, .m = MONTH_FEB, .d = 19 }, &(time_t){ .h = 11, .m = 43, .s = 12 }));
 
     emu_storage_load();
 
