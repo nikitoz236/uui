@@ -4,6 +4,7 @@
 #include "str_utils.h"
 #include "storage.h"
 
+#define DP_NAME "ROUTES"
 #include "dp.h"
 
 /*
@@ -233,6 +234,7 @@ void route_trip_start(void)
 
 static void route_reset_counters(route_t route)
 {
+    dp("resert "); dp(route_name(route)); dn();
     if (route == ROUTE_TYPE_TOTAL) {
         return;
     }
@@ -240,7 +242,10 @@ static void route_reset_counters(route_t route)
         return;
     }
     for (unsigned type = 0; type <= ROUTE_VALUE_TIME; type++) {
-        route_start[route][type] = total_get_value(type);
+        //  ROUTE_VALUE_DIST
+        //  ROUTE_VALUE_FUEL
+        //  ROUTE_VALUE_TIME
+        route_start[route][type] = route_start[ROUTE_TYPE_TOTAL][type];
     }
     route_start[route][ROUTE_VALUE_SINCE_TIME] = rtc_get_time_s();
 }
@@ -253,7 +258,7 @@ void route_reset(route_t route)
 
 static void route_starts_load(void)
 {
-    dpn("\nroute load");
+    dpn("route load");
     unsigned len = 0;
     const unsigned * total_start_odo_ptr = storage_search_file(ROUTES_FILE_ID, &len);
     if (len == sizeof(unsigned)) {
