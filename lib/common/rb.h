@@ -2,8 +2,8 @@
 #include <stdint.h>
 
 typedef struct {
-    uint16_t head;          // данные кладутся по этому индексу
-    uint16_t tail;          // догоняет head, данные забираются по этому индексу
+    volatile uint16_t head;          // данные кладутся по этому индексу
+    volatile uint16_t tail;          // догоняет head, данные забираются по этому индексу
     uint8_t data[];
 } rb_t;
 
