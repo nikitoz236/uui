@@ -7,6 +7,7 @@
 #include "metrics_ecu.h"
 #include "tc.h"
 
+#define DP_NAME "DLC POLL"
 #include "dp.h"
 
 /*
@@ -150,7 +151,7 @@ static void dlc_send_request(void)
 
 static void dlc_poll_process_rx_data(void)
 {
-    dpn("DLC poll process rx data");
+    dpn("process rx data");
 
     if (check_rx_frame_valid()) {
         if (engine_state == 0) {
@@ -172,7 +173,7 @@ static void dlc_poll_process_rx_data(void)
 
 static void dlc_poll_process_timeout(void)
 {
-    dpn("DLC poll process timeout");
+    dpn("process timeout");
     if (engine_state) {
         engine_state = 0;
         tc_engine_set_status(0);

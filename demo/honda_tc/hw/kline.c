@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include "config.h"
+
+#define DP_NAME "K-LINE"
 #include "dp.h"
 
 static uint8_t * rx_buf = 0;
