@@ -22,6 +22,7 @@ INC += $(LIB)/graphic/forms
 
 # text_field.h
 INC += $(LIB)/graphic/text
+SRC += $(LIB)/graphic/text/text_label_color.c
 
 SRC += $(LIB)/graphic/lcd_text.c
 SRC += $(LIB)/graphic/forms/forms_align.c
