@@ -13,16 +13,16 @@ typedef struct {
 } text_field_t;
 
 typedef struct {
-    const text_field_t * tfcfg;
+    const text_field_t * tfcfg;                     // текстовое поле
     union {
         const char * text;
         const char * (*to_str)(unsigned idx);
     };
-    xy_t pos;
-    uint16_t len;
-    val_text_t vt;
-    val_rep_t rep;
-    uint16_t offset;
+    xy_t pos;                                       // положение знакоместа
+    uint16_t len;                                   // в какую длину поля поместить
+    val_text_t vt;                                  // отрисовка
+    val_rep_t rep;                                  // представление в памяти
+    uint16_t offset;                                // смещение в памяти
 } text_field_label_t;
 
 typedef struct {
@@ -42,3 +42,54 @@ static inline xy_t text_field_text_pos(const form_t * f, const text_field_t * cf
 {
     return align_form_pos(f, lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->a, cfg->padding);
 }
+
+
+/*
+
+итак значит мне сейчас надо сейчас нахуевертить механизм отрисовки чегонибудь
+
+у тебя есть текстовое поле и к нему массив структур, количество структур.
+
+даже несколько массивов. статический и динамический
+
+для статической надписи тебе надо либо указатель на текст, либо на указатель по индексу
+
+для динамической надписи тебе надо указатель на функцию которая преобразует значение в текст
+
+*/
+
+typedef struct {
+    const char * text;
+    const char * (*to_str)(unsigned x);
+    xy_t pos_char;
+    uint16_t len;
+} label_static_t;
+
+typedef struct {
+    union {
+        const char * (*to_str)(unsigned x);
+    };
+    xy_t pos_char;
+    uint16_t len;
+    uint16_t offset;
+    val_rep_t rep;
+    val_text_t vt;
+    uint8_t sub_label : 1;
+} label_value_t;
+
+typedef struct {
+    const text_field_t * tfcfg;
+    xy_t pos;
+} tf_ctx_t;
+
+
+// typedef struct {
+//     union {
+//         const char * text;
+//         const char * (*to_str)(unsigned x);
+//         val_text_t vt;
+//     };
+//     xy_t pos_char;
+// };
+
+
