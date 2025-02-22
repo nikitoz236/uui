@@ -165,7 +165,7 @@ const label_value_t labels_route_since[] = {
 
 static void ctx_update_time(struct route_time * rt, unsigned time_s)
 {
-    printf("calc time %d ptr %p\n", time_s, rt);
+    // printf("calc time %d ptr %p\n", time_s, rt);
     rt->s = time_s % 60;
     time_s /= 60;
     rt->m = time_s % 60;
@@ -174,7 +174,7 @@ static void ctx_update_time(struct route_time * rt, unsigned time_s)
 
 static void ctx_update_since(struct route_since * rs, unsigned since_s)
 {
-    printf("calc since %d ptr %p\n", since_s, rs);
+    // printf("calc since %d ptr %p\n", since_s, rs);
     date_from_s(&rs->d, since_s);
     time_from_s(&rs->t, since_s);
 }
@@ -247,7 +247,7 @@ static void update(ui_element_t * el)
 
     struct updated_val uv;
     ctx_update_vals(&uv, r);
-    printf("update route %d\n", r);
+    // printf("update route %d\n", r);
 
     for (unsigned i = 0; i < ARRAY_SIZE(labels_vals); i++) {
         cs.fg = labels_vals[i].color;
@@ -281,7 +281,7 @@ static void draw(ui_element_t * el)
         cs.fg = labels_vals[i].color;
         label_value_print(&tf_ctx, &labels_vals[i].l, &cs, 0, &ctx->uv);
     }
-    printf("ctx time %d h %d m %d s%d\n", ctx->uv.rv[ROUTE_VALUE_TIME], ctx->uv.time.h, ctx->uv.time.m, ctx->uv.time.s);
+    // printf("ctx time %d h %d m %d s%d\n", ctx->uv.rv[ROUTE_VALUE_TIME], ctx->uv.time.h, ctx->uv.time.m, ctx->uv.time.s);
 }
 
 static void update_restart_engaged(ui_element_t * el)
@@ -326,7 +326,7 @@ static unsigned process(ui_element_t * el, unsigned event)
 const widget_desc_t widget_route_list_item = {
     .calc = calc,
     .extend = extend,
-    // .update = update,
+    .update = update,
     .draw = draw,
     .select = draw,
     .process_event = process,
