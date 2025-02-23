@@ -1,5 +1,5 @@
 #include "widget_route_list_item.h"
-#include "lcd_text_color.h"
+
 #include "text_field.h"
 #include "draw_color.h"
 #include "array_size.h"
@@ -8,19 +8,19 @@
 #include "routes.h"
 #include "date_time.h"
 #include "time_zone.h"
-#include "str_utils.h"
 
 #include "event_list.h"
 #include "text_label_color.h"
-
-#include <stdio.h>
-
 
 /*
     достаточно типичная ситуация - горизонтальный элемент
     как выглядит работа с ним
 
     на стадии calc вычисляется размер формы - дальше форму такто надо сохранить если это например заголовок чтобы можно было ее закрасить на стадии draw
+
+    интересная мысль 1 - выравниания. можно сделать отрицательные значения координат для выравнивания по правому / нижнему краю
+
+    что делаем с листабельным текстом ?
 
 */
 
@@ -35,49 +35,6 @@ const text_field_t tf = {
     .padding = { .x = 8, .y = 8 },
     .limit_char = { .x = 50, .y = 4 },      // ну вот он же может расширятся, и интерфейс может расширятся, есть поля привязаные к правому краю, хм
 };
-
-/*
-    можно coord_t сделать знаковым, тогда можно вектора сдвиги делать итд, выравнивать по правому краю итд
-
-
-    чем ты тут вообще занимаешься
-
-    я хочу удобный инструментарий для рисования виджета
-
-    а именно
-
-    расположение статичных текстов по координатам.
-        тут есть общие свойства
-            текстовое поле со шрифтом и начальными координатами
-                например шрифт
-            координаты знакоместа
-            цвет, выделение
-
-    расположение переменнх по координатам, тут сложнее
-        общие свойства + цвет может отличаться
-        свойства отрисовки значения
-        как получить значение
-
-    тут как будто надо 2 структуры ?
-
-
-
-
-    интересная мысль 1 - выравниания. можно сделать отрицательные значения координат для выравнивания по правому / нижнему краю
-
-    что делаем с листабельным текстом ?
-
-
-
-    было бы охуенно если у меня была таблица, просто бегу по количеству ее элементов
-
-    для каждого элемента я знаю как его получить снаружи ??? например
-
-    дальше я могу понять нужно ли его отрисовывать
-    дальше могу перерисовать если нужно
-
-*/
-
 
 const lcd_color_t bg[] = { 0x111111, 0x113222 };
 
@@ -103,7 +60,6 @@ typedef struct {
     struct updated_val uv;
     uint8_t restart_engaged;
 } ctx_t;
-
 
 struct lscolor {
     lcd_color_t color;
@@ -147,25 +103,23 @@ const struct lscolor label_restart[] = {
     { .color = 0xFF0000, .l = { .xy = { .x = 14, .y = 0 }, .text = "OK to RESTART", .len = 13 } }
 };
 
-
 const label_value_t labels_route_time[] = {
-    { .t = LV, .xy = { .x = 37, .y = 0 }, .rep = { .vs = VAL_SIZE_32 }, .len = 7, .vt = { .zl = 0 },     .offset = offsetof(struct route_time, h) },
-    { .t = LV, .xy = { .x = 45, .y = 0 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .offset = offsetof(struct route_time, m) },
-    { .t = LV, .xy = { .x = 48, .y = 0 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .offset = offsetof(struct route_time, s) },
+    { .t = LV, .xy = { .x = 37, .y = 0 }, .rep = { .vs = VAL_SIZE_32 }, .len = 7, .vt = { .zl = 0 },     .ofs = offsetof(struct route_time, h) },
+    { .t = LV, .xy = { .x = 45, .y = 0 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(struct route_time, m) },
+    { .t = LV, .xy = { .x = 48, .y = 0 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(struct route_time, s) },
 };
 
 const label_value_t labels_route_since[] = {
-    { .t = LV, .xy = { .x = 7,  .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 0 },     .offset = offsetof(struct route_since, d.d) },
-    { .t = LF, .xy = { .x = 10, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 3, .to_str = month_name,  .offset = offsetof(struct route_since, d.m) },
-    { .t = LV, .xy = { .x = 14, .y = 1 }, .rep = { .vs = VAL_SIZE_16 }, .len = 4, .vt = { .zl = 0 },     .offset = offsetof(struct route_since, d.y) },
-    { .t = LV, .xy = { .x = 19, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .offset = offsetof(struct route_since, t.h) },
-    { .t = LV, .xy = { .x = 22, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .offset = offsetof(struct route_since, t.m) },
-    { .t = LV, .xy = { .x = 25, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .offset = offsetof(struct route_since, t.s) },
+    { .t = LV, .xy = { .x = 7,  .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 0 },     .ofs = offsetof(struct route_since, d.d) },
+    { .t = LF, .xy = { .x = 10, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 3, .to_str = month_name,  .ofs = offsetof(struct route_since, d.m) },
+    { .t = LV, .xy = { .x = 14, .y = 1 }, .rep = { .vs = VAL_SIZE_16 }, .len = 4, .vt = { .zl = 0 },     .ofs = offsetof(struct route_since, d.y) },
+    { .t = LV, .xy = { .x = 19, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(struct route_since, t.h) },
+    { .t = LV, .xy = { .x = 22, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(struct route_since, t.m) },
+    { .t = LV, .xy = { .x = 25, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(struct route_since, t.s) },
 };
 
 static void ctx_update_time(struct route_time * rt, unsigned time_s)
 {
-    // printf("calc time %d ptr %p\n", time_s, rt);
     rt->s = time_s % 60;
     time_s /= 60;
     rt->m = time_s % 60;
@@ -174,20 +128,19 @@ static void ctx_update_time(struct route_time * rt, unsigned time_s)
 
 static void ctx_update_since(struct route_since * rs, unsigned since_s)
 {
-    // printf("calc since %d ptr %p\n", since_s, rs);
     date_from_s(&rs->d, since_s);
     time_from_s(&rs->t, since_s);
 }
 
 const struct lvcolor labels_vals[] = {
-    [ROUTE_VALUE_DIST] =        { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 36, .y = 2 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_DIST]) } },
-    [ROUTE_VALUE_FUEL] =        { .color = 0x96A4Ad, .l = { .t = LV, .xy = { .x = 37, .y = 3 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_FUEL]) } },
-    [ROUTE_VALUE_SINCE_ODO] =   { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 37, .y = 1 }, .len = 10,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_SINCE_ODO]) } },
-    [ROUTE_VALUE_AVG_SPEED] =   { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 11, .y = 2 }, .len = 6,   .vt = { .f = X1000, .p = 2, .zr = 0}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_AVG_SPEED]) } },
-    [ROUTE_VALUE_CONS_DIST] =   { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 16, .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_CONS_DIST]) } },
-    [ROUTE_VALUE_CONS_TIME] =   { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 6,  .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_CONS_TIME]) } },
-    [ROUTE_VALUE_SINCE_TIME] =  { .color = 0xE6A7bd, .l = { .t = LS, .sl = &(const struct sub_label_list){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_since, .list = labels_route_since, .count = 6 }, .sub_ctx_offset = offsetof(struct updated_val, since), .rep = { .vs = VAL_SIZE_32}, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_SINCE_TIME]) } },
-    [ROUTE_VALUE_TIME] =        { .color = 0x96A41d, .l = { .t = LS, .sl = &(const struct sub_label_list){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time, .list = labels_route_time, .count = 3 }, .sub_ctx_offset = offsetof(struct updated_val, time), .rep = { .vs = VAL_SIZE_32}, .offset = offsetof(struct updated_val, rv[ROUTE_VALUE_TIME]) } },
+    [ROUTE_VALUE_DIST] =        { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 36, .y = 2 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_DIST]) } },
+    [ROUTE_VALUE_FUEL] =        { .color = 0x96A4Ad, .l = { .t = LV, .xy = { .x = 37, .y = 3 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_FUEL]) } },
+    [ROUTE_VALUE_SINCE_ODO] =   { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 37, .y = 1 }, .len = 10,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_SINCE_ODO]) } },
+    [ROUTE_VALUE_AVG_SPEED] =   { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 11, .y = 2 }, .len = 6,   .vt = { .f = X1000, .p = 2, .zr = 0}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_AVG_SPEED]) } },
+    [ROUTE_VALUE_CONS_DIST] =   { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 16, .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_CONS_DIST]) } },
+    [ROUTE_VALUE_CONS_TIME] =   { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 6,  .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_CONS_TIME]) } },
+    [ROUTE_VALUE_SINCE_TIME] =  { .color = 0xE6A7bd, .l = { .t = LS, .sofs = offsetof(struct updated_val, since), .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_SINCE_TIME]), .sl = &(const struct sub_label_list){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_since, .list = labels_route_since, .count = 6 } } },
+    [ROUTE_VALUE_TIME] =        { .color = 0x96A41d, .l = { .t = LS, .sofs = offsetof(struct updated_val, time),  .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(struct updated_val, rv[ROUTE_VALUE_TIME]),       .sl = &(const struct sub_label_list){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time,  .list = labels_route_time,  .count = 3 } } },
 };
 
 /*
@@ -218,20 +171,6 @@ static void ctx_update_vals(struct updated_val * uv, route_t r)
     }
 }
 
-static unsigned update_ctx_val(void * ctx, void * new, val_rep_t rep, unsigned offset)
-{
-    static const uint8_t vl[] = {
-        [VAL_SIZE_8] = 1,
-        [VAL_SIZE_16] = 2,
-        [VAL_SIZE_32] = 4,
-    };
-    if (!str_cmp(ctx + offset, new + offset, vl[rep.vs])) {
-        str_cp(ctx + offset, new + offset, vl[rep.vs]);
-        return 1;
-    }
-    return 0;
-}
-
 static void update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
@@ -242,13 +181,11 @@ static void update(ui_element_t * el)
 
     tf_ctx_t tf_ctx = {
         .tfcfg = &tf,
-        .pos = ctx->tp,
+        .xy = ctx->tp,
     };
 
     struct updated_val uv;
     ctx_update_vals(&uv, r);
-    // printf("update route %d\n", r);
-
     for (unsigned i = 0; i < ARRAY_SIZE(labels_vals); i++) {
         cs.fg = labels_vals[i].color;
         label_value_print(&tf_ctx, &labels_vals[i].l, &cs, &ctx->uv, &uv);
@@ -267,7 +204,7 @@ static void draw(ui_element_t * el)
 
     tf_ctx_t tf_ctx = {
         .tfcfg = &tf,
-        .pos = ctx->tp,
+        .xy = ctx->tp,
     };
 
     draw_color_form(&el->f, cs.bg);
@@ -281,7 +218,6 @@ static void draw(ui_element_t * el)
         cs.fg = labels_vals[i].color;
         label_value_print(&tf_ctx, &labels_vals[i].l, &cs, 0, &ctx->uv);
     }
-    // printf("ctx time %d h %d m %d s%d\n", ctx->uv.rv[ROUTE_VALUE_TIME], ctx->uv.time.h, ctx->uv.time.m, ctx->uv.time.s);
 }
 
 static void update_restart_engaged(ui_element_t * el)
@@ -294,7 +230,7 @@ static void update_restart_engaged(ui_element_t * el)
 
     tf_ctx_t tf_ctx = {
         .tfcfg = &tf,
-        .pos = ctx->tp,
+        .xy = ctx->tp,
     };
 
     label_static_print(&tf_ctx, &label_restart[ctx->restart_engaged].l, &cs, 0);
@@ -306,7 +242,6 @@ static unsigned process(ui_element_t * el, unsigned event)
 
     if (event == EVENT_BTN_OK) {
         if (ctx->restart_engaged) {
-            printf("reset route %d\n", el->idx);
             route_reset(el->idx);
             ctx->restart_engaged = 0;
             update_restart_engaged(el);

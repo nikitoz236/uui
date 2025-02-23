@@ -76,9 +76,9 @@ typedef struct {
     xy_t xy;
     union {
         uint16_t len;
-        uint16_t sub_ctx_offset;
+        uint16_t sofs;
     };
-    uint16_t offset;
+    uint16_t ofs;
     val_rep_t rep;
     enum {
         LV,
@@ -88,14 +88,8 @@ typedef struct {
 } label_value_t;
 
 typedef struct {
-    label_value_t * label_list;
-    uint16_t ctx_offset;
-    uint16_t ctx_size;
-} sub_label_list_t;
-
-typedef struct {
     const text_field_t * tfcfg;
-    xy_t pos;
+    xy_t xy;
 } tf_ctx_t;
 
 struct sub_label_list {
@@ -103,7 +97,6 @@ struct sub_label_list {
     const label_value_t * list;
     uint8_t count;
 };
-
 
 // typedef struct {
 //     union {
