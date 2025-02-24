@@ -15,6 +15,7 @@ SRC += hw_cfg.c
 SRC += kline.c
 SRC += time_subsystem.c
 SRC += sound_subsystem.c
+SRC += ui_subsystem.c
 
 INC += .
 INC += $(LIB)/common
@@ -41,6 +42,7 @@ SRC += $(LIB)/common/str_val_buf.c
 SRC += $(LIB)/common/str_utils.c
 
 SRC += $(LIB)/common/date_time.c
+SRC += $(LIB)/common/val_mod.c
 
 
 INC += ../logic
@@ -53,6 +55,41 @@ INC += $(LIB)/storage
 SRC += $(LIB)/storage/storage.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
 
+# ui
+# ==========================================================================
+
+# forms_edge.h
+# forms_split.h
+INC += $(LIB)/graphic/forms
+SRC += $(LIB)/graphic/forms/forms_split.c
+
+INC += $(LIB)/graphic
+INC += $(LIB)/graphic/lcd_color
+SRC += $(LIB)/graphic/lcd_color/lcd_text_color.c
+
+INC += $(LIB)/graphic/text
+
+SRC += $(LIB)/graphic/lcd_text.c
+SRC += $(LIB)/graphic/align_forms.c
+SRC += $(LIB)/graphic/forms/forms_align.c
+
+# ui_tree.h
+INC += $(LIB)/graphic/ui_tree
+SRC += $(LIB)/graphic/ui_tree/ui_tree.c
+
+# debug_print.h - надо переделывать на dp.h
+INC += ../tests/hw/watch_screen/
+
+# fonts.h
+INC += $(LIB)/graphic/fonts
+SRC += $(LIB)/graphic/fonts/fonts.c
+SRC += $(LIB)/graphic/fonts/font_5x7.c
+SRC += $(LIB)/graphic/fonts/font_3x5.c
+
+
+# widgets
+INC += ../tests/graphic/dump
+SRC += ../tests/graphic/dump/widget_tc_dump.c
 
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/

@@ -18,8 +18,9 @@
 #include "storage.h"
 #include "sound_subsystem.h"
 
-// time_subsystem.c
-void init_date_time_subsystem(void);
+#include "time_subsystem.h"
+#include "ui_subsystem.h"
+
 
 void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
 {
@@ -94,7 +95,6 @@ int main(void)
 
     pclk_ctrl(&(pclk_t)PCLK_DMA1, 1);
 
-    init_gpio_list(&buttons);
     init_gpio_list(&debug_gpio_list);
 
     init_systick();
@@ -121,12 +121,13 @@ int main(void)
     lcd_bl(4);
     init_lcd(&lcd_cfg);
 
-    lcd_rect(10, 20, 30, 40, 0xA14C);
+    init_ui();
 
     while (1) {
         dlc_poll();
         sound_subsystem_process();
         storage_prepare_page();
+        ui_process(0);
     }
 
     return 0;
