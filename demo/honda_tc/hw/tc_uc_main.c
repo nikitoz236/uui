@@ -13,6 +13,12 @@
 #include "api_lcd_color.h"
 
 #include "dlc_poll.h"
+#include "date_time.h"
+
+#include "storage.h"
+
+// time_subsystem.c
+void init_date_time_subsystem(void);
 
 void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
 {
@@ -83,33 +89,19 @@ int main(void)
     init_systick();
     __enable_irq();
 
-    // for (unsigned i = 0; i < ARRAY_SIZE(debug_gpio_list); i++) {
-    //     const gpio_cfg_t cfg = {
-    //         .mode = GPIO_MODE_OUTPUT,
-    //         .speed = GPIO_SPEED_HIGH,
-    //         .type = GPIO_TYPE_PP,
-    //         .pull = GPIO_PULL_NONE,
-    //     };
-    //     gpio_set_cfg(&debug_gpio_list[i], &cfg);
-    //     gpio_set_state(&debug_gpio_list[i], 0);
-    // }
-
-    // for (unsigned i = 0; i < 4; i++) {
-    //     gpio_set_state(&debug_gpio_list[0], 1);
-    //     delay_ms(100);
-    //     gpio_set_state(&debug_gpio_list[0], 0);
-    //     delay_ms(100);
-    // }
-
-
     usart_set_cfg(&debug_usart);
     usart_set_cfg(&kline_usart);
 
+    dn();
+    dn();
+    dn();
+    dpn("HONDA K-line trip computer");
+
+    storage_init();
+    storage_print_info();
 
     dn();
-    dpn("\n\n\nHONDA K-line trip computer");
-
-    init_rtc();
+    init_date_time_subsystem();
 
     init_lcd_hw(&lcd_cfg);
     lcd_bl(4);
@@ -125,12 +117,6 @@ int main(void)
     pwm_set_ccr(&buz_cfg, 0);
 
     lcd_rect(10, 20, 30, 40, 0xA14C);
-
-
-    // unsigned rtc_last = 0;
-
-    // mstimer_t led_flash_timer = mstimer_with_timeout(500);
-    // unsigned led_state = 0;
 
 
     while (1) {

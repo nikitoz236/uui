@@ -1,9 +1,9 @@
 #include "periph_header.h"
 #include "periph_pclk.h"
 #include "rtc.h"
-#include "dp.h"
 
-// void db(char * s);
+#define DP_NAME "RTC"
+#include "dp.h"
 
 static void rtc_enter_configuration_mode(void)
 {

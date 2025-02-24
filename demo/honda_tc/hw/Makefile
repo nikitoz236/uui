@@ -13,6 +13,7 @@ DEF += STM32F10X_MD
 SRC += $(TARGET).c
 SRC += hw_cfg.c
 SRC += kline.c
+SRC += time_subsystem.c
 
 INC += .
 INC += $(LIB)/common
@@ -38,11 +39,19 @@ SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
 SRC += $(LIB)/common/str_utils.c
 
+SRC += $(LIB)/common/date_time.c
+
+
 INC += ../logic
 SRC += ../logic/dlc_poll.c
 SRC += ../logic/honda_dlc_units.c
 # SRC += ../logic/metrics_ecu.c
 # SRC += ../logic/trip_integrate.c
+
+INC += $(LIB)/storage
+SRC += $(LIB)/storage/storage.c
+SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
+
 
 
 # GCC_PATH = /home/nikita/software/gcc-arm-none-eabi-10-2020-q4-major/bin/
