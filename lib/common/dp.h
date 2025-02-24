@@ -16,13 +16,17 @@ struct dp_ctx {
     unsigned registred : 1;
 };
 
-#ifdef DP_NAME
-    static struct dp_ctx __dp_ctx = {
-        .name = DP_NAME
-    };
-#else
-    static struct dp_ctx __dp_ctx = {};
+#ifndef DP_NAME
+    #define DP_NAME 0
 #endif
+
+
+static struct dp_ctx __dp_ctx = {
+    .name = DP_NAME,
+    #ifdef DP_SILENT
+        .silent = 1,
+    #endif
+};
 
 static inline void __debug_print_str(const char * s, unsigned l, char padding_char)
 {

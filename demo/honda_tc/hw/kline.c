@@ -2,6 +2,7 @@
 #include "config.h"
 
 #define DP_NAME "K-LINE"
+#define DP_SILENT
 #include "dp.h"
 
 static uint8_t * rx_buf = 0;
