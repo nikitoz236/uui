@@ -29,6 +29,8 @@ static mstimer_t timeout = {};
 #define UNIT_RESPONCE_TIMEOUT           200
 #define UNIT_NEXT_POLL_TRY              2000
 
+#define DLC_DUMP_INACTIVE               HONDA_UNIT_COUNT
+
 static uint8_t engine_state = 0;
 
 static kline_request_t dlc_req = {};
@@ -41,8 +43,9 @@ static uint8_t dump_poll = 0;
 static uint8_t dump_data[16] = {};
 static uint8_t dump_addr = 0;
 static uint8_t dump_len = 0;
+static honda_unit_t dump_unit = 0;
 
-static honda_unit_t dump_unit = HONDA_UNIT_COUNT;       // no active
+static honda_unit_t dump_unit_req = DLC_DUMP_INACTIVE;       // no active
 
 static honda_unit_t current_unit = HONDA_UNIT_ECU;
 static unsigned next_address = 0;
@@ -69,7 +72,7 @@ void dlc_dump_request(honda_unit_t unit)
     if (unit >= HONDA_UNIT_COUNT) {
         return;
     }
-    dump_unit = unit;
+    dump_unit_req = unit;
 }
 
 unsigned dlc_dump_get_new_data(uint8_t * data, unsigned * address, honda_unit_t * unit)
@@ -90,24 +93,30 @@ static void dlc_next(void)
         планировщик обязательно будет опрашивать ECU
         если есть запрос на дамп, то он будет выполнен как только закончится полностью чтение всей памяти ECU
         между запросами на дамп обязательно будет вставлен один цикл опроса ECU
+
+        есть проблемки.
+            вопервых мотор толкьо со второго круга опрашивается.
+            хочется чтобы мотор опрашивался без дампа только по короткому списку
     */
     uint8_t len = 16;
     unsigned unit_max_addr = honda_dlc_unit_len(current_unit);
     if (next_address < unit_max_addr) {
+        // все адреса в юните
         if ((next_address + len) >= unit_max_addr) {
             len = unit_max_addr - next_address;
         }
     } else {
+        // юнит закончился
         if (dump_poll) {
             current_unit = HONDA_UNIT_ECU;
             dump_poll = 0;
         } else {
-            if (dump_unit == HONDA_UNIT_COUNT) {
+            if (dump_unit_req == DLC_DUMP_INACTIVE) {
                 current_unit = HONDA_UNIT_ECU;
             } else {
                 dump_poll = 1;
-                current_unit = dump_unit;
-                dump_unit = HONDA_UNIT_COUNT;
+                current_unit = dump_unit_req;
+                dump_unit_req = DLC_DUMP_INACTIVE;
             }
         }
         next_address = 0;
@@ -161,6 +170,7 @@ static void dlc_poll_process_rx_data(void)
         if (dump_poll) {
             dump_addr = dlc_req.offset;
             dump_len = dlc_req.len;
+            dump_unit = current_unit;
             str_cp(dump_data, &kline_responce[2], dlc_req.len);
         }
         if (current_unit == HONDA_UNIT_ECU) {
