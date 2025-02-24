@@ -386,6 +386,10 @@ static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
     unsigned result = 0;
     ui_element_t * child = ui_tree_child(element);
 
+    if (element->ui_node->widget->update) {
+        element->ui_node->widget->update(element);
+    }
+
     while (child) {
         if (ui_tree_element_process(child, event)) {
             result = 1;
