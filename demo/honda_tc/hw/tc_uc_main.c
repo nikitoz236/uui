@@ -16,6 +16,7 @@
 #include "date_time.h"
 
 #include "storage.h"
+#include "sound_subsystem.h"
 
 // time_subsystem.c
 void init_date_time_subsystem(void);
@@ -67,6 +68,16 @@ const gpio_list_t buttons = {
     }
 };
 
+// sound_t sound_engine_run = {
+sound_t sound_startup = {
+    .notes = (struct sound_note []) {
+        { .freq = 610, .ms_x10 = 10, .vol = 20 },
+        { .freq = 650, .ms_x10 = 10, .vol = 20 },
+        { .freq = 800, .ms_x10 = 15, .vol = 10 },
+    },
+    .n = 3
+};
+
 int main(void)
 {
     rcc_apply_cfg(&rcc_cfg);
@@ -98,43 +109,24 @@ int main(void)
     dpn("HONDA K-line trip computer");
 
     storage_init();
+    dn();
     storage_print_info();
 
     dn();
     init_date_time_subsystem();
+    init_sound_subsystem(&buz_cfg);
+    sound_play(&sound_startup);
 
     init_lcd_hw(&lcd_cfg);
     lcd_bl(4);
     init_lcd(&lcd_cfg);
 
-    init_pwm(&buz_cfg);
-
-    pwm_set_freq(&buz_cfg, 600);
-    pwm_set_ccr(&buz_cfg, 10);
-    delay_ms(100);
-    pwm_set_freq(&buz_cfg, 800);
-    delay_ms(100);
-    pwm_set_ccr(&buz_cfg, 0);
-
     lcd_rect(10, 20, 30, 40, 0xA14C);
-
 
     while (1) {
         dlc_poll();
-        // unsigned rtc_s = rtc_get_time_s();
-        // if (rtc_last != rtc_s) {
-        //     rtc_last = rtc_s;
-        //     dp("rtc time: ");
-        //     dpd(rtc_s, 10);
-        //     dn();
-        // }
-
-
-        // if (mstimer_do_period(&led_flash_timer)) {
-        //     led_state++;
-        //     led_state &= 1;
-        //     gpio_set_state(&led_pin, led_state);
-        // }
+        sound_subsystem_process();
+        storage_prepare_page();
     }
 
     return 0;
