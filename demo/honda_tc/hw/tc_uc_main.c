@@ -20,6 +20,7 @@
 
 #include "time_subsystem.h"
 #include "ui_subsystem.h"
+#include "button_subsystem.h"
 
 
 void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
@@ -54,21 +55,6 @@ const gpio_list_t debug_gpio_list = {
     }
 };
 
-const gpio_list_t buttons = {
-    .count = 5,
-    .cfg = {
-        .mode = GPIO_MODE_INPUT,
-        .pull = GPIO_PULL_NONE,
-    },
-    .pin_list = (gpio_pin_t []){
-        { .port = GPIO_PORT_B, .pin = 3 },      // LU
-        { .port = GPIO_PORT_A, .pin = 15 },     // LD
-        { .port = GPIO_PORT_B, .pin = 4 },      // RU
-        { .port = GPIO_PORT_B, .pin = 6 },      // RM
-        { .port = GPIO_PORT_B, .pin = 7 },      // RD
-    }
-};
-
 // sound_t sound_engine_run = {
 sound_t sound_startup = {
     .notes = (struct sound_note []) {
@@ -77,6 +63,13 @@ sound_t sound_startup = {
         { .freq = 800, .ms_x10 = 15, .vol = 10 },
     },
     .n = 3
+};
+
+sound_t sound_btn_short = {
+    .notes = (struct sound_note []) {
+        { .freq = 800, .ms_x10 = 2, .vol = 20 },
+    },
+    .n = 1
 };
 
 int main(void)
@@ -117,6 +110,8 @@ int main(void)
     init_sound_subsystem(&buz_cfg);
     sound_play(&sound_startup);
 
+    init_button_subsystem(&buttons);
+
     init_lcd_hw(&lcd_cfg);
     lcd_bl(4);
     init_lcd(&lcd_cfg);
@@ -127,7 +122,13 @@ int main(void)
         dlc_poll();
         sound_subsystem_process();
         storage_prepare_page();
-        ui_process(0);
+
+        unsigned event = btn_get_event();
+        if (event) {
+            sound_play(&sound_btn_short);
+            dp("button event: "); dpx(event, 1); dn();
+        }
+        ui_process(event);
     }
 
     return 0;

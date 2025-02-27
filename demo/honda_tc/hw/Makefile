@@ -16,6 +16,7 @@ SRC += kline.c
 SRC += time_subsystem.c
 SRC += sound_subsystem.c
 SRC += ui_subsystem.c
+SRC += button_subsystem.c
 
 INC += .
 INC += $(LIB)/common

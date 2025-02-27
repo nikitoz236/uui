@@ -194,3 +194,18 @@ const pwm_cfg_t buz_cfg = {
         }
     }
 };
+
+const gpio_list_t buttons = {
+    .count = 5,
+    .cfg = {
+        .mode = GPIO_MODE_INPUT,
+        .pull = GPIO_PULL_NONE,
+    },
+    .pin_list = (gpio_pin_t []){
+        { .port = GPIO_PORT_B, .pin = 3 },      // LU
+        { .port = GPIO_PORT_A, .pin = 15 },     // LD
+        { .port = GPIO_PORT_B, .pin = 4 },      // RU
+        { .port = GPIO_PORT_B, .pin = 6 },      // RM
+        { .port = GPIO_PORT_B, .pin = 7 },      // RD
+    }
+};
