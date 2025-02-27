@@ -156,12 +156,16 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 unsigned engine_state = 0;
 unsigned engine_last = 0;
 
+unsigned resp_slow = 0;
+unsigned resp_slow_last = 0;
+
 
 uint8_t kline_rx_buf[32];
 uint8_t kline_tx_buf[32];
 unsigned kline_rx_idx = 0;
 
 mstimer_t kline_timeout = { .timeout = 50 };
+mstimer_t resp_timer = { .timeout = 0 };
 
 void kline_rx_byte_handler(char byte)
 {
@@ -186,6 +190,14 @@ void debug_rx_byte_handler(char byte)
 
     if (byte == 's') {
         engine_state = 0;
+    }
+
+    if (byte == 'F') {
+        resp_slow = 1;
+    }
+
+    if (byte == 'f') {
+        resp_slow = 0;
     }
 }
 
@@ -220,8 +232,21 @@ int main()
     dpn("Honda DLC emulator");
 
     unsigned echo_len = 0;
+    unsigned tx_len = 0;
+
 
     while (1) {
+        if (resp_slow_last != resp_slow) {
+            resp_slow_last = resp_slow;
+            if (resp_slow) {
+                dpn("Slow response");
+                resp_timer.timeout = 150;
+            } else {
+                dpn("Fast response");
+                resp_timer.timeout = 0;
+            }
+        }
+
         if (engine_last != engine_state) {
             engine_last = engine_state;
             if (engine_state) {
@@ -233,26 +258,41 @@ int main()
 
         if (kline_rx_idx) {
             if (mstimer_is_over(&kline_timeout)) {
+                // если нам отправили какойто мусор, то после таймаута игнорируем его. ожидаем пакет заново
                 kline_rx_idx = 0;
                 echo_len = 0;
                 dpn("timeout");
             }
         }
+
         if (kline_rx_idx == (echo_len + 5)) {
             dp("req : ");
             dpxd(&kline_rx_buf[echo_len], 1, 5);
             dn();
             if (engine_state) {
-                unsigned tx_len =check_kline_req(&kline_rx_buf[echo_len], 5, kline_tx_buf);
-                if (tx_len) {
+                // готовим данные для передачи и засекаем таймер
+                tx_len = check_kline_req(&kline_rx_buf[echo_len], 5, kline_tx_buf);
+                mstimer_reset(&resp_timer);
+            }
+            kline_rx_idx = 0;
+            echo_len = 0;
+        }
+
+        if (tx_len) {
+            if (kline_rx_idx == 0) {
+                if (mstimer_is_over(&resp_timer)) {
+                    // если таймаут вышел только когда было что передавать и не начался новый прием
                     dp("resp: ");
                     dpxd(kline_tx_buf, 1, tx_len);
                     dn();
                     usart_tx(&kline_usart, kline_tx_buf, tx_len);
+                    echo_len = tx_len;
+                    tx_len = 0;
                 }
-                echo_len = tx_len;
+            } else {
+                // отмена передачи если уже приняли чтото новое
+                tx_len = 0;
             }
-            kline_rx_idx = 0;
         }
     };
 
