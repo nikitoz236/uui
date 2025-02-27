@@ -89,3 +89,8 @@ unsigned gpio_list_get_state(const gpio_list_t * gpio_list, unsigned idx)
 {
     return stm_gpio_get_state(gpio_list->pin_list[idx]);
 }
+
+unsigned gpio_list_count(const gpio_list_t * gpio_list)
+{
+    return gpio_list->count;
+}
