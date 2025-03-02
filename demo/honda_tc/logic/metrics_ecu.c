@@ -33,7 +33,7 @@ typedef struct {
     uint8_t len : 4;
 } ecu_map_t;
 
-#define METRIC_ECU_MAP(id, name, units, f, a, l, t, m, s) \
+#define METRIC_ECU_MAP(id, name, units, f, p, a, l, t, m, s) \
     { \
         .address = a, \
         .len = l, \

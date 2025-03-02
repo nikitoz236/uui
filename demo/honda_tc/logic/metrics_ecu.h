@@ -14,37 +14,37 @@ void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len);
 // tables
 
 #define METRIC_ECU_VAR_LIST(macro) \
-/*        enum name         name            units  factor  addr len type      mul         sub*/ \
+/*        enum name         name            units  factor  point  addr len type    mul         sub     sign                   */               \
 /*                           012345678901234 */ \
-    macro(RPM,              "RPM",          0,     X1,     0x00, 2, RMS,    0.25,       0       ), /* Обороты двигателя */ \
-    macro(ECU_SPEED,        "SPEED ECU",    "KMh", X1,     0x02, 1, RAW,    0,          0       ), /* Скорость */ \
-    macro(ENGINE_T,         "ENGINE t",     "*C",  X1000,  0x10, 1, TMP,    0,          0       ), /* Температура ОЖ(град) */ \
-    macro(INTAKE_T,         "INTAKE t",     "*C",  X1000,  0x11, 1, TMP,    0,          0       ), /* Температура входящего воздуха(град) */ \
-    macro(INTAKE_P,         "INTAKE P",     "KPa", X1000,  0x12, 1, RMS,    716,        5000    ), /* Датчик абсолютного давления(кПа) */ \
-    macro(ATM_P,            "ATM P",        "KPa", X1000,  0x13, 1, RMS,    716,        5000    ), /* Датчик атмосферного давления(кПа) */ \
-    macro(THROTTLE,         "THROTTLE",     "%",   X1000,  0x14, 1, RSM,    500,        24      ), /* Датчик положения ДЗ(%) */ \
-    macro(OXY_1,            "OXY 1",        "V",   X1000,  0x15, 1, RMS,    19.493177,  0       ), /* Напряжение управляющего ЛЗ (В) */ \
-    macro(VOLTAGE_ECU,      "VOLTAGE ECU",  "V",   X1000,  0x17, 1, RMS,    95.693779,  0       ), /* Напряжение сети (В) */ \
-    macro(ALTERNATOR_LOAD,  "ALTERN. LOAD", "%",   X1000,  0x18, 1, RMS,    392.156862, 0       ), /* Нагрузка на генератор ALT_FR (%) */ \
-    macro(CURRENT,          "CURRENT",      "A",   X1000,  0x19, 1, SRM,    394.150802, 77060   ), /* Электрическая нагрузка блок ELD (А) */ \
-    macro(ERG_VALVE_V,      "ERG VALVE",    "V",   X1,     0x1B, 1, RMS,    19.493177,  0       ), /* Датчик положения клапана EGR (В) */ \
-    macro(CORR_SHORT,       "CORR. SHORT",  "%",   X1000,  0x20, 1, RMS,    392.156862, 100000  ), /* Краткосрочная коррекция (%) */ \
-    macro(CORR_LONG,        "CORR. LONG",   "%",   X1000,  0x22, 1, RMS,    392.156862, 100000  ), /* Долгосрочная коррекция (%) */ \
-    macro(INJECTION,        "INJECTION",    "MS",  X1000,  0x24, 2, RMS,    4,          0       ), /* Время впрыска(мс) */ \
-    macro(IDLING_ANGLE,     "IGN. ANGLE",   0,     X1000,  0x26, 1, RSM,    500,        128     ), /* Угол Опережения Зажигания - IngAdv */ \
-    macro(IDLING_LIMIT,     "IGN. LIMIT",   0,     X1000,  0x27, 1, RSM,    500,        128     ), /* Ограничение УОЗ по ДД - IngLim */ \
-    macro(AIR_VALVE_POS,    "AIR VALVE",    "%",   X1000,  0x28, 1, RMS,    392.156862, 0       ), /* Клапан холостого хода (%) */ \
-    macro(AIR_VALVE_CUR,    "AIR VALVE",    "mA",  X1,     0x29, 1, RAW,    0,          0       ), /* Клапан холостого хода (мА) */ \
-    macro(ERG_CTRL,         "ERG CONTROL",  "%",   X1000,  0x2B, 1, RMS,    392.156862, 0       ), /* Управление клапаном EGR (%) */ \
-    macro(ERG_VALVE_POS,    "ERG VALVE",    "%",   X1000,  0x2C, 1, RMS,    392.156862, 0       ), /* Датчик положения клапана EGR (%) */ \
-    macro(AIR_FUEL,         "AIR/FUEL",     0,     X1,     0x2E, 1, RAW,    0,          0       ), /* Отношение воздух/топливо AF FB CMD */ \
-    macro(PCS_EVAP,         "PCS EVAP",     "%",   X1000,  0x2F, 1, RMS,    392.156862, 0       ), /* Клапан PCS EVAP (%) */ \
-    macro(DETONATION,       "DETONATION",   0,     X1,     0x3C, 1, RMS,    18.181818,  0       ), /* Датчик детонации */ \
-    macro(FUEL_SYSTEM,      "FUEL SYSTEM",  0,     X1,     0x9A, 1, RAW,    0,          0       ), /* Состояние топливной системы FSS */ \
-    macro(ENGINE_LOAD,      "ENGINE LOAD",  "%",   X1000,  0x9C, 1, RMS,    392.156862, 0       ), /* Нагрузка на двигатель (%) */ \
-    macro(OXY_2,            "OXY 2",        "V",   X1,     0xA0, 1, RMS,    19.493177,  0       ), /* Напряжение проверяющего ЛЗ (В) */ \
-    macro(MISF_CYL,         "MisF_Cyl",     0,     X1,     0xB6, 1, RAW,    0,          0       ), /* Пропуск зажигания MisF_Cyl */ \
-    macro(CKP_LEARN,        "CKP Learn",    0,     X1,     0xBC, 1, RAW,    0,          0       )  /* Обучение CKP_Learn */
+    macro(RPM,              "RPM",          0,     X1,     0,     0x00, 2, RMS,    0.25,       0       ), /* Обороты двигателя */ \
+    macro(ECU_SPEED,        "SPEED ECU",    "KMh", X1,     0,     0x02, 1, RAW,    0,          0       ), /* Скорость */ \
+    macro(ENGINE_T,         "ENGINE t",     "*C",  X1000,  2,     0x10, 1, TMP,    0,          0       ), /* Температура ОЖ(град) */ \
+    macro(INTAKE_T,         "INTAKE t",     "*C",  X1000,  2,     0x11, 1, TMP,    0,          0       ), /* Температура входящего воздуха(град) */ \
+    macro(INTAKE_P,         "INTAKE P",     "KPa", X1000,  2,     0x12, 1, RMS,    716,        5000    ), /* Датчик абсолютного давления(кПа) */ \
+    macro(ATM_P,            "ATM P",        "KPa", X1000,  2,     0x13, 1, RMS,    716,        5000    ), /* Датчик атмосферного давления(кПа) */ \
+    macro(THROTTLE,         "THROTTLE",     "%",   X1000,  2,     0x14, 1, RSM,    500,        24      ), /* Датчик положения ДЗ(%) */ \
+    macro(OXY_1,            "OXY 1",        "V",   X1000,  2,     0x15, 1, RMS,    19.493177,  0       ), /* Напряжение управляющего ЛЗ (В) */ \
+    macro(VOLTAGE_ECU,      "VOLTAGE ECU",  "V",   X1000,  2,     0x17, 1, RMS,    95.693779,  0       ), /* Напряжение сети (В) */ \
+    macro(ALTERNATOR_LOAD,  "ALTERN. LOAD", "%",   X1000,  2,     0x18, 1, RMS,    392.156862, 0       ), /* Нагрузка на генератор ALT_FR (%) */ \
+    macro(CURRENT,          "CURRENT",      "A",   X1000,  2,     0x19, 1, SRM,    394.150802, 77060   ), /* Электрическая нагрузка блок ELD (А) */ \
+    macro(ERG_VALVE_V,      "ERG VALVE",    "V",   X1,     0,     0x1B, 1, RMS,    19.493177,  0       ), /* Датчик положения клапана EGR (В) */ \
+    macro(CORR_SHORT,       "CORR. SHORT",  "%",   X1000,  0,     0x20, 1, RMS,    392.156862, 100000  ), /* Краткосрочная коррекция (%) */ \
+    macro(CORR_LONG,        "CORR. LONG",   "%",   X1000,  0,     0x22, 1, RMS,    392.156862, 100000  ), /* Долгосрочная коррекция (%) */ \
+    macro(INJECTION,        "INJECTION",    "MS",  X1000,  3,     0x24, 2, RMS,    4,          0       ), /* Время впрыска(мс) */ \
+    macro(IDLING_ANGLE,     "IGN. ANGLE",   0,     X1000,  1,     0x26, 1, RSM,    500,        128     ), /* Угол Опережения Зажигания - IngAdv */ \
+    macro(IDLING_LIMIT,     "IGN. LIMIT",   0,     X1000,  1,     0x27, 1, RSM,    500,        128     ), /* Ограничение УОЗ по ДД - IngLim */ \
+    macro(AIR_VALVE_POS,    "AIR VALVE",    "%",   X1000,  0,     0x28, 1, RMS,    392.156862, 0       ), /* Клапан холостого хода (%) */ \
+    macro(AIR_VALVE_CUR,    "AIR VALVE",    "mA",  X1,     0,     0x29, 1, RAW,    0,          0       ), /* Клапан холостого хода (мА) */ \
+    macro(ERG_CTRL,         "ERG CONTROL",  "%",   X1000,  0,     0x2B, 1, RMS,    392.156862, 0       ), /* Управление клапаном EGR (%) */ \
+    macro(ERG_VALVE_POS,    "ERG VALVE",    "%",   X1000,  0,     0x2C, 1, RMS,    392.156862, 0       ), /* Датчик положения клапана EGR (%) */ \
+    macro(AIR_FUEL,         "AIR/FUEL",     0,     X1,     0,     0x2E, 1, RAW,    0,          0       ), /* Отношение воздух/топливо AF FB CMD */ \
+    macro(PCS_EVAP,         "PCS EVAP",     "%",   X1000,  0,     0x2F, 1, RMS,    392.156862, 0       ), /* Клапан PCS EVAP (%) */ \
+    macro(DETONATION,       "DETONATION",   0,     X1,     0,     0x3C, 1, RMS,    18.181818,  0       ), /* Датчик детонации */ \
+    macro(FUEL_SYSTEM,      "FUEL SYSTEM",  0,     X1,     0,     0x9A, 1, RAW,    0,          0       ), /* Состояние топливной системы FSS */ \
+    macro(ENGINE_LOAD,      "ENGINE LOAD",  "%",   X1000,  0,     0x9C, 1, RMS,    392.156862, 0       ), /* Нагрузка на двигатель (%) */ \
+    macro(OXY_2,            "OXY 2",        "V",   X1,     0,     0xA0, 1, RMS,    19.493177,  0       ), /* Напряжение проверяющего ЛЗ (В) */ \
+    macro(MISF_CYL,         "MisF_Cyl",     0,     X1,     0,     0xB6, 1, RAW,    0,          0       ), /* Пропуск зажигания MisF_Cyl */ \
+    macro(CKP_LEARN,        "CKP Learn",    0,     X1,     0,     0xBC, 1, RAW,    0,          0       )  /* Обучение CKP_Learn */
 
 #define METRIC_ECU_BOOL_LIST(macro) \
     /*    enum name          name           bit number*/ \

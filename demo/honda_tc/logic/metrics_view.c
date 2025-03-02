@@ -1,6 +1,8 @@
 #include "metrics_view.h"
 #include "array_size.h"
 
+// походу можно просто иметь один список в котором будет тип получения
+
 #define METRIC_ENUM_NUM(id, ...)        ____ENUM_NUM_ ## id
 
 enum { METRIC_ECU_BOOL_LIST(METRIC_ENUM_NUM), METRIC_ECU_BOOL_NUM };
@@ -108,15 +110,21 @@ const char * metric_var_get_unit(metric_var_id_t id)
     return metric_var_units[id];
 }
 
-dec_factor_t metric_var_get_factor(metric_var_id_t id)
+void metric_var_get_factor_point(metric_var_id_t id, dec_factor_t * f, unsigned * point)
 {
-    #define METRIC_FACTOR(id, name, unit, factor, ...) factor
-    static const uint8_t metric_var_factors[] = {
-        METRIC_VAR_LIST(METRIC_FACTOR)
+    #define METRIC_FORMAT(id, name, units, f, p, ... ) { .factor = f, .point = p }
+
+    struct fp {
+        dec_factor_t factor : 4;
+        uint8_t point : 4;
     };
 
+    static const struct fp metric_var_fp[] = {
+        METRIC_VAR_LIST(METRIC_FORMAT)
+    };
     if (id >= METRIC_VAR_ID_NUM) {
-        return 0;
+        return;
     }
-    return metric_var_factors[id];
+    *f = metric_var_fp[id].factor;
+    *point = metric_var_fp[id].point;
 }

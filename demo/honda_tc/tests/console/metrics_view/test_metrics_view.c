@@ -5,11 +5,11 @@
     тест модуля metrics_view.c
 
     - проверяет все существующие измеряемые и вычисляемые параметры, как они склеиваются в один список, численные и флаговые
+    - проверяет что нормально достаются множители и количество знаков после запятой
 */
 
 int metric_ecu_get_real(unsigned id) { return id * 100; };
 unsigned metric_ecu_get_raw(unsigned id) { return id * 16; };
-
 unsigned metric_ecu_get_bool(unsigned id) { return id & 1; };
 
 int main()
@@ -22,6 +22,10 @@ int main()
         } else {
             printf("       ");
         }
+        dec_factor_t factor;
+        unsigned point;
+        metric_var_get_factor_point(m_id, &factor, &point);
+        printf("    f %1d, p %1d", factor, point);
         printf("  - %04X\n", metric_var_get_raw(m_id));
     }
 

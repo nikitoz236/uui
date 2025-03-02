@@ -10,6 +10,6 @@ void trip_restart(void);
 int trip_integrate_get_real(unsigned id);
 
 #define TRIP_INTEGRATE_VAR_LIST(macro) \
-    macro(CONS_MOMENT_TIME, "FUEL CONS D",  "L/H",      X1000 ), \
-    macro(CONS_MOMENT_DIST, "FUEL CONS H",  "L/100",    X1000 ), \
-    macro(INTEGRATE_PERIOD, "OBD PERIOD",   "MS",       X1000 )
+    macro(CONS_MOMENT_TIME, "FUEL CONS D",  "L/H",      X1000, 2 ), \
+    macro(CONS_MOMENT_DIST, "FUEL CONS H",  "L/100",    X1000, 2 ), \
+    macro(INTEGRATE_PERIOD, "OBD PERIOD",   "MS",       X1,    0 )

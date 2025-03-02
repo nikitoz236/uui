@@ -58,4 +58,4 @@ int metric_var_get_real(metric_var_id_t id);
 unsigned metric_var_get_raw(metric_var_id_t id);
 const char * metric_var_get_name(metric_var_id_t id);
 const char * metric_var_get_unit(metric_var_id_t id);
-dec_factor_t metric_var_get_factor(metric_var_id_t id);
+void metric_var_get_factor_point(metric_var_id_t id, dec_factor_t * f, unsigned * point);
