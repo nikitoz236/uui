@@ -16,14 +16,14 @@ const char * raw_hex(unsigned x)
     return str;
 }
 
-struct uv {
+typedef struct {
     int val;
     unsigned raw;
-};
+} uv_t;
 
 typedef struct {
     xy_t pos;
-    struct uv uv;
+    uv_t uv;
 } ctx_t;
 
 extern const font_t font_5x7;
@@ -62,16 +62,16 @@ metric name       -12345678901  units     0000
 
 */
 
-static const struct lscolor label_static_real[] = {
-    { .color = 0xABCDEF, .l = { .to_str = metric_var_get_name, .xy = { .x = 0 }, } },
-    { .color = 0xABCDEF, .l = { .to_str = metric_var_get_unit, .xy = { .x = 32 }, } },
+static const struct lvcolor label_static_real[] = {
+    { .color = 0xABCDEF, .l = { .to_str = metric_var_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, } },
+    { .color = 0xABCDEF, .l = { .to_str = metric_var_get_unit, .t = LP_T_FIDX, .xy = { .x = 32 }, } },
 };
 
-static const struct lscolor label_static_bool = {
-      .color = 0xABCDEF, .l = { .to_str = metric_bool_get_name, .xy = { .x = 0 }, }
+static const struct lvcolor label_static_bool = {
+      .color = 0xABCDEF, .l = { .to_str = metric_bool_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, }
 };
 
-void metric_vt(unsigned idx, val_text_t * vt)
+void metric_vt(val_text_t * vt, unsigned idx)
 {
     unsigned point = 0;
     dec_factor_t factor = 0;
@@ -83,11 +83,11 @@ void metric_vt(unsigned idx, val_text_t * vt)
 };
 
 static const struct lvcolor label_val[] = {
-    { .color = 0xABCDEF, .l = { .len = 10, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LVFI, .vt_by_idx = metric_vt, .ofs = offsetof(struct uv, val), .xy = { .x = 18 }, } },
-    { .color = 0xABCDEF, .l = { .len = 4,  .rep = { .vs = VAL_SIZE_32 }, .t = LF, .to_str = raw_hex, .ofs = offsetof(struct uv, raw), .xy = { .x = 42 }, } },
+    { .color = 0xABCDEF, .l = { .len = 10, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LVFI, .vt_by_idx = metric_vt, .ofs = offsetof(uv_t, val), .xy = { .x = 18 }, } },
+    { .color = 0xABCDEF, .l = { .len = 4,  .rep = { .vs = VAL_SIZE_32 }, .t = LF, .to_str = raw_hex, .ofs = offsetof(uv_t, raw), .xy = { .x = 42 }, } },
 };
 
-void update_uv(struct uv * uv, unsigned idx)
+void update_uv(uv_t * uv, unsigned idx)
 {
     uv->val = metric_var_get_real(idx);
     uv->raw = metric_ecu_get_raw(idx);
@@ -119,11 +119,23 @@ static void extend(ui_element_t * el)
 
 static void update_real(ui_element_t * el)
 {
-    struct uv uv = {};
+    ctx_t * ctx = (ctx_t *)el->ctx;
+
+    color_scheme_t cs = {
+        .bg = bg[el->active],
+    };
+
+    tf_ctx_t tf_ctx = {
+        .tfcfg = &tf,
+        .xy = ctx->pos,
+    };
+
+    uv_t uv = {};
     update_uv(&uv, el->idx);
 
     for (unsigned i = 0; i < ARRAY_SIZE(label_val); i++) {
-        // label_value_print(&label_val[i].l, &uv, el->idx);
+        cs.fg = label_static_real[i].color;
+        lp(&tf_ctx, &label_val[i].l, &cs, 0, &ctx->uv, el->idx);
     }
 }
 
@@ -147,19 +159,14 @@ static void draw_real(ui_element_t * el)
 
     for (unsigned i = 0; i < ARRAY_SIZE(label_static_real); i++) {
         cs.fg = label_static_real[i].color;
-        label_static_print(&tf_ctx, &label_static_real[i].l, &cs, el->idx);
+        lp(&tf_ctx, &label_static_real[i].l, &cs, 0, 0, el->idx);
     }
 
     update_uv(&ctx->uv, el->idx);
 
     for (unsigned i = 0; i < ARRAY_SIZE(label_val); i++) {
-        label_value_print(&tf_ctx, &label_val[i].l, &cs, 0, &ctx->uv, el->idx);
+        lp(&tf_ctx, &label_val[i].l, &cs, 0, &ctx->uv, el->idx);
     }
-
-    // update_tf(&items_real[ITEM_NAME], ctx->pos, el->idx);
-    // update_tf(&items_real[ITEM_UNIT], ctx->pos, el->idx);
-    // update_tf(&items_real[ITEM_REAL], ctx->pos, el->idx);
-    // update_tf(&items_real[ITEM_RAW], ctx->pos, el->idx);
 }
 
 static void draw_bool(ui_element_t * el)
@@ -176,7 +183,7 @@ static void draw_bool(ui_element_t * el)
     };
 
     cs.fg = label_static_bool.color;
-    label_static_print(&tf_ctx, &label_static_bool.l, &cs, el->idx);
+    lp(&tf_ctx, &label_static_bool.l, &cs, 0, 0, el->idx);
 
     // ctx->val = metric_ecu_get_bool(el->idx);
 }
@@ -184,8 +191,9 @@ static void draw_bool(ui_element_t * el)
 const widget_desc_t __widget_metric_list_item_real = {
     .calc = calc,
     .draw = draw_real,
-    // .update = update_real,
+    .update = update_real,
     .extend = extend,
+    .select = draw_real,
     .ctx_size = sizeof(ctx_t)
 };
 
@@ -194,5 +202,6 @@ const widget_desc_t __widget_metric_list_item_bool = {
     .draw = draw_bool,
     // .update = update_bool,
     .extend = extend,
+    .select = draw_bool,
     .ctx_size = sizeof(ctx_t)
 };

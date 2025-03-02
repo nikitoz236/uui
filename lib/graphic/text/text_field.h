@@ -3,6 +3,7 @@
 #include "lcd_text.h"
 #include "val_text.h"
 #include "forms_align.h"
+#include <stddef.h>
 
 typedef struct {
     const lcd_font_cfg_t * fcfg;
@@ -69,23 +70,35 @@ struct sub_label_list;
 
 typedef struct {
     union {
+        const char * text;
         const char * (*to_str)(unsigned x);
         const struct sub_label_list * sl;
+        void (*vt_by_idx)(val_text_t * vt, unsigned idx);
         val_text_t vt;
+        // const char ** text_list;
+        // const char * (*to_str_val)(void * p, val_rep_t r);
     };
     xy_t xy;
     union {
         uint16_t len;
-        uint16_t sofs;
+        uint16_t sofs;      // sub label ctx offset in ctx
     };
-    uint16_t ofs;
-    val_rep_t rep;
+    uint16_t ofs;           // val offset in ctx
+    val_rep_t rep;          // val representation in ctx
     enum {
-        LV,
-        LF,
-        LS
-    } t : 2;
-} label_value_t;
+        LP_SL,              // sub label
+        LP_VT,              // value to str, format from const vt
+        LP_VT_FIDX,         // value to str, format from function by index
+        LP_T,               // text from const pointer
+        LP_T_FIDX,          // text from to_str function by index
+        LP_T_FV,            // text from to_str function by unsigned val index
+
+        LV = LP_VT,
+        LVFI = LP_VT_FIDX,
+        LF = LP_T_FV,
+        LS = LP_SL,
+    } t : 4;
+} label_t;
 
 typedef struct {
     const text_field_t * tfcfg;
@@ -93,18 +106,7 @@ typedef struct {
 } tf_ctx_t;
 
 struct sub_label_list {
-    void (*ctx_update)(void * ctx, unsigned x);
-    const label_value_t * list;
+    void (*ctx_update)(void * ctx, unsigned idx);
+    const label_t * list;
     uint8_t count;
 };
-
-// typedef struct {
-//     union {
-//         const char * text;
-//         const char * (*to_str)(unsigned x);
-//         val_text_t vt;
-//     };
-//     xy_t pos_char;
-// };
-
-
