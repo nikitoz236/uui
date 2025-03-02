@@ -26,7 +26,6 @@ static const char * str_from_val(void * ptr, val_rep_t rep, val_text_t vt, unsig
     return str;
 }
 
-
 /*
     все! мне для того чтобы выдергивать форматирование значений для компьютера понадобился индекс здесь, можно конечно было через контекст, но это память
 
@@ -57,7 +56,6 @@ static const char * str_from_val(void * ptr, val_rep_t rep, val_text_t vt, unsig
 
         каким цветом
 */
-
 
 //  label print
 //  const tf_ctx_t * tf         контекст текстового поля
@@ -102,6 +100,7 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
                 for (unsigned i = 0; i < l->sl->count; i++) {
                     lp(tf, &l->sl->list[i], cs, sub_prev_ctx, sub_ctx, idx);
                 }
+                // lp_color(tf, cs->bg, l->sl, idx, sub_ctx, sub_prev_ctx);
                 return;
             } else if (t == LP_T_LV) {
                 str = l->text_list[v];
@@ -116,4 +115,17 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
     }
 
     lcd_color_text_raw_print(str, tf->tfcfg->fcfg, cs, &tf->xy, &tf->tfcfg->limit_char, &l->xy, l->len);
+}
+
+void lp_color(const tf_ctx_t * tf, lcd_color_t bg_color, const label_list_t * list, unsigned idx, void * ctx, void * prev_ctx)
+{
+    color_scheme_t cs = { .bg = bg_color };
+    if (list->ctx_update) {
+        list->ctx_update(ctx, idx);
+    }
+    for (unsigned i = 0; i < list->count; i++) {
+        lp_color_t * a = (lp_color_t *)list->wrap_list;
+        cs.fg = a[i].color;
+        lp(tf, &a[i].l, &cs, prev_ctx, ctx, idx);
+    }
 }

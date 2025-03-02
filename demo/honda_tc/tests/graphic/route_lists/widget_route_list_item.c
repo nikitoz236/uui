@@ -60,7 +60,28 @@ typedef struct {
     uint8_t restart_engaged;
 } ctx_t;
 
-const struct lvcolor label_static[] = {
+static void ctx_update_time(route_time_t * rt, unsigned time_s)
+{
+    rt->s = time_s % 60;
+    time_s /= 60;
+    rt->m = time_s % 60;
+    rt->h = time_s / 60;
+}
+
+static void ctx_update_since(route_since_t * rs, unsigned since_s)
+{
+    date_from_s(&rs->d, since_s);
+    time_from_s(&rs->t, since_s);
+}
+
+static void ctx_update_vals(uv_t * uv, route_t r)
+{
+    for (route_value_t t = 0; t < ROUTE_VALUE_NUM; t++) {
+        uv->rv[t] = route_get_value(r, t);
+    }
+}
+
+const lp_color_t label_static[] = {
     { .color = 0x882222, .l = { .t = LP_T_FIDX, .xy = { .x = 0,  .y = 0 }, .to_str = route_name } },
     { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30, .y = 0 }, .text = "time:",        } },
     { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 44, .y = 0 }, .text = ":",            } },
@@ -81,23 +102,13 @@ const struct lvcolor label_static[] = {
     { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48, .y = 1 }, .text = "km",           } },
 };
 
-const struct lvcolor label_restart = {
-      .color = 0xFF0000, .l = { .t = LP_T_LV, .xy = { .x = 14, .y = 0 }, .text_list = &(char *[]){ 0, "OK to RESTART" }, .len = 13, .rep = { .vs = VAL_SIZE_8 }, .ofs = offsetof(ctx_t, restart_engaged) } 
+const label_list_t ll_static = { .count = ARRAY_SIZE(label_static), .wrap_list = label_static };
+
+const label_list_t ll_restart = {
+    .count = 1, .wrap_list = (const lp_color_t []){
+        { .color = 0xFF0000, .l = { .t = LP_T_LV, .xy = { .x = 14, .y = 0 }, .text_list = (const char *[]){ 0, "OK to RESTART" }, .len = 13, .rep = { .vs = VAL_SIZE_8 }, .ofs = offsetof(ctx_t, restart_engaged) } }
+    }
 };
-
-static void ctx_update_time(route_time_t * rt, unsigned time_s)
-{
-    rt->s = time_s % 60;
-    time_s /= 60;
-    rt->m = time_s % 60;
-    rt->h = time_s / 60;
-}
-
-static void ctx_update_since(route_since_t * rs, unsigned since_s)
-{
-    date_from_s(&rs->d, since_s);
-    time_from_s(&rs->t, since_s);
-}
 
 const label_t labels_route_time[] = {
     { .t = LV, .xy = { .x = 37, .y = 0 }, .rep = { .vs = VAL_SIZE_32 }, .len = 7, .vt = { .zl = 0 },     .ofs = offsetof(route_time_t, h) },
@@ -114,16 +125,18 @@ const label_t labels_route_since[] = {
     { .t = LV, .xy = { .x = 25, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(route_since_t, t.s) },
 };
 
-const struct lvcolor labels_vals[] = {
+const lp_color_t labels_vals[] = {
     { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 36, .y = 2 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_DIST]) } },
     { .color = 0x96A4Ad, .l = { .t = LV, .xy = { .x = 37, .y = 3 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_FUEL]) } },
     { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 37, .y = 1 }, .len = 10,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_ODO]) } },
     { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 11, .y = 2 }, .len = 6,   .vt = { .f = X1000, .p = 2, .zr = 0}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_AVG_SPEED]) } },
     { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 16, .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_CONS_DIST]) } },
     { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 6,  .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_CONS_TIME]) } },
-    { .color = 0xE6A7bd, .l = { .t = LS, .sofs = offsetof(uv_t, since), .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_TIME]), .sl = &(const struct sub_label_list){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_since, .list = labels_route_since, .count = 6 } } },
-    { .color = 0x96A41d, .l = { .t = LS, .sofs = offsetof(uv_t, time),  .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_TIME]),       .sl = &(const struct sub_label_list){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time,  .list = labels_route_time,  .count = 3 } } },
+    { .color = 0xE6A7bd, .l = { .t = LS, .sofs = offsetof(uv_t, since), .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_TIME]), .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_since, .list = labels_route_since, .count = 6 } } },
+    { .color = 0x96A41d, .l = { .t = LS, .sofs = offsetof(uv_t, time),  .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_TIME]),       .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time,  .list = labels_route_time,  .count = 3 } } },
 };
+
+const label_list_t ll_vals = { .count = ARRAY_SIZE(labels_vals), .wrap_list = labels_vals, .ctx_update = ctx_update_vals };
 
 /*
 vscode показывает символы начиная с 1, графика с 0
@@ -146,32 +159,15 @@ static void extend(ui_element_t * el)
     ctx->tp = text_field_text_pos(&el->f, &tf);
 }
 
-static void ctx_update_vals(uv_t * uv, route_t r)
-{
-    for (route_value_t t = 0; t < ROUTE_VALUE_NUM; t++) {
-        uv->rv[t] = route_get_value(r, t);
-    }
-}
-
 static void update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    route_t r = el->idx;
-    color_scheme_t cs = {
-        .bg = bg[el->active],
-    };
-
     tf_ctx_t tf_ctx = {
         .tfcfg = &tf,
         .xy = ctx->tp,
     };
-
     uv_t uv;
-    ctx_update_vals(&uv, r);
-    for (unsigned i = 0; i < ARRAY_SIZE(labels_vals); i++) {
-        cs.fg = labels_vals[i].color;
-        lp(&tf_ctx, &labels_vals[i].l, &cs, &ctx->uv, &uv, r);
-    }
+    lp_color(&tf_ctx, bg[el->active], &ll_vals, el->idx, &uv, &ctx->uv);
 }
 
 static void draw(ui_element_t * el)
@@ -180,42 +176,29 @@ static void draw(ui_element_t * el)
     ctx->restart_engaged = 0;
     route_t r = el->idx;
 
-    color_scheme_t cs = {
-        .bg = bg[el->active],
-    };
-
     tf_ctx_t tf_ctx = {
         .tfcfg = &tf,
         .xy = ctx->tp,
     };
 
-    draw_color_form(&el->f, cs.bg);
-    for (unsigned i = 0; i < ARRAY_SIZE(label_static); i++) {
-        cs.fg = label_static[i].color;
-        lp(&tf_ctx, &label_static[i].l, &cs, 0, 0, r);
-    }
+    draw_color_form(&el->f, bg[el->active]);
 
-    ctx_update_vals(&ctx->uv, r);
-    for (unsigned i = 0; i < ARRAY_SIZE(labels_vals); i++) {
-        cs.fg = labels_vals[i].color;
-        lp(&tf_ctx, &labels_vals[i].l, &cs, 0, &ctx->uv, r);
-    }
+    lp_color(&tf_ctx, bg[el->active], &ll_static, el->idx, &ctx->uv, 0);
+    lp_color(&tf_ctx, bg[el->active], &ll_vals, el->idx, &ctx->uv, 0);
 }
 
 static void update_restart_engaged(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    color_scheme_t cs = {
-        .bg = bg[1],
-        .fg = label_restart.color
-    };
 
     tf_ctx_t tf_ctx = {
         .tfcfg = &tf,
         .xy = ctx->tp,
     };
 
-    lp(&tf_ctx, &label_restart.l, &cs, 0, ctx, 0);
+    lp_color(&tf_ctx, bg[el->active], &ll_restart, el->idx, ctx, 0);
+
+    // проверяй что файл поменялся прежде чем сохранять маршрут
 }
 
 static unsigned process(ui_element_t * el, unsigned event)
