@@ -59,23 +59,16 @@ static inline xy_t text_field_text_pos(const form_t * f, const text_field_t * cf
 
 */
 
-typedef struct {
-    const char * text;
-    const char * (*to_str)(unsigned x);
-    xy_t xy;
-    uint16_t len;
-} label_static_t;
-
-struct sub_label_list;
+struct label_list;
 
 typedef struct {
     union {
         const char * text;
         const char * (*to_str)(unsigned x);
-        const struct sub_label_list * sl;
+        const struct label_list * sl;
         void (*vt_by_idx)(val_text_t * vt, unsigned idx);
         val_text_t vt;
-        // const char ** text_list;
+        const char ** text_list;
         // const char * (*to_str_val)(void * p, val_rep_t r);
     };
     xy_t xy;
@@ -86,17 +79,19 @@ typedef struct {
     uint16_t ofs;           // val offset in ctx
     val_rep_t rep;          // val representation in ctx
     enum {
-        LP_SL,              // sub label
-        LP_VT,              // value to str, format from const vt
-        LP_VT_FIDX,         // value to str, format from function by index
+        LP_S,               // sub label
+        LP_V,               // value to str, format from const vt
+        LP_V_FIDX,          // value to str, format from function by index
         LP_T,               // text from const pointer
         LP_T_FIDX,          // text from to_str function by index
-        LP_T_FV,            // text from to_str function by unsigned val index
+        LP_T_FV,            // text from to_str function by unsigned val
+        LP_T_LIDX,          // text from pointers array list by index
+        LP_T_LV,            // text from pointers array list by unsigned val
 
-        LV = LP_VT,
-        LVFI = LP_VT_FIDX,
+        LV = LP_V,
+        LVFI = LP_V_FIDX,
         LF = LP_T_FV,
-        LS = LP_SL,
+        LS = LP_S,
     } t : 4;
 } label_t;
 
@@ -105,8 +100,13 @@ typedef struct {
     xy_t xy;
 } tf_ctx_t;
 
-struct sub_label_list {
+struct label_list {
     void (*ctx_update)(void * ctx, unsigned idx);
-    const label_t * list;
+    union {
+        const label_t * list;
+        const void * wrap_list;     // может быть какойто другой тип. на усмотрение реализации печатающей функции.
+    };
     uint8_t count;
 };
+
+typedef struct label_list label_list_t;
