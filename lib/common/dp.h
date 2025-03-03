@@ -8,12 +8,24 @@ void __debug_usart_tx_data(const char * s, unsigned len);
 
 // static const char * __debug_module_name = { __FILE__ };
 
+enum {
+    DPC_BLACK,
+    DPC_RED,
+    DPC_GREEN,
+    DPC_YELLOW,
+    DPC_BLUE,
+    DPC_MAGENTA,
+    DPC_CYAN,
+    DPC_WHITE,
+};
+
 struct dp_ctx {
     struct dp_ctx * next;
     const char * name;
     unsigned silent : 4;
     unsigned started : 1;
     unsigned registred : 1;
+    unsigned color : 1;
 };
 
 #ifndef DP_NAME
@@ -66,6 +78,10 @@ static inline unsigned __debug_start(void)
 
     if (__dp_ctx.started == 0) {
         __dp_ctx.started = 1;
+        if (__dp_ctx.color) {
+            __debug_usart_tx_data("\x1b[m", 3);
+            __dp_ctx.color = 0;
+        }
         // __debug_usart_tx_data("[", 1);
         __debug_print_str(__dp_ctx.name, NAME_LEN, ' ');
         __debug_usart_tx_data("|", 2);
@@ -73,6 +89,40 @@ static inline unsigned __debug_start(void)
     }
     return 0;
 }
+
+static inline void dpcr(void)
+{
+    if (__debug_start()) {
+        return;
+    }
+    __dp_ctx.color = 0;
+    __debug_usart_tx_data("\x1b[m", 3);
+}
+
+static inline void dpct(unsigned color)
+{
+    if (__debug_start()) {
+        return;
+    }
+    __dp_ctx.color = 1;
+    char n = '0' + color;
+    __debug_usart_tx_data("\x1b[3", 3);
+    __debug_usart_tx_data(&n, 1);
+    __debug_usart_tx_data("m", 1);
+}
+
+static inline void dpcb(unsigned color)
+{
+    if (__debug_start()) {
+        return;
+    }
+    __dp_ctx.color = 1;
+    char n = '0' + color;
+    __debug_usart_tx_data("\x1b[4", 3);
+    __debug_usart_tx_data(&n, 1);
+    __debug_usart_tx_data("m", 1);
+}
+
 
 static inline void dpl(const char * s, unsigned l)
 {
@@ -156,8 +206,6 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
             plen++;
         }
             __debug_usart_tx_data(str, plen);
-        // здесь есть проблема, если мы передаем через DMA без промежуточного буфера, то следующий цикл изменит str
-        // до его полной отправки предыдущим циклом, так как __debug_usart_tx_data возвращает управление до полной отправки
     }
 }
 

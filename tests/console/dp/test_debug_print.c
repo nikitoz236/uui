@@ -20,5 +20,9 @@ int main()
 
     dpl("fuck", 7); dpn("<");
 
+    dpct(DPC_RED); dpn("color text red");
+    dpn("next str without color");
+    dpct(DPC_RED); dp("color text red "); dpcr(); dpn("reset color in midle of str");
+
     return 0;
 }
