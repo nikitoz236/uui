@@ -153,6 +153,7 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
 
 void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len)
 {
+
     unsigned scale = cfg->scale;
     if (scale == 0) {
         scale = 1;
@@ -162,6 +163,8 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
     if (pos_chars) {
         char_idx = *pos_chars;
     }
+
+    // printf("lcd_color_text_raw_print str %s, len %d, x %d y %d, lim x %d, lim y %d \n", str, len, char_idx.x, char_idx.y, limit_chars->x, limit_chars->y);
 
     if (limit_chars) {
         if (char_idx.x >= limit_chars->x) {
@@ -200,12 +203,16 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
             }
         }
 
+        // printf("     char %c hex %02x\n", c, c);
+
         if (c == 0) {
             if (len == 0) {
                 return;
             }
             // если строка закончилась или отсутствует, но указан len
             // заполняем оставшиеся от len знакоместа пробелами
+
+            // printf("lcd_color_text_raw_print fill_rem_form_str\n");
             c = ' ';
         }
 
@@ -215,6 +222,7 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
             lcd_rect(char_pos_px.x, char_pos_px.y, (cfg->font->size.w * scale), (cfg->font->size.h * scale), cs->bg);
             // ?? надо ли заполнять зазор между буквами?
         } else {
+
             print_char(c, char_pos_px.x, char_pos_px.y, cfg->font, cs->fg, cs->bg, scale);
         }
 

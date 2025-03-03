@@ -6,6 +6,7 @@
     здесь только про геометрию текста
 */
 
+// DEPRICATED
 typedef struct __attribute__((packed)) {
     const font_t * font;
     xy_t text_size;
@@ -15,8 +16,8 @@ typedef struct __attribute__((packed)) {
 
 typedef struct {
     const font_t * font;
-    xy_t gaps;
-    uint8_t scale;
+    xy_t gaps;              // вот это как раз какбы маргин
+    uint8_t scale;          // досихпор не понятно как влияет на gaps - не влияет, за счет этого большая точность, можно некратные зазоры делать
 } lcd_font_cfg_t;
 
 void lcd_text_calc_size(xy_t * size, const lcd_text_cfg_t * cfg);

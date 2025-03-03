@@ -16,3 +16,9 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
 // pos_chars - положение текста в текстовом поле в символах, если 0 - то в начало,
 // len - длина строки, если 0 - то до конца текста или до text_size.x
 void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len);
+
+// появилась идея завернуть все в универсальную функцию, color_scheme_t это тип который передается целиком, на монохромном дисплее будет также, но это не точно
+static inline void lcd_text(xy_t xy_px, const char * str, const lcd_font_cfg_t * cfg, color_scheme_t cs, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len)
+{
+    lcd_color_text_raw_print(str, cfg, &cs, &xy_px, limit_chars, pos_chars, len);
+}
