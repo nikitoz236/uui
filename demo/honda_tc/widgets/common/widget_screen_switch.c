@@ -4,85 +4,65 @@
 #include "forms_align.h"
 #include "forms_split.h"
 #include "draw_color.h"
-#include "lcd_text_color.h"
+#include "lcd_color.h"
+#include "val_mod.h"
 
 typedef struct {
     form_t title_form;
-    uint8_t last_selector;
+    tf_ctx_t title_ctx;
+    unsigned selector;
 } ctx_t;
 
-static void calc(ui_element_t * el)
+static void redraw(ui_element_t * el)
 {
-    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     ctx_t * ctx = (ctx_t *)el->ctx;
-    unsigned current_screen = *cfg->selector_ptr;
-    ui_node_desc_t * node = &cfg->screens_list[current_screen];
-    ui_element_t * item = ui_tree_add(el, node, current_screen);
-    ui_tree_element_calc(item);
-    el->f.s = item->f.s;
+
+    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
+
+    ui_node_desc_t * node = &cfg->screens_list[ctx->selector];
+    ui_element_t * item = ui_tree_add(el, node, ctx->selector);
+
+    // не делаю calc дочерним элементам. сразу ему форму целиком отдаю весь размер, или заголовок оставить ?
+    item->f = el->f;
+
     if (cfg->title_cfg) {
-        ctx->title_form.s = text_field_size_px(cfg->title_cfg);
-        el->f.s.h += ctx->title_form.s.h;
+        ctx->title_form = el->f;
+        tf_ctx_calc(&ctx->title_ctx, &ctx->title_form, cfg->title_cfg);
+        form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
+        draw_color_form(&ctx->title_form, 0x76ab23);
+        lcd_color_tf_print(cfg->titles[ctx->selector], &ctx->title_ctx, &(color_scheme_t){ .bg = 0x76ab23, .fg = 0xAE349E }, 0, 0);
     }
+                    // ui_tree_element_extend(item);       // выпилить потом
+
+    ui_tree_element_draw(item);
 }
 
-static void extend(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
-    ui_element_t * item = ui_tree_child(el);
-    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
     ctx_t * ctx = (ctx_t *)el->ctx;
-    item->f = el->f;
-    if (cfg->title_cfg) {
-        ctx->title_form.p = el->f.p;
-        ctx->title_form.s.w = el->f.s.w;
-        form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
-    }
-    ui_tree_element_extend(item);
+    ctx->selector = 0;
+    redraw(el);
 }
 
 static void draw_new_child(ui_element_t * el)
 {
     ui_tree_delete_childs(el);
-    calc(el);
-    extend(el);
-    ui_tree_element_draw(el);
-}
-
-static void draw(ui_element_t * el)
-{
-    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
-    ctx_t * ctx = (ctx_t *)el->ctx;
-    if (cfg->title_cfg) {
-        draw_color_form(&ctx->title_form, 0x76ab23);
-        xy_t title_pos = align_form_pos(&ctx->title_form, text_field_size_px(cfg->title_cfg), cfg->title_cfg->a, cfg->title_cfg->padding);
-        unsigned current_screen = *cfg->selector_ptr;
-        lcd_color_text_raw_print(cfg->titles[current_screen], cfg->title_cfg->fcfg, &(color_scheme_t){ .bg = 0x76ab23, .fg = 0xAE349E }, &title_pos, 0, 0, 0);
-    }
-    ui_element_t * item = ui_tree_child(el);
-    ui_tree_element_draw(item);
+    redraw(el);
 }
 
 static unsigned process(ui_element_t * el, unsigned event)
 {
     __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
-
+    ctx_t * ctx = (ctx_t *)el->ctx;
     ui_element_t * item = ui_tree_child(el);
 
-    uint8_t * current_screen = cfg->selector_ptr;
     if (event == EVENT_BTN_DOWN) {
-        (*current_screen)++;
-        if (*current_screen == cfg->screens_num) {
-            *current_screen = 0;
-        }
+        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_ADD, 1, 0, cfg->screens_num - 1, 1);
         draw_new_child(el);
         return 1;
     }
     if (event == EVENT_BTN_UP) {
-        if (*current_screen == 0) {
-            *current_screen = cfg->screens_num;
-        }
-        (*current_screen)--;
-
+        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_SUB, 1, 0, cfg->screens_num - 1, 1);
         draw_new_child(el);
         return 1;
     }
@@ -91,17 +71,15 @@ static unsigned process(ui_element_t * el, unsigned event)
         return 1;
     }
     if (event == EVENT_BTN_LEFT) {
-        if (item->active) {
+        // if (item->active) {
             ui_tree_element_select(item, 0);
             return 1;
-        }
+        // }
     }
     return 0;
 }
 
-widget_desc_t __widget_screen_switch = {
-    .calc = calc,
-    .extend = extend,
+const widget_desc_t widget_screen_switch = {
     .draw = draw,
     .process_event = process,
     .ctx_size = sizeof(ctx_t)

@@ -12,7 +12,6 @@ uint8_t screen_selector = 0;
 void widget_color_rect_draw(ui_element_t * el)
 {
     lcd_color_t * color = el->ui_node->cfg;
-    printf("    rect color hex %06x\n", *color);
     draw_color_form(&el->f, *color);
 }
 
@@ -30,7 +29,6 @@ const lcd_color_t color_list[] = {
 ui_node_desc_t ui = {
     .widget = &__widget_screen_switch_titled,
     .cfg = &(__widget_screen_switch_cfg_t){
-        .selector_ptr = &screen_selector,
         .screens_num = 4,
         .title_cfg = &(text_field_t){
             .fcfg = &(lcd_font_cfg_t){

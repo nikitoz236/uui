@@ -26,6 +26,8 @@ SRC += $(LIB)/emu/hw/rtc.c
 SRC += $(LIB)/emu/console/emu_dp_usart.c
 SRC += $(LIB)/common/str_utils.c
 
+SRC += $(LIB)/common/val_mod.c
+
 SRC += $(LIB)/graphic/forms/forms_split.c
 
 TEST_NAME = test_screen_switch_title
