@@ -17,7 +17,7 @@ static void redraw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
 
-    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
+    widget_screen_switch_cfg_t * cfg = (widget_screen_switch_cfg_t *)el->ui_node->cfg;
 
     ui_node_desc_t * node = &cfg->screens_list[ctx->selector];
     ui_element_t * item = ui_tree_add(el, node, ctx->selector);
@@ -52,7 +52,7 @@ static void draw_new_child(ui_element_t * el)
 
 static unsigned process(ui_element_t * el, unsigned event)
 {
-    __widget_screen_switch_cfg_t * cfg = (__widget_screen_switch_cfg_t *)el->ui_node->cfg;
+    widget_screen_switch_cfg_t * cfg = (widget_screen_switch_cfg_t *)el->ui_node->cfg;
     ctx_t * ctx = (ctx_t *)el->ctx;
     ui_element_t * item = ui_tree_child(el);
 

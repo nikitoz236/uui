@@ -27,8 +27,8 @@ const lcd_color_t color_list[] = {
 };
 
 ui_node_desc_t ui = {
-    .widget = &__widget_screen_switch_titled,
-    .cfg = &(__widget_screen_switch_cfg_t){
+    .widget = &widget_screen_switch,
+    .cfg = &(widget_screen_switch_cfg_t){
         .screens_num = 4,
         .title_cfg = &(text_field_t){
             .fcfg = &(lcd_font_cfg_t){
@@ -44,7 +44,7 @@ ui_node_desc_t ui = {
             "Widget",
             "Debug Metrics Bool",
             "Debug Metrics REAL",
-            "DUMP ECU", 
+            "DUMP ECU",
         },
         .screens_list = (ui_node_desc_t[]){
             {
@@ -70,9 +70,7 @@ ui_node_desc_t ui = {
 
 int main()
 {
-    printf("test __widget_screen_switch_titled\r\n");
-
-
+    printf("test widget_screen_switch titled\r\n");
     emu_ui_node(&ui);
     return 0;
 }
