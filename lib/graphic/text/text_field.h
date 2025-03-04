@@ -45,6 +45,9 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
     }
 
     for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
+        ctx->xy.ca[d] = f->p.ca[d];
+
+        unsigned text_linear_size = 0;
         unsigned char_linear_size = cfg->fcfg->font->size.ca[d];
         unsigned gap = cfg->fcfg->gaps.ca[d];
         if (gap == 0) {
@@ -52,7 +55,6 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
             // охуенный план также расширять gaps и scale если там нули
             // и у тебя упрется по одной из координат всегда текст, и другую координату можно будет уменьшить
         }
-        unsigned text_linear_size = 0;
         if (cfg->limit_char.ca[d]) {
             // вариант когда мы уменьшаем размер формы
             unsigned text_len = cfg->limit_char.ca[d];
@@ -64,12 +66,12 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
 
             // align
             if (cfg->a.ca[d].center) {
-                ctx->xy.ca[d] = (f->s.ca[d] - text_linear_size) / 2;
+                ctx->xy.ca[d] += (f->s.ca[d] - text_linear_size) / 2;
             } else {
                 if (cfg->a.ca[d].edge == EDGE_L) {
-                    ctx->xy.ca[d] = cfg->padding.ca[d];
+                    ctx->xy.ca[d] += cfg->padding.ca[d];
                 } else {
-                    ctx->xy.ca[d] = f->s.ca[d] - cfg->padding.ca[d] - text_linear_size;
+                    ctx->xy.ca[d] += f->s.ca[d] - cfg->padding.ca[d] - text_linear_size;
                 }
             }
         } else {
@@ -78,7 +80,7 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
             ctx->size.ca[d] = (available + gap) / ((char_linear_size * scale) + gap);
 
             // align
-            ctx->xy.ca[d] = cfg->padding.ca[d];
+            ctx->xy.ca[d] += cfg->padding.ca[d];
         }
     }
 
