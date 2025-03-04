@@ -118,7 +118,7 @@ void ui_tree_delete_childs(ui_element_t * element);
 void ui_tree_element_update(ui_element_t * element);
 void ui_tree_element_draw(ui_element_t * element);
 void ui_tree_element_calc(ui_element_t * element);
-void ui_tree_element_select(ui_element_t * element, unsigned select);
+unsigned ui_tree_element_select(ui_element_t * element, unsigned select);
 void ui_tree_element_extend(ui_element_t * el);
 
 void ui_tree_draw(void);
@@ -131,4 +131,4 @@ void ui_tree_process(unsigned event);
 
 void ui_tree_debug_print_linear(void);
 void ui_tree_debug_print_tree(void);
-void print_el_offset(ui_element_t * element);
+void ui_tree_debug_el_offset(ui_element_t * element);

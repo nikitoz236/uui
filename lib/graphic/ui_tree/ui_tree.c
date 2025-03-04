@@ -1,9 +1,8 @@
-#include "ui_tree.h"
-#include "debug_print.h"
-#include "misc.h"
+#define DP_NAME "UI TREE"
+#include "dp.h"
 
-// #define debug__create    debug_print
-#define debug__create
+#include "ui_tree.h"
+#include "misc.h"
 
 static void * ui_tree_ptr = 0;
 static unsigned ui_tree_size = 0;
@@ -38,6 +37,10 @@ static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_of
     el->child = 0;
     el->next = 0;
     el->active = 0;
+
+    // дочерний элемент по умолчанию имеет форму родителя и может ее делить по своему усмотрению
+    ui_element_t * owner = ui_tree_element(owner_offset);
+    el->f = owner->f;
 
     // after save ui_node pointer
     ui_tree_top += element_size(el);
@@ -93,7 +96,7 @@ static ui_element_t * search_last_child(ui_element_t * owner)
 {
     ui_element_t * last = ui_tree_child(owner);
     while (last->next) {
-        debug__create("    search last child %d\n", last->next);
+        // debug__create("    search last child %d\n", last->next);
         last = ui_tree_element(last->next);
     }
     return last;
@@ -102,7 +105,7 @@ static ui_element_t * search_last_child(ui_element_t * owner)
 ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node, unsigned idx)
 {
     ui_element_t * el;
-    debug__create("ui tree add owner %d, tree top %d\n", element_offset(owner), ui_tree_top);
+    // debug__create("ui tree add owner %d, tree top %d\n", element_offset(owner), ui_tree_top);
     if (owner->child == 0) {
         // первый дочерний элемент
         el = add_node(ui_node, element_offset(owner), 0);
@@ -361,12 +364,22 @@ void ui_tree_element_draw(ui_element_t * element)
     }
 }
 
-void ui_tree_element_select(ui_element_t * element, unsigned select)
+unsigned ui_tree_element_select(ui_element_t * element, unsigned select)
 {
+    // проблема. активность элемента задает родитель, кажется что сбрасывать ее может сам элемент
+    // пока непонятно осознание. но там есть какойто доп иф в селекторе
+    // если это будет ответственность дочернего элемента, то корневой элемент может случайно сбросить свою активность
+
+    if (element->active == select) {
+        return 0;
+    }
+
     element->active = select;
+
     if (element->ui_node->widget->select) {
         element->ui_node->widget->select(element);
     }
+    return 1;
 }
 
 void ui_tree_draw(void)
@@ -426,25 +439,33 @@ void ui_tree_process(unsigned event)
 
 // debug prints
 
+
+static inline void dprint_form(form_t * f)
+{
+    dp("form p: "); dpd(f->p.x, 3); dp(", "); dpd(f->p.y, 3); dp(" s: "); dpd(f->s.w, 3); dp(", "); dpd(f->s.h, 3);
+}
+
 void ui_tree_debug_print_linear(void)
 {
-    debug_print("ui tree linear:\n");
+    dpn("ui tree linear: need to implement");
     ui_element_t * element = ui_tree_element(0);
     while (element) {
         // debug_print_hex("--  ", element, sizeof(ui_element_t) + element->ui_node->widget->ctx_size);
-        debug_print_color(GREEN, NONE, "    element %d: ", element->ctx[0]);
-        debug_print("offset: %d, %p idx %2d, owner %4d, child %4d, next %4d, ctx size %d\n",  element_offset(element), element->ui_node, element->idx, element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
+        // debug_print_color(GREEN, NONE, "    element %d: ", element->ctx[0]);
+        // debug_print("offset: %d, %p idx %2d, owner %4d, child %4d, next %4d, ctx size %d\n",  element_offset(element), element->ui_node, element->idx, element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
         element = ui_tree_next_linear(element);
     }
 }
 
 static void ui_tree_debug_print_tree_element(ui_element_t * element, unsigned level)
 {
-    for (unsigned i = 0; i < level; i++) {
-        debug_print("    ");
-    }
-    debug_print_color(RED, NONE, "element %d: ", element->ctx[0]);
-    debug_print("offset: %d, %p idx %2d, owner %4d, child %4d, next %4d, ctx size %d\n",  element_offset(element), element->ui_node, element->idx, element->owner, element->child, element->next, element->ui_node->widget->ctx_size);
+    dpl(0, 4 * level);
+    dpct(DPC_RED); dp("element "); dpd(element->ctx[0], 3); dp(": ");
+    dpcr(); dp("offset: "); dpd(element_offset(element), 4); dp(" ["); dpx((unsigned)element->ui_node, 4);
+    dp("] idx: "); dpd(element->idx, 2); dp(" owner: "); dpd(element->owner, 4); dp(" child: "); dpd(element->child, 4);
+    dp(" next: "); dpd(element->next, 4); dp(" ctx size: "); dpd(element->ui_node->widget->ctx_size, 3); dp(" ");
+    dprint_form(&element->f); dn();
+
     if (element->child) {
         ui_element_t * child = ui_tree_child(element);
         while (child) {
@@ -454,14 +475,14 @@ static void ui_tree_debug_print_tree_element(ui_element_t * element, unsigned le
     }
 }
 
-void print_el_offset(ui_element_t * element)
+void ui_tree_debug_el_offset(ui_element_t * element)
 {
-    debug_print("element %d: ", element_offset(element));
+    dp("element : "); dpd(element_offset(element), 4);
 }
 
 void ui_tree_debug_print_tree(void)
 {
-    debug_print("ui tree tree:\n");
+    dpn("ui tree:");
     ui_element_t * element = ui_tree_element(0);
-    ui_tree_debug_print_tree_element(element, 1);
+    ui_tree_debug_print_tree_element(element, 0);
 }
