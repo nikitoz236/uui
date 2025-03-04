@@ -1,6 +1,5 @@
 #include "widget_screen_switch.h"
 #include "event_list.h"
-
 #include "forms_split.h"
 #include "draw_color.h"
 #include "lcd_color.h"
@@ -20,9 +19,6 @@ static void redraw(ui_element_t * el)
 
     ui_node_desc_t * node = &cfg->screens_list[ctx->selector];
     ui_element_t * item = ui_tree_add(el, node, ctx->selector);
-
-    // не делаю calc дочерним элементам. сразу ему форму целиком отдаю весь размер, или заголовок оставить ?
-    item->f = el->f;
 
     if (cfg->title_cfg) {
         form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
@@ -72,14 +68,10 @@ static unsigned process(ui_element_t * el, unsigned event)
         return 1;
     }
     if (event == EVENT_BTN_OK) {
-        ui_tree_element_select(item, 1);
-        return 1;
+        return ui_tree_element_select(item, 1);
     }
     if (event == EVENT_BTN_LEFT) {
-        // if (item->active) {
-            ui_tree_element_select(item, 0);
-            return 1;
-        // }
+        return ui_tree_element_select(item, 0);
     }
     return 0;
 }
