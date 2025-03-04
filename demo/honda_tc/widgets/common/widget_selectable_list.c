@@ -42,7 +42,9 @@ static void recalc(ui_element_t * el)
             }
         }
 
-        if (ui_tree_element_draw(item) == 0) {
+        ui_tree_element_draw(item);
+
+        if (item->drawed == 0) {
             break;
         }
 
@@ -56,15 +58,16 @@ static void recalc(ui_element_t * el)
 
         form_cut(&f, DIMENSION_Y, EDGE_U, cfg->margin.y);
     }
+
+    // printf("widget_selectable_list recalc, count %d, first %d, pos %d\n", ctx->count, ctx->first, ctx->pos);
 }
 
-static unsigned draw(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->first = 0;
     ctx->pos = 0;
     recalc(el);
-    // printf("list calc %d %d %d %d\n", el->f.p.x, el->f.p.y, el->f.s.w, el->f.s.h);
     return 1;
 }
 

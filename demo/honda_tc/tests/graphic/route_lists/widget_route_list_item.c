@@ -146,6 +146,7 @@ static void update(ui_element_t * el)
 
 static void select(ui_element_t * el)
 {
+    // printf("            widget_route_list_item select, active %d, idx %d\n", el->active, el->idx);
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->restart_engaged = 0;
 
@@ -155,16 +156,18 @@ static void select(ui_element_t * el)
     lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &ctx->uv, 0);
 }
 
-static unsigned draw(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     form_t f_bkp = el->f;
     tf_ctx_calc(&ctx->tf, &el->f, &tf);
+
     if (el->f.s.h > f_bkp.s.h) {
-        return 0;
+        return;
     }
+
     select(el);
-    return 1;
+    el->drawed = 1;
 }
 
 static void update_restart_engaged(ui_element_t * el)

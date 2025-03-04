@@ -25,7 +25,6 @@ static void redraw(ui_element_t * el)
         draw_color_form(&ctx->title_form, 0x76ab23);
         lcd_color_tf_print(cfg->titles[ctx->selector], &ctx->title_ctx, &(color_scheme_t){ .bg = 0x76ab23, .fg = 0xAE349E }, 0, 0);
     }
-                    ui_tree_element_extend(item);       // выпилить потом
 
     ui_tree_element_draw(item);
 }
