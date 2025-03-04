@@ -137,34 +137,22 @@
 
 #include "widget_debug_metrics.h"
 
-extern font_t font_5x7;
-text_field_t screen_title = {
-    .fcfg = &(lcd_font_cfg_t){
-        .font = &font_5x7,
-        .gaps = { .x = 2, .y = 2 },
-        .scale = 2
-    },
-    .limit_char = { .y = 1 },
-    .a = ALIGN_LIC,
-    .padding = { .x = 2, .y = 2 }
-};
-
 ui_node_desc_t ui = {
     .widget = &widget_screen_switch,
     .cfg = &(widget_screen_switch_cfg_t){
-        .screens_num = 3,
+        .screens_num = 4,
         .screens_list = (ui_node_desc_t[]){
             {
                 .widget = &widget_screen_debug_metrics,
-                .cfg = &(widget_screen_debug_metrics_cfg_t){
-                    .title_cfg = &screen_title
-                }
             },
             {
                 .widget = &widget_screen_debug_metrics,
-                .cfg = &(widget_screen_debug_metrics_cfg_t){
-                    .title_cfg = &screen_title
-                }
+            },
+            {
+                .widget = &widget_screen_debug_metrics,
+            },
+            {
+                .widget = &widget_screen_debug_metrics,
             },
             {
                 .widget = &widget_dlc_dump
