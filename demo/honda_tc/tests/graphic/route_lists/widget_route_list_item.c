@@ -135,7 +135,7 @@ const lp_color_t labels_vals[] = {
     { .color = 0x96A41d, .l = { .t = LS, .sofs = offsetof(uv_t, time),  .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_TIME]),       .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time,  .list = labels_route_time,  .count = 3 } } },
 };
 
-const label_list_t ll_vals = { .count = ARRAY_SIZE(labels_vals), .wrap_list = labels_vals, .ctx_update = ctx_update_vals };
+const label_list_t ll_vals = { .count = ARRAY_SIZE(labels_vals), .wrap_list = labels_vals, .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_vals };
 
 static void calc(ui_element_t * el)
 {
@@ -153,7 +153,6 @@ static void update(ui_element_t * el)
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    // tf_ctx_calc(&ctx->tf, &el->f, &tf);
     ctx->restart_engaged = 0;
 
     draw_color_form(&el->f, bg[el->active]);

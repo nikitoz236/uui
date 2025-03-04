@@ -4,8 +4,6 @@
 #include "event_list.h"
 #include "draw_color.h"
 
-#include "forms_align.h"
-
 /*
     нужно добавить движение все списка кнопками для варианта selectable = 0
     еще нужно обрабатывать cycled
@@ -17,122 +15,65 @@ typedef struct {
     uint8_t count;      // количество элементов поместившихся на экране
 } ctx_t;
 
-static void recalc_list_same(ui_element_t * el)
+static void recalc(ui_element_t * el)
 {
-    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
     ctx_t * ctx = (ctx_t *)el->ctx;
-    ui_element_t * item = ui_tree_add(el, cfg->ui_node, ctx->first);
-    ui_tree_element_calc(item);
-    xy_t item_size = item->f.s;
-    xy_t item_place_size = size_add_padding(item_size, cfg->margin);
-    ctx->count = el->f.s.h / item_place_size.h;
-    if (ctx->count > (cfg->num - ctx->first)) {
-        ctx->count = (cfg->num - ctx->first);
-    }
-
-    unsigned list_idx = 0;
-    form_t f = el->f;
-
-    // printf("recalc_list_same item count %d, form p %d %d s %d %d\n", ctx->count, f.p.x, f.p.y, f.s.w, f.s.h);
-    while (1) {
-        /*
-            потенциально проблемы так как ты не дергаешь calc каждого элемента. ты просто ставишь им размер как у первого.
-            соответственно нельзя инициализировать контекст в вызове calc
-        */
-
-        item->f.s = item_size;
-        item->f.p = align_form_pos(&f, item_size, ALIGN_LIUI, cfg->margin);
-        item->f.s.w = f.s.w - (2 * cfg->margin.x);
-        ui_tree_element_extend(item);
-        // printf("recalc_list_same item pos %d %d size %d %d, idx %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h, ctx->first + list_idx);
-
-        form_cut(&f, DIMENSION_Y, EDGE_U, item_place_size.h - cfg->margin.y);
-        list_idx++;
-        if (list_idx >= ctx->count) {
-            break;
-        }
-        item = ui_tree_add(el, cfg->ui_node, ctx->first + list_idx);
-    }
-}
-
-static void recalc_list_different_down(ui_element_t * el)
-{
     __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
-    ctx_t * ctx = (ctx_t *)el->ctx;
+    draw_color_form(&el->f, 0);
 
     ctx->count = 0;
-    unsigned child_idx = ctx->first;
     form_t f = el->f;
+    form_cut_padding(&f, cfg->margin);
+    unsigned child_idx = ctx->first;
 
-    while (1) {
-        const ui_node_desc_t * child_ui_node = &cfg->ui_node[child_idx];
+    const ui_node_desc_t * child_ui_node = &cfg->ui_node[0];
+
+    while (child_idx < cfg->num) {
+        if (cfg->different_nodes) {
+            child_ui_node = &cfg->ui_node[child_idx];
+        }
+
         ui_element_t * item = ui_tree_add(el, child_ui_node, child_idx);
+        item->f = f;
+
+        // printf("recalc item form %d %d %d %d idx %d\n", f.p.x, f.p.y, f.s.w, f.s.h, item->idx);
+
+        // считаем сколько там надо места
         ui_tree_element_calc(item);
-        xy_t item_size = size_add_padding(item->f.s, cfg->margin);
 
-        // printf("recalc_list_different_down item size %d %d with margin %d %d\n", item->f.s.w, item->f.s.h, item_size.w, item_size.h);
-
-        if (f.s.h < item_size.h) {
+        if (item->f.s.h > f.s.h) {
             break;
         }
 
-        item->f.p = align_form_pos(&f, item->f.s, ALIGN_LIUI, cfg->margin);
-        item->f.s.w = f.s.w - (2 * cfg->margin.x);
+        form_cut(&f, DIMENSION_Y, EDGE_U, item->f.s.h);
 
-        // printf("recalc_list_different_down item pos %d %d size %d %d\n", item->f.p.x, item->f.p.y, item->f.s.w, item->f.s.h);
 
-        ui_tree_element_extend(item);
+        if (el->active) {
+            if (ctx->count == ctx->pos) {
+                item->active = 1;
+            }
+        }
 
-        form_cut(&f, DIMENSION_Y, EDGE_U, item_size.h - cfg->margin.y);
-
-        // printf("recalc_list_different_down form %d %d %d %d\n", f.p.x, f.p.y, f.s.w, f.s.h);
+        ui_tree_element_draw(item);
 
         child_idx++;
         ctx->count++;
 
-        if (child_idx >= cfg->num) {
+        if (f.s.h < cfg->margin.y) {
             break;
         }
+
+        form_cut(&f, DIMENSION_Y, EDGE_U, cfg->margin.y);
+
     }
 }
 
-static void redraw_list(ui_element_t * el)
+static void calc(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    draw_color_form(&el->f, 0);
-
-    // printf("redraw list\n");
-
-    ui_element_t * item = ui_tree_child(el);
-    for (unsigned i = 0; i < ctx->count; i++) {
-        if (el->active) {
-            if (i == ctx->pos) {
-                item->active = 1;
-            }
-        }
-        ui_tree_element_draw(item);
-        item = ui_tree_next(item);
-    }
-}
-
-static void recalc_list(ui_element_t * el)
-{
-    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
-    if (cfg->different_nodes) {
-        recalc_list_different_down(el);
-    } else {
-        recalc_list_same(el);
-    }
-}
-
-static void extend(ui_element_t * el)
-{
-    ctx_t * ctx = (ctx_t *)el->ctx;
-
     ctx->first = 0;
     ctx->pos = 0;
-
-    recalc_list(el);
+    // printf("list calc %d %d %d %d\n", el->f.p.x, el->f.p.y, el->f.s.w, el->f.s.h);
 }
 
 static void select(ui_element_t * el)
@@ -154,9 +95,29 @@ static void change_selected_cild(ui_element_t * el, unsigned unselect, unsigned 
 static void move_list(ui_element_t * el)
 {
     ui_tree_delete_childs(el);
-    recalc_list(el);
-    redraw_list(el);
+    recalc(el);
 }
+
+static void move_selector_dn(ctx_t * ctx, unsigned num)
+{
+
+}
+
+static void move_selector_up(ctx_t * ctx, unsigned num)
+{
+
+}
+
+static void move_list_dn(void)
+{
+
+}
+
+static void move_list_up(void)
+{
+
+}
+
 
 static unsigned process_event(ui_element_t * el, unsigned event)
 {
@@ -227,8 +188,8 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t __widget_selectable_list = {
-    .extend = extend,
-    .draw = redraw_list,
+    .calc = calc,
+    .draw = recalc,
     .select = select,
     .process_event = process_event,
     .ctx_size = sizeof(ctx_t)
