@@ -41,8 +41,6 @@ SRC += ../dump/widget_tc_dump.c
 
 SRC += $(LIB)/graphic/forms/forms_split.c
 
-
-
 # dlc_poll.h
 INC += $(PROJECT)/logic
 SRC += $(PROJECT)/logic/metrics_view.c

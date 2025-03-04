@@ -31,19 +31,19 @@ typedef struct {
 */
 
 const lp_color_t title = {
-    .color = 0xCE4512, .l = { .xy = { .x = 2 }, .len = 10, .text = (const char * []){ "METRICS", "DLC DUMP" }, .t = LP_T_LIDX }
+    .color = 0xFFB62E, .l = { .xy = { .x = 2 }, .len = 10, .text = (const char * []){ "METRICS", "DLC DUMP" }, .t = LP_T_LIDX }
 };
 
 const lp_color_t local_title = {
-    .color = 0xCE4512, .l = { .xy = { .x = 19 }, .len = 10, .text = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX }
+    .color = 0xA36A00, .l = { .xy = { .x = -3 }, .len = 4, .text = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX }
 };
 
 const label_list_t title_selector = {
     .wrap_list = (lp_color_t []) {
-        { .color = 0xCE4512, .l = { .xy = { .x =  0 }, .len = 1, .text_list = (const char *[]){ "<", 0 }, .t = LP_T_LIDX } },
-        { .color = 0xCE4512, .l = { .xy = { .x = 13 }, .len = 1, .text_list = (const char *[]){ ">", 0 }, .t = LP_T_LIDX } },
-        { .color = 0xCE4512, .l = { .xy = { .x = 17 }, .len = 1, .text_list = (const char *[]){ 0, "<" }, .t = LP_T_LIDX } },
-        { .color = 0xCE4512, .l = { .xy = { .x = 25 }, .len = 1, .text_list = (const char *[]){ 0, ">" }, .t = LP_T_LIDX } },
+        { .color = 0xFFB62E, .l = { .xy = { .x =  0 }, .len = 1, .text_list = (const char *[]){ "<", 0 }, .t = LP_T_LIDX } },
+        { .color = 0xFFB62E, .l = { .xy = { .x = 13 }, .len = 1, .text_list = (const char *[]){ ">", 0 }, .t = LP_T_LIDX } },
+        { .color = 0xFFB62E, .l = { .xy = { .x = -8 }, .len = 1, .text_list = (const char *[]){ 0, "<" }, .t = LP_T_LIDX } },
+        { .color = 0xFFB62E, .l = { .xy = { .x = -1 }, .len = 1, .text_list = (const char *[]){ 0, ">" }, .t = LP_T_LIDX } },
     },
     .count = 4
 };
@@ -59,7 +59,7 @@ static void redraw(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     widget_screen_debug_metrics_cfg_t * cfg = (widget_screen_debug_metrics_cfg_t *)el->ui_node->cfg;
 
-    lp(&ctx->title_ctx, &local_title.l, &(color_scheme_t){ .fg = title.color, .bg = bg }, 0, 0, ctx->selector);
+    lp(&ctx->title_ctx, &local_title.l, &(color_scheme_t){ .fg = local_title.color, .bg = bg }, 0, 0, ctx->selector);
     lp_color(&ctx->title_ctx, bg, &title_selector, el->active, 0, 0);
 }
 

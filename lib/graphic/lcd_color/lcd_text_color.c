@@ -154,40 +154,58 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
 void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len)
 {
 
+    xy_t char_shift;        // вектор смещения на 1 знакоместа
+    xy_t char_idx = {};     // текущее знакоместо
+    xy_t char_pos_px = {};  // коодинаты текущего знакоместа
+    unsigned gap = 0;
     unsigned scale = cfg->scale;
     if (scale == 0) {
         scale = 1;
     }
 
-    xy_t char_idx = {};
-    if (pos_chars) {
-        char_idx = *pos_chars;
-    }
-
     // printf("lcd_color_text_raw_print str %s, len %d, x %d y %d, lim x %d, lim y %d \n", str, len, char_idx.x, char_idx.y, limit_chars->x, limit_chars->y);
-
-    if (limit_chars) {
-        if (char_idx.x >= limit_chars->x) {
-            return;
-        }
-    }
-
-    xy_t char_shift;
-    xy_t char_pos_px;
-    xy_t gap;
 
 
     for (unsigned i = 0; i < DIMENSION_COUNT; i++) {
-        gap.ca[i] = cfg->gaps.ca[i];
-        if (gap.ca[i] == 0) {
-            gap.ca[i] = 1;
+        gap = cfg->gaps.ca[i];
+        if (gap == 0) {
+            gap = 1;
         }
-        char_shift.ca[i] = (cfg->font->size.ca[i] * scale) + gap.ca[i];
+        char_shift.ca[i] = (cfg->font->size.ca[i] * scale) + gap;
 
-        char_pos_px.ca[i] = pos_px->ca[i];
+        if (pos_px) {
+            char_pos_px.ca[i] = pos_px->ca[i];
+        }
 
         if (pos_chars) {
-            char_pos_px.ca[i] += pos_chars->ca[i] * char_shift.ca[i];
+            int shift = pos_chars->ca[i];
+
+            if (shift < 0) {
+                if (limit_chars) {
+                    shift = limit_chars->ca[i] + shift - len + 1;
+                    if (shift < 0) {
+                        printf("lcd_color_text_raw_print error left edge - shift %d limit %d\n", shift, limit_chars->ca[i]);
+                        // не влезает в форму слева
+                        return;
+                    }
+                } else {
+                    printf("lcd_color_text_raw_print error no limits - shift %d\n", shift);
+                    // без лимитов непонятно откуда вычитать сдиг
+                    return;
+                }
+
+            } else {
+                if (limit_chars) {
+                    if (shift >= limit_chars->ca[i]) {
+                        // не влезает в форму справа
+                        printf("lcd_color_text_raw_print error right edge - shift %d limit %d\n", shift, limit_chars->ca[i]);
+                        return;
+                    }
+                }
+            }
+
+            char_idx.ca[i] = shift;
+            char_pos_px.ca[i] += shift * char_shift.ca[i];
         }
     }
 
