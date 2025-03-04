@@ -57,10 +57,7 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     if (display_size) {
         el->f.s = *display_size;
     }
-
-    // новая парадигма. если есть calc значит элемент МОЖЕТ уменьшить свой виджет
-    ui_tree_element_calc(el);
-}
+ }
 
 ui_element_t * ui_tree_owner(ui_element_t * element)
 {
@@ -352,17 +349,18 @@ void ui_tree_element_extend(ui_element_t * el)
     }
 }
 
-void ui_tree_element_draw(ui_element_t * element)
+unsigned ui_tree_element_draw(ui_element_t * element)
 {
     if (element->ui_node->widget->draw) {
-        element->ui_node->widget->draw(element);
-    } else {
-        ui_element_t * child = ui_tree_child(element);
-        while (child) {
-            ui_tree_element_draw(child);
-            child = ui_tree_next(child);
-        }
+        return element->ui_node->widget->draw(element);
+    // } else {
+    //     ui_element_t * child = ui_tree_child(element);
+    //     while (child) {
+    //         ui_tree_element_draw(child);
+    //         child = ui_tree_next(child);
+    //     }
     }
+    return 0;
 }
 
 unsigned ui_tree_element_select(ui_element_t * element, unsigned select)

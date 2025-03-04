@@ -69,8 +69,8 @@ typedef struct {
     // пока не используется, но смысл чтобы пересчитывать контекст, после выделения места, не использует HW
     void (*extend)(ui_element_t * el);
 
-    // отрисовка всего элемента
-    void (*draw)(ui_element_t * el);
+    // отрисовка всего элемента, возвращает 1 если удалось, 0 если не влез
+    unsigned (*draw)(ui_element_t * el);
 
     // обновление элемента - чтобы шли часы, менялись значения итд
     void (*update)(ui_element_t * el);
@@ -115,11 +115,12 @@ ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node,
 void ui_tree_delete_childs(ui_element_t * element);
 
 
-void ui_tree_element_update(ui_element_t * element);
-void ui_tree_element_draw(ui_element_t * element);
 void ui_tree_element_calc(ui_element_t * element);
-unsigned ui_tree_element_select(ui_element_t * element, unsigned select);
 void ui_tree_element_extend(ui_element_t * el);
+
+void ui_tree_element_update(ui_element_t * element);
+unsigned ui_tree_element_draw(ui_element_t * element);
+unsigned ui_tree_element_select(ui_element_t * element, unsigned select);
 
 void ui_tree_draw(void);
 void ui_tree_update(void);

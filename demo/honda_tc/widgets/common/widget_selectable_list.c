@@ -36,26 +36,17 @@ static void recalc(ui_element_t * el)
         ui_element_t * item = ui_tree_add(el, child_ui_node, child_idx);
         item->f = f;
 
-        // printf("recalc item form %d %d %d %d idx %d\n", f.p.x, f.p.y, f.s.w, f.s.h, item->idx);
-
-        // считаем сколько там надо места
-        ui_tree_element_calc(item);
-
-        if (item->f.s.h > f.s.h) {
-            break;
-        }
-
-        form_cut(&f, DIMENSION_Y, EDGE_U, item->f.s.h);
-
-
         if (el->active) {
             if (ctx->count == ctx->pos) {
                 item->active = 1;
             }
         }
 
-        ui_tree_element_draw(item);
+        if (ui_tree_element_draw(item) == 0) {
+            break;
+        }
 
+        form_cut(&f, DIMENSION_Y, EDGE_U, item->f.s.h);
         child_idx++;
         ctx->count++;
 
@@ -64,16 +55,17 @@ static void recalc(ui_element_t * el)
         }
 
         form_cut(&f, DIMENSION_Y, EDGE_U, cfg->margin.y);
-
     }
 }
 
-static void calc(ui_element_t * el)
+static unsigned draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->first = 0;
     ctx->pos = 0;
+    recalc(el);
     // printf("list calc %d %d %d %d\n", el->f.p.x, el->f.p.y, el->f.s.w, el->f.s.h);
+    return 1;
 }
 
 static void select(ui_element_t * el)
@@ -188,8 +180,7 @@ static unsigned process_event(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t __widget_selectable_list = {
-    .calc = calc,
-    .draw = recalc,
+    .draw = draw,
     .select = select,
     .process_event = process_event,
     .ctx_size = sizeof(ctx_t)

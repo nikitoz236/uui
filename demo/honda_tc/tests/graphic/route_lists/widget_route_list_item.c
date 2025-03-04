@@ -137,12 +137,6 @@ const lp_color_t labels_vals[] = {
 
 const label_list_t ll_vals = { .count = ARRAY_SIZE(labels_vals), .wrap_list = labels_vals, .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_vals };
 
-static void calc(ui_element_t * el)
-{
-    ctx_t * ctx = (ctx_t *)el->ctx;
-    tf_ctx_calc(&ctx->tf, &el->f, &tf);
-}
-
 static void update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
@@ -150,7 +144,7 @@ static void update(ui_element_t * el)
     lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &uv, &ctx->uv);
 }
 
-static void draw(ui_element_t * el)
+static void select(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->restart_engaged = 0;
@@ -159,6 +153,18 @@ static void draw(ui_element_t * el)
 
     lp_color(&ctx->tf, bg[el->active], &ll_static, el->idx, &ctx->uv, 0);
     lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &ctx->uv, 0);
+}
+
+static unsigned draw(ui_element_t * el)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    form_t f_bkp = el->f;
+    tf_ctx_calc(&ctx->tf, &el->f, &tf);
+    if (el->f.s.h > f_bkp.s.h) {
+        return 0;
+    }
+    select(el);
+    return 1;
 }
 
 static void update_restart_engaged(ui_element_t * el)
@@ -192,10 +198,9 @@ static unsigned process(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t widget_route_list_item = {
-    .calc = calc,
     .update = update,
     .draw = draw,
-    .select = draw,
+    .select = select,
     .process_event = process,
     .ctx_size = sizeof(ctx_t),
 };
