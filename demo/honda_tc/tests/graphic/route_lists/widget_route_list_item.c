@@ -12,27 +12,16 @@
 #include "event_list.h"
 #include "text_label_color.h"
 
-/*
-    достаточно типичная ситуация - горизонтальный элемент
-    как выглядит работа с ним
-
-    на стадии calc вычисляется размер формы - дальше форму такто надо сохранить если это например заголовок чтобы можно было ее закрасить на стадии draw
-
-    интересная мысль 1 - выравниания. можно сделать отрицательные значения координат для выравнивания по правому / нижнему краю
-
-    что делаем с листабельным текстом ?
-*/
-
 extern const font_t font_5x7;
 
-const text_field_t tf = {
+const tf_cfg_t tf = {
     .fcfg = &(lcd_font_cfg_t){
         .font = &font_5x7,
         .gaps = { .y = 4 },
     },
     .a = ALIGN_CC,
     .padding = { .x = 8, .y = 8 },
-    .limit_char = { .x = 50, .y = 4 },      // ну вот он же может расширятся, и интерфейс может расширятся, есть поля привязаные к правому краю, хм
+    .limit_char = { .y = 4 },      // ну вот он же может расширятся, и интерфейс может расширятся, есть поля привязаные к правому краю, хм
 };
 
 const lcd_color_t bg[] = { 0x111111, 0x113222 };
@@ -55,7 +44,7 @@ typedef struct {
 } uv_t;
 
 typedef struct {
-    xy_t tp;
+    tf_ctx_t tf;
     uv_t uv;
     uint8_t restart_engaged;
 } ctx_t;
@@ -81,25 +70,35 @@ static void ctx_update_vals(uv_t * uv, route_t r)
     }
 }
 
+/*
+vscode показывает символы начиная с 1, графика с 0
+--------------------------------------------------
+JOURNEY     RESTART? (OK)       time: 124562:34:23
+start: 21 DEC 2024 13:34:23   dist: 1245673.343 km
+avg speed: 253.45 km/h         fuel: 2334567.233 L
+cons: 37.56 L/h 37.56 L/100km   odo: 345674.324 km
+--------------------------------------------------
+*/
+
 const lp_color_t label_static[] = {
     { .color = 0x882222, .l = { .t = LP_T_FIDX, .xy = { .x = 0,  .y = 0 }, .to_str = route_name } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30, .y = 0 }, .text = "time:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 44, .y = 0 }, .text = ":",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 47, .y = 0 }, .text = ":",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,  .y = 1 }, .text = "start:",       } },
-    { .color = 0x96A41d, .l = { .t = LP_T, .xy = { .x = 21, .y = 1 }, .text = ":",            } },
-    { .color = 0x96A41d, .l = { .t = LP_T, .xy = { .x = 24, .y = 1 }, .text = ":",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30, .y = 2 }, .text = "dist:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48, .y = 2 }, .text = "km",           } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,  .y = 2 }, .text = "avg speed:",   } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 18, .y = 2 }, .text = "km/h",         } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30, .y = 3 }, .text = "fuel:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 49, .y = 3 }, .text = "L",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,  .y = 3 }, .text = "cons:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 12, .y = 3 }, .text = "L/h",          } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 22, .y = 3 }, .text = "L/100km",      } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 31, .y = 1 }, .text = "odo:",         } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48, .y = 1 }, .text = "km",           } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30 - 51, .y = 0 }, .text = "time:",        } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 44 - 51, .y = 0 }, .text = ":",            } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 47 - 51, .y = 0 }, .text = ":",            } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,       .y = 1 }, .text = "start:",       } },
+    { .color = 0x96A41d, .l = { .t = LP_T, .xy = { .x = 21,      .y = 1 }, .text = ":",            } },
+    { .color = 0x96A41d, .l = { .t = LP_T, .xy = { .x = 24,      .y = 1 }, .text = ":",            } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30 - 51, .y = 2 }, .text = "dist:",        } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48 - 51, .y = 2 }, .text = "km",           } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,       .y = 2 }, .text = "avg speed:",   } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 18,      .y = 2 }, .text = "km/h",         } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30 - 51, .y = 3 }, .text = "fuel:",        } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 49 - 51, .y = 3 }, .text = "L",            } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,       .y = 3 }, .text = "cons:",        } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 12,      .y = 3 }, .text = "L/h",          } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 22,      .y = 3 }, .text = "L/100km",      } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 31 - 51, .y = 1 }, .text = "odo:",         } },
+    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48 - 51, .y = 1 }, .text = "km",           } },
 };
 
 const label_list_t ll_static = { .count = ARRAY_SIZE(label_static), .wrap_list = label_static };
@@ -138,65 +137,35 @@ const lp_color_t labels_vals[] = {
 
 const label_list_t ll_vals = { .count = ARRAY_SIZE(labels_vals), .wrap_list = labels_vals, .ctx_update = ctx_update_vals };
 
-/*
-vscode показывает символы начиная с 1, графика с 0
---------------------------------------------------
-JOURNEY     RESTART? (OK)       time: 124562:34:23
-start: 21 DEC 2024 13:34:23   dist: 1245673.343 km
-avg speed: 253.45 km/h         fuel: 2334567.233 L
-cons: 37.56 L/h 37.56 L/100km   odo: 345674.324 km
---------------------------------------------------
-*/
-
 static void calc(ui_element_t * el)
 {
-    el->f.s = text_field_size_px(&tf);
-}
-
-static void extend(ui_element_t * el)
-{
     ctx_t * ctx = (ctx_t *)el->ctx;
-    ctx->tp = text_field_text_pos(&el->f, &tf);
+    tf_ctx_calc(&ctx->tf, &el->f, &tf);
 }
 
 static void update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    tf_ctx_t tf_ctx = {
-        .tfcfg = &tf,
-        .xy = ctx->tp,
-    };
     uv_t uv;
-    lp_color(&tf_ctx, bg[el->active], &ll_vals, el->idx, &uv, &ctx->uv);
+    lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &uv, &ctx->uv);
 }
 
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
+    // tf_ctx_calc(&ctx->tf, &el->f, &tf);
     ctx->restart_engaged = 0;
-    route_t r = el->idx;
-
-    tf_ctx_t tf_ctx = {
-        .tfcfg = &tf,
-        .xy = ctx->tp,
-    };
 
     draw_color_form(&el->f, bg[el->active]);
 
-    lp_color(&tf_ctx, bg[el->active], &ll_static, el->idx, &ctx->uv, 0);
-    lp_color(&tf_ctx, bg[el->active], &ll_vals, el->idx, &ctx->uv, 0);
+    lp_color(&ctx->tf, bg[el->active], &ll_static, el->idx, &ctx->uv, 0);
+    lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &ctx->uv, 0);
 }
 
 static void update_restart_engaged(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    tf_ctx_t tf_ctx = {
-        .tfcfg = &tf,
-        .xy = ctx->tp,
-    };
-
-    lp_color(&tf_ctx, bg[el->active], &ll_restart, el->idx, ctx, 0);
+    lp_color(&ctx->tf, bg[el->active], &ll_restart, el->idx, ctx, 0);
 
     // проверяй что файл поменялся прежде чем сохранять маршрут
 }
@@ -225,7 +194,6 @@ static unsigned process(ui_element_t * el, unsigned event)
 
 const widget_desc_t widget_route_list_item = {
     .calc = calc,
-    .extend = extend,
     .update = update,
     .draw = draw,
     .select = draw,
