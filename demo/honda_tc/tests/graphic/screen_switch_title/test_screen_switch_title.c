@@ -10,7 +10,7 @@ extern font_t font_5x7;
 
 void widget_color_rect_draw(ui_element_t * el)
 {
-    lcd_color_t * color = el->ui_node->cfg;
+    const lcd_color_t * color = el->ui_node->cfg;
     draw_color_form(&el->f, *color);
 }
 

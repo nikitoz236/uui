@@ -1,7 +1,6 @@
 #include "widget_screen_switch.h"
 #include "event_list.h"
 
-#include "forms_align.h"
 #include "forms_split.h"
 #include "draw_color.h"
 #include "lcd_color.h"
@@ -26,13 +25,11 @@ static void redraw(ui_element_t * el)
     item->f = el->f;
 
     if (cfg->title_cfg) {
-        ctx->title_form = el->f;
-        tf_ctx_calc(&ctx->title_ctx, &ctx->title_form, cfg->title_cfg);
         form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
         draw_color_form(&ctx->title_form, 0x76ab23);
         lcd_color_tf_print(cfg->titles[ctx->selector], &ctx->title_ctx, &(color_scheme_t){ .bg = 0x76ab23, .fg = 0xAE349E }, 0, 0);
     }
-                    // ui_tree_element_extend(item);       // выпилить потом
+                    ui_tree_element_extend(item);       // выпилить потом
 
     ui_tree_element_draw(item);
 }
@@ -40,7 +37,15 @@ static void redraw(ui_element_t * el)
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
+    widget_screen_switch_cfg_t * cfg = (widget_screen_switch_cfg_t *)el->ui_node->cfg;
+
     ctx->selector = 0;
+
+    if (cfg->title_cfg) {
+        ctx->title_form = el->f;
+        tf_ctx_calc(&ctx->title_ctx, &ctx->title_form, cfg->title_cfg);
+    }
+
     redraw(el);
 }
 
