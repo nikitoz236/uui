@@ -41,7 +41,11 @@ SRC += $(LIB)/graphic/forms/forms_split.c
 #depricated
 SRC += $(LIB)/graphic/align_forms.c
 
+# dp dependencies
+SRC += $(LIB)/emu/console/emu_dp_usart.c
+SRC += $(LIB)/common/str_utils.c
 
+SRC += $(LIB)/common/val_mod.c
 
 TEST_NAME = test_screen_switch
 

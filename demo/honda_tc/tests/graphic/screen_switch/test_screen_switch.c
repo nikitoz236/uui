@@ -9,12 +9,9 @@ int main()
 {
     printf("test widget_screen_switch\r\n");
 
-    uint8_t screen_selector = 0;
-
     ui_node_desc_t ui = {
-        .widget = &__widget_screen_switch,
-        .cfg = &(__widget_screen_switch_cfg_t){
-            .selector_ptr = &screen_selector,
+        .widget = &widget_screen_switch,
+        .cfg = &(widget_screen_switch_cfg_t){
             .screens_num = 3,
             .screens_list = (ui_node_desc_t[]){
                 {

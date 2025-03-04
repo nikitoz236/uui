@@ -7,7 +7,6 @@
 #include "draw_color.h"
 
 extern font_t font_5x7;
-uint8_t screen_selector = 0;
 
 void widget_color_rect_draw(ui_element_t * el)
 {
