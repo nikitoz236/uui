@@ -22,3 +22,6 @@ static inline form_t form_split_half(form_t * f, dimension_t d, form_edge_t edge
 {
     return form_split_size(f, d, edge, f->s.ca[d] / 2);
 }
+
+// обрезает форму с 4х сторон на свой padding по каждому измерению
+void form_cut_padding(form_t * f, xy_t padding);
