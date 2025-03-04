@@ -114,7 +114,7 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
         }
     }
 
-    lcd_color_text_raw_print(str, tf->tfcfg->fcfg, cs, &tf->xy, &tf->tfcfg->limit_char, &l->xy, l->len);
+    lcd_color_text_raw_print(str, tf->tfcfg->fcfg, cs, &tf->xy, &tf->size, &l->xy, l->len);
 }
 
 void lp_color(const tf_ctx_t * tf, lcd_color_t bg_color, const label_list_t * list, unsigned idx, void * ctx, void * prev_ctx)
