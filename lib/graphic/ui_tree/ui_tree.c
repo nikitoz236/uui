@@ -37,6 +37,7 @@ static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_of
     el->child = 0;
     el->next = 0;
     el->active = 0;
+    el->drawed = 0;
 
     // дочерний элемент по умолчанию имеет форму родителя и может ее делить по своему усмотрению
     ui_element_t * owner = ui_tree_element(owner_offset);
@@ -328,31 +329,10 @@ void ui_tree_delete_childs(ui_element_t * element)
     }
 }
 
-void ui_tree_element_update(ui_element_t * element)
-{
-    if (element->ui_node->widget->update) {
-        element->ui_node->widget->update(element);
-    }
-}
-
-void ui_tree_element_calc(ui_element_t * element)
-{
-    if (element->ui_node->widget->calc) {
-        element->ui_node->widget->calc(element);
-    }
-}
-
-void ui_tree_element_extend(ui_element_t * el)
-{
-    if (el->ui_node->widget->extend) {
-        el->ui_node->widget->extend(el);
-    }
-}
-
-unsigned ui_tree_element_draw(ui_element_t * element)
+void ui_tree_element_draw(ui_element_t * element)
 {
     if (element->ui_node->widget->draw) {
-        return element->ui_node->widget->draw(element);
+        element->ui_node->widget->draw(element);
     // } else {
     //     ui_element_t * child = ui_tree_child(element);
     //     while (child) {
@@ -360,7 +340,6 @@ unsigned ui_tree_element_draw(ui_element_t * element)
     //         child = ui_tree_next(child);
     //     }
     }
-    return 0;
 }
 
 unsigned ui_tree_element_select(ui_element_t * element, unsigned select)
@@ -387,30 +366,21 @@ void ui_tree_draw(void)
     ui_tree_element_draw(element);
 }
 
-void ui_tree_update(void)
-{
-    ui_element_t * element = ui_tree_element(0);
-    ui_tree_element_update(element);
-}
-
 static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
 {
     unsigned result = 0;
     ui_element_t * child = ui_tree_child(element);
 
-    if (element->ui_node->widget->update) {
-        element->ui_node->widget->update(element);
+    if (element->drawed) {
+        if (element->ui_node->widget->update) {
+            element->ui_node->widget->update(element);
+        }
     }
 
     while (child) {
         if (ui_tree_element_process(child, event)) {
             result = 1;
         }
-
-        if (child->ui_node->widget->update) {
-            child->ui_node->widget->update(child);
-        }
-
         child = ui_tree_next(child);
     }
 
@@ -462,7 +432,7 @@ static void ui_tree_debug_print_tree_element(ui_element_t * element, unsigned le
     dpct(DPC_RED); dp("element "); dpd(element->ctx[0], 3); dp(": ");
     dpcr(); dp("offset: "); dpd(element_offset(element), 4); dp(" ["); dpx((unsigned)element->ui_node, 4);
     dp("] idx: "); dpd(element->idx, 2); dp(" owner: "); dpd(element->owner, 4); dp(" child: "); dpd(element->child, 4);
-    dp(" next: "); dpd(element->next, 4); dp(" ctx size: "); dpd(element->ui_node->widget->ctx_size, 3); dp(" active: "); dpd(element->active, 1); dp(" ");
+    dp(" next: "); dpd(element->next, 4); dp(" ctx size: "); dpd(element->ui_node->widget->ctx_size, 3); dp(" a: "); dpd(element->active, 1); dp(" d: "); dpd(element->drawed, 1); dp(" ");
     dprint_form(&element->f); dn();
 
     if (element->child) {

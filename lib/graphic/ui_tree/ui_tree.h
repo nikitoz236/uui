@@ -58,19 +58,14 @@ typedef struct {
     uint16_t child;                         // смещение первого дочернего элемента
     uint16_t next;                          // смещение следующего элемента на данном уровне
     uint8_t idx;                            // индекс элемента на данном уровне, позволяет генерировать однотипные списки
-    uint8_t active : 1;                     // либо управляет выделением элемента, либо обработкой событий
+    uint8_t active : 1;                     // управляет выделением элемента и обработкой событий
+    uint8_t drawed : 1;                     // ставится после успешной отрисовки (если хватило места) и можно дергать update
     uint8_t ctx[];                          // произвольный контекст элемента
 } ui_element_t;
 
 typedef struct {
-    // расчет минимальных размеров элемента, результат в el->f.s, здесь можно инициализировать контекст, не использует HW
-    void (*calc)(ui_element_t * el);
-
-    // пока не используется, но смысл чтобы пересчитывать контекст, после выделения места, не использует HW
-    void (*extend)(ui_element_t * el);
-
     // отрисовка всего элемента, возвращает 1 если удалось, 0 если не влез
-    unsigned (*draw)(ui_element_t * el);
+    void (*draw)(ui_element_t * el);
 
     // обновление элемента - чтобы шли часы, менялись значения итд
     void (*update)(ui_element_t * el);
@@ -114,17 +109,10 @@ ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node,
 
 void ui_tree_delete_childs(ui_element_t * element);
 
-
-void ui_tree_element_calc(ui_element_t * element);
-void ui_tree_element_extend(ui_element_t * el);
-
-void ui_tree_element_update(ui_element_t * element);
-unsigned ui_tree_element_draw(ui_element_t * element);
+void ui_tree_element_draw(ui_element_t * element);
 unsigned ui_tree_element_select(ui_element_t * element, unsigned select);
 
 void ui_tree_draw(void);
-void ui_tree_update(void);
-
 void ui_tree_process(unsigned event);
 
     // найти хозяина, и следующего, прописать в хозяина след ребенка и схлопнуть весь стек влево на размер удаляемого элемента
