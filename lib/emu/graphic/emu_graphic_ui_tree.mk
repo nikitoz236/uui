@@ -3,9 +3,6 @@
 INC += $(LIB)/graphic/ui_tree
 SRC += $(LIB)/graphic/ui_tree/ui_tree.c
 
-# debug_print.h
-INC += $(LIB)/emu
-
 # misc.h
 INC += $(LIB)/common
 
@@ -24,8 +21,12 @@ INC += $(LIB)/graphic/forms
 INC += $(LIB)/graphic/text
 SRC += $(LIB)/graphic/text/text_label_color.c
 
+# for text_label_color
+SRC += $(LIB)/common/str_val.c
+SRC += $(LIB)/common/str_val_buf.c
+SRC += $(LIB)/common/val_text.c
+
 SRC += $(LIB)/graphic/lcd_text.c
-SRC += $(LIB)/graphic/forms/forms_align.c
 SRC += $(LIB)/common/str_utils.c
 
 include $(LIB)/emu/graphic/emu_graphic.mk

@@ -78,9 +78,6 @@ SRC += $(LIB)/graphic/forms/forms_align.c
 INC += $(LIB)/graphic/ui_tree
 SRC += $(LIB)/graphic/ui_tree/ui_tree.c
 
-# debug_print.h - надо переделывать на dp.h
-INC += ../tests/hw/watch_screen/
-
 # fonts.h
 INC += $(LIB)/graphic/fonts
 SRC += $(LIB)/graphic/fonts/fonts.c
