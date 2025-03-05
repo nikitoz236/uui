@@ -10,10 +10,12 @@
 
 #include "widget_debug_metrics.h"
 
-#include "widget_metric_list_item.h"
-#include "widget_route_list_item.h"
 #include "widget_selectable_list.h"
 #include "widget_screen_by_idx.h"
+
+#include "widget_metric_list_item.h"
+#include "widget_route_list_item.h"
+#include "widget_tc_dump.h"
 
 extern font_t font_5x7;
 
@@ -124,7 +126,7 @@ ui_node_desc_t menu_screens[] = {
         }
     },
     [MENU_DUMP] = {
-        .widget = &widget_color_rect
+        .widget = &widget_dlc_dump
     },
     [MENU_SETTINGS] = {
         .widget = &widget_color_rect
@@ -185,7 +187,7 @@ static void select_update(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
 
     lp(&ctx->title_ctx, &local_title[el->idx].l, &(color_scheme_t){ .fg = local_title[el->idx].color, .bg = bg }, 0, 0, ctx->selector);
-    lp_color(&ctx->title_ctx, bg, &title_selector, el->active, 0, 0);
+    lp_color(&ctx->title_ctx, 0x4585E1, &title_selector, el->active, 0, 0);
 }
 static const unsigned selector = 1;
 
