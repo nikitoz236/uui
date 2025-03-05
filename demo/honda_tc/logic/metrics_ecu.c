@@ -79,6 +79,7 @@ unsigned metric_ecu_get_bool(unsigned id)
     if (honda_metric_bool[offset] & mask) {
         return 1;
     }
+    return 0;
 }
 
 const ecu_map_t * search_var_map(uint8_t addr, const ecu_map_t * map, unsigned map_len)
