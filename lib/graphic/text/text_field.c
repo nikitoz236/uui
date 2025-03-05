@@ -22,12 +22,18 @@ unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const tf_cfg_t * cfg)
         unsigned text_linear_size = 0;
 
         unsigned form_size_px = f->s.ca[d];
-        unsigned available_px = form_size_px - (2 * cfg->padding.ca[d]);
+        unsigned available_px = form_size_px;
+        if (available_px < (2 * cfg->padding.ca[d])) {
+            available_px = 0;
+        } else {
+            available_px -= 2 * cfg->padding.ca[d];
+        }
         unsigned available_chars = (available_px + gap) / ((char_linear_size * scale) + gap);
 
         if (cfg->limit_char.ca[d]) {
             // вариант когда мы уменьшаем размер формы
             text_len = cfg->limit_char.ca[d];
+            // printf("tf_ctx_calc text_len %d available_chars %d dim %d form_size_px %d\n", text_len, available_chars, d, form_size_px);
             if (text_len > available_chars) {
                 // если нужно больше места то возвращаем 0, чтобы list понял что форма не влезла
                 return 0;
