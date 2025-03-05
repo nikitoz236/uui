@@ -23,16 +23,16 @@
 #include "button_subsystem.h"
 
 
-void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
-{
-    dp("    -- metric_ecu_data_ready: ");
-    dpx(addr, 1);
-    dp(" len: ");
-    dpd(len, 2);
-    dp(" data: ");
-    dpxd(data, 1, len);
-    dn();
-}
+// void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
+// {
+//     dp("    -- metric_ecu_data_ready: ");
+//     dpx(addr, 1);
+//     dp(" len: ");
+//     dpd(len, 2);
+//     dp(" data: ");
+//     dpxd(data, 1, len);
+//     dn();
+// }
 
 void tc_engine_set_status(unsigned state)
 {

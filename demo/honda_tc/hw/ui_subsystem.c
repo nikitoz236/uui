@@ -1,11 +1,19 @@
 #include "ui_tree.h"
 
-#include "widget_dlc_dump.h"
 
-// uint8_t screen_selector = 0;
+#include "widget_screen_switch.h"
+#include "widget_menu_screen.h"
 
 ui_node_desc_t ui = {
-    .widget = &__widget_tc_dump
+    .widget = &widget_screen_switch,
+    .cfg = &(widget_screen_switch_cfg_t){
+        .screens_num = 4,
+        .screens_list = (ui_node_desc_t[]){
+            {
+                .widget = &widget_menu_screen,
+            }
+        }
+    }
 };
 
 uint8_t ui_ctx[1024] = {0};
