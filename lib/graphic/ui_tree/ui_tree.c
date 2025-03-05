@@ -356,7 +356,10 @@ unsigned ui_tree_element_select(ui_element_t * element, unsigned select)
 
     if (element->ui_node->widget->select) {
         element->ui_node->widget->select(element);
+    } else {
+        ui_tree_element_select(ui_tree_child(element), select);
     }
+
     return 1;
 }
 
@@ -429,9 +432,9 @@ void ui_tree_debug_print_linear(void)
 static void ui_tree_debug_print_tree_element(ui_element_t * element, unsigned level)
 {
     dpl(0, 4 * level);
-    dpct(DPC_RED); dp("element "); dpd(element->ctx[0], 3); dp(": ");
+    dpct(DPC_RED); dp("element "); dpd(element->idx, 2); dp(": ");
     dpcr(); dp("offset: "); dpd(element_offset(element), 4); dp(" ["); dpx((unsigned)element->ui_node, 4);
-    dp("] idx: "); dpd(element->idx, 2); dp(" owner: "); dpd(element->owner, 4); dp(" child: "); dpd(element->child, 4);
+    dp("] owner: "); dpd(element->owner, 4); dp(" child: "); dpd(element->child, 4);
     dp(" next: "); dpd(element->next, 4); dp(" ctx size: "); dpd(element->ui_node->widget->ctx_size, 3); dp(" a: "); dpd(element->active, 1); dp(" d: "); dpd(element->drawed, 1); dp(" ");
     dprint_form(&element->f); dn();
 

@@ -18,7 +18,7 @@ typedef struct {
 static void recalc(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
+    widget_selectable_list_cfg_t * cfg = (widget_selectable_list_cfg_t *)el->ui_node->cfg;
     draw_color_form(&el->f, 0);
 
     ctx->count = 0;
@@ -68,7 +68,6 @@ static void draw(ui_element_t * el)
     ctx->first = 0;
     ctx->pos = 0;
     recalc(el);
-    return 1;
 }
 
 static void select(ui_element_t * el)
@@ -116,7 +115,7 @@ static void move_list_up(void)
 
 static unsigned process_event(ui_element_t * el, unsigned event)
 {
-    __widget_selectable_list_cfg_t * cfg = (__widget_selectable_list_cfg_t *)el->ui_node->cfg;
+    widget_selectable_list_cfg_t * cfg = (widget_selectable_list_cfg_t *)el->ui_node->cfg;
     ctx_t * ctx = (ctx_t *)el->ctx;
 
     // printf("widget_selectable_list process_event active %d, event %d\n", el->active, event);
@@ -182,7 +181,7 @@ static unsigned process_event(ui_element_t * el, unsigned event)
     return 0;
 }
 
-const widget_desc_t __widget_selectable_list = {
+const widget_desc_t widget_selectable_list = {
     .draw = draw,
     .select = select,
     .process_event = process_event,

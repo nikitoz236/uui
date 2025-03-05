@@ -16,7 +16,7 @@ typedef struct {
 } uv_t;
 
 typedef struct {
-    xy_t pos;
+    tf_ctx_t tf;
     uv_t uv;
 } ctx_t;
 
@@ -26,12 +26,12 @@ static const text_field_t tf = {
     .fcfg = &(lcd_font_cfg_t){
         .font = &font_5x7,
     },
-    .limit_char = { .x = 50 },
+    .limit_char = { .y = 1 },
     .padding = { .x = 2, .y = 2 },
     .a = ALIGN_LIC,
 };
 
-const lcd_color_t bg[] = { 0x111111, 0x113222 };
+static const lcd_color_t bg[] = { 0x111111, 0x113222 };
 
 static const char * metric_str_bool(unsigned idx)
 {
@@ -42,22 +42,21 @@ static const char * metric_str_bool(unsigned idx)
     return "inactive";
 }
 
-
-const char * raw_hex(unsigned x)
+static const char * raw_hex(unsigned x)
 {
     char * str = str_val_buf_get();
     hex_to_str(&x, str, 2);
     return str;
 }
 
-void metric_vt(val_text_t * vt, unsigned idx)
+static void metric_vt(val_text_t * vt, unsigned idx)
 {
     unsigned point = 0;
     dec_factor_t factor = 0;
     metric_var_get_factor_point(idx, &factor, &point);
     vt->f = factor;
     vt->p = point;
-    vt->zr = 0;
+    vt->zr = 1;
     vt->zl = 0;
 };
 
@@ -83,25 +82,26 @@ static const lp_color_t label_val[] = {
     { .color = 0xAB4422, .l = { .len = 4,  .rep = { .vs = VAL_SIZE_32 }, .t = LF, .to_str = raw_hex, .ofs = offsetof(uv_t, raw), .xy = { .x = 42 }, } },
 };
 
-void update_uv(uv_t * uv, unsigned idx)
+static void update_uv_real(uv_t * uv, unsigned idx)
 {
     uv->val = metric_var_get_real(idx);
     uv->raw = metric_ecu_get_raw(idx);
 }
 
-const label_list_t ll_static_real = { .count = ARRAY_SIZE(label_static_real), .wrap_list = label_static_real };
-const label_list_t ll_val_real = { .count = ARRAY_SIZE(label_val), .wrap_list = label_val, .ctx_update = (void(*)(void * ctx, unsigned x))update_uv };
-
-static void calc(ui_element_t * el)
+static void update_uv_bool(uv_t * uv, unsigned idx)
 {
-    el->f.s = text_field_size_px(&tf);
+    uv->val = metric_bool_get_val(idx);
 }
 
-static void extend(ui_element_t * el)
-{
-    ctx_t * ctx = (ctx_t *)el->ctx;
-    ctx->pos = align_form_pos(&el->f, lcd_text_size_px(tf.fcfg, tf.limit_char), tf.a, tf.padding);
-}
+static const label_list_t ll_static[] = {
+    [METRIC_LIST_VAL] = { .count = ARRAY_SIZE(label_static_real), .wrap_list = label_static_real },
+    [METRIC_LIST_BOOL] = { .count = 1, .wrap_list = &label_static_bool }
+};
+
+static const label_list_t ll_value[] = {
+    [METRIC_LIST_VAL] = { .count = ARRAY_SIZE(label_val), .wrap_list = label_val, .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_real },
+    [METRIC_LIST_BOOL] = { .count = 1, .wrap_list = label_val, .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_bool },
+};
 
 /*
     итак
@@ -112,74 +112,39 @@ static void extend(ui_element_t * el)
                 но печатать его непонятно как, у каждого свое представление, знак, фактор, количество символов после запятой итд, тоже по индексу становится понятно
             единица измерения которая зависит от индекса
             сырое значение из контекста
-        для булевых значений 
+        для булевых значений
 
 */
 
-static void update_real(ui_element_t * el)
+static void update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    tf_ctx_t tf_ctx = {
-        .tfcfg = &tf,
-        .xy = ctx->pos,
-    };
-
+    widget_metric_list_item_cfg_t * cfg = (widget_metric_list_item_cfg_t *)el->ui_node->cfg;
     uv_t uv = {};
-    lp_color(&tf_ctx, bg[el->active], &ll_val_real, el->idx, &uv, &ctx->uv);
+    lp_color(&ctx->tf, bg[el->active], &ll_value[cfg->type], el->idx, &uv, &ctx->uv);
 }
 
-static void update_bool(ui_element_t * el)
-{
-
-}
-
-static void draw_real(ui_element_t * el)
+static void select_update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    tf_ctx_t tf_ctx = {
-        .tfcfg = &tf,
-        .xy = ctx->pos,
-    };
+    widget_metric_list_item_cfg_t * cfg = (widget_metric_list_item_cfg_t *)el->ui_node->cfg;
     draw_color_form(&el->f, bg[el->active]);
-    lp_color(&tf_ctx, bg[el->active], &ll_static_real, el->idx, 0, 0);
-    lp_color(&tf_ctx, bg[el->active], &ll_val_real, el->idx, &ctx->uv, 0);
+    lp_color(&ctx->tf, bg[el->active], &ll_static[cfg->type], el->idx, 0, 0);
+    lp_color(&ctx->tf, bg[el->active], &ll_value[cfg->type], el->idx, &ctx->uv, 0);
 }
 
-static void draw_bool(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    color_scheme_t cs = {
-        .bg = bg[el->active],
-    };
-
-    tf_ctx_t tf_ctx = {
-        .tfcfg = &tf,
-        .xy = ctx->pos,
-    };
-
-    cs.fg = label_static_bool.color;
-    lp(&tf_ctx, &label_static_bool.l, &cs, 0, 0, el->idx);
-
-    // ctx->val = metric_ecu_get_bool(el->idx);
+    if (tf_ctx_calc(&ctx->tf, &el->f, &tf)) {
+        select_update(el);
+        el->drawed = 1;
+    }
 }
 
-const widget_desc_t __widget_metric_list_item_real = {
-    .calc = calc,
-    .draw = draw_real,
-    .update = update_real,
-    .extend = extend,
-    .select = draw_real,
-    .ctx_size = sizeof(ctx_t)
-};
-
-const widget_desc_t __widget_metric_list_item_bool = {
-    .calc = calc,
-    .draw = draw_bool,
-    // .update = update_bool,
-    .extend = extend,
-    .select = draw_bool,
+const widget_desc_t widget_metric_list_item = {
+    .draw = draw,
+    .update = update,
+    .select = select_update,
     .ctx_size = sizeof(ctx_t)
 };

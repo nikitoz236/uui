@@ -9,11 +9,11 @@
 #include "event_list.h"
 
 #include "widget_debug_metrics.h"
-#include "widget_metric_list.h"
-#include "widget_metric_list_item.h"
 
-// #include "widget_titled_screen.h"
-// #include "metrics_view.h"
+#include "widget_metric_list_item.h"
+#include "widget_route_list_item.h"
+#include "widget_selectable_list.h"
+#include "widget_screen_by_idx.h"
 
 extern font_t font_5x7;
 
@@ -41,24 +41,116 @@ typedef struct {
 < METRICS   >
 
 ============================================
-
-
-я могу создать дочерний элемент на остатке экрана
-
-    у него будет
-
-
 */
 
+
+static void widget_color_rect_draw(ui_element_t * el)
+{
+    static const lcd_color_t color_list[] = {
+        0xAABBCC,
+        0x11BBCC,
+        0xAA22CC,
+        0xAABB33,
+    };
+    const unsigned * color_idx = el->ui_node->cfg;
+    draw_color_form(&el->f, color_list[el->idx]);
+}
+
+const widget_desc_t widget_color_rect = {
+    .draw = widget_color_rect_draw
+};
+
+enum {
+    MENU_METRICS,
+    MENU_ROUTES,
+    MENU_DUMP,
+    MENU_SETTINGS
+};
+
+ui_node_desc_t menu_screens[] = {
+    [MENU_METRICS] = {
+        .widget = &widget_screen_by_idx,
+        .cfg = &(widget_screen_by_idx_cfg_t){
+            .screens_num = 2,
+            .screens_list = (ui_node_desc_t[]){
+                {
+                    .widget = &widget_selectable_list,
+                    .cfg = &(widget_selectable_list_cfg_t){
+                        .margin = { .x = 0, .y = 2 },
+                        .num = METRIC_VAR_ID_NUM,
+                        .ui_node = &(ui_node_desc_t){
+                            .widget = &widget_metric_list_item,
+                            .cfg = &(widget_metric_list_item_cfg_t) {
+                                .type = METRIC_LIST_VAL,
+                            }
+                        },
+                    }
+                },
+                {
+                    .widget = &widget_selectable_list,
+                    .cfg = &(widget_selectable_list_cfg_t){
+                        .margin = { .x = 0, .y = 2 },
+                        .num = METRIC_BOOL_ID_NUM,
+                        .ui_node = &(ui_node_desc_t){
+                            .widget = &widget_metric_list_item,
+                            .cfg = &(widget_metric_list_item_cfg_t) {
+                                .type = METRIC_LIST_BOOL,
+                            }
+                        },
+                    }
+                },
+            },
+        }
+    },
+    [MENU_ROUTES] = {
+        .widget = &widget_screen_by_idx,
+        .cfg = &(widget_screen_by_idx_cfg_t){
+            .screens_num = 1,
+            .screens_list = (ui_node_desc_t[]){
+                {
+                    .widget = &widget_selectable_list,
+                    .cfg = &(widget_selectable_list_cfg_t){
+                        .num = ROUTE_TYPE_NUM,
+                        .margin = { .x = 2, .y = 2 },
+                        .ui_node = &(ui_node_desc_t){
+                            .widget = &widget_route_list_item,
+                            // .cfg = &(widget_metric_list_item_cfg_t) {
+                            //     .type = METRIC_LIST_VAL,
+                            // }
+                        },
+                    }
+                },
+            },
+        }
+    },
+    [MENU_DUMP] = {
+        .widget = &widget_color_rect
+    },
+    [MENU_SETTINGS] = {
+        .widget = &widget_color_rect
+    }
+};
+
 const lp_color_t title = {
-    .color = 0, .l = { .xy = { .x = 2 }, .len = 8, .text = (const char * []){ "METRICS", "ROUTES", "DLC DUMP", "SETTINGS" }, .t = LP_T_LIDX }
+    .color = 0,
+    .l = {
+        .xy = { .x = 2 },
+        .len = 8,
+        .text_list = (const char * []){
+            [MENU_METRICS] =    "METRICS",
+            [MENU_ROUTES] =     "ROUTES",
+            [MENU_DUMP] =       "DLC DUMP",
+            [MENU_SETTINGS] =   "SETTINGS"
+        },
+        .t = LP_T_LIDX
+    }
 };
 
 const lp_color_t local_title[] = {
-    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
-    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
-    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text = (const char * []){ "ECU", "SRS", "ABS" }, .t = LP_T_LIDX } },
-    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text = (const char * []){ "DATETIME", "ODO", "ANALOG" }, .t = LP_T_LIDX } },
+    [MENU_METRICS] =    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
+    [MENU_ROUTES] =     { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
+    [MENU_DUMP] =       { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ECU", "SRS", "ABS" }, .t = LP_T_LIDX } },
+    [MENU_SETTINGS] =   { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "DATETIME", "ODO", "ANALOG" }, .t = LP_T_LIDX } },
 };
 
 const label_list_t title_selector = {
@@ -71,68 +163,60 @@ const label_list_t title_selector = {
     .count = 4
 };
 
-
-void widget_color_rect_draw(ui_element_t * el)
-{
-    const lcd_color_t * color = el->ui_node->cfg;
-    draw_color_form(&el->f, *color);
-}
-
-const widget_desc_t widget_color_rect = {
-    .draw = widget_color_rect_draw
+struct menu_cfg {
+    const widget_desc_t * widget;
+    uint8_t menu_count;
+    uint8_t * list_len;
+    uint8_t confirm;
 };
 
-const lcd_color_t color_list[] = {
-    0xAABBCC,
-    0x11BBCC,
-    0xAA22CC,
-    0xAABB33,
-};
-
-ui_node_desc_t menu_screens[] = {
-    {
-        .widget = &widget_color_rect,
-        .cfg = &color_list[0]
-    },
-    {
-        .widget = &widget_color_rect,
-        .cfg = &color_list[1]
-    },
-    {
-        .widget = &widget_color_rect,
-        .cfg = &color_list[2]
-    },
-    {
-        .widget = &widget_color_rect,
-        .cfg = &color_list[3]
-    },
+const struct menu_cfg menu_cfg[] = {
+    [MENU_METRICS] =    { .widget = &widget_metric_list_item, .menu_count = 2, .list_len = (uint8_t []){ METRIC_VAR_ID_NUM, METRIC_BOOL_ID_NUM} },
+    [MENU_ROUTES] =     { .widget = &widget_route_list_item,  .menu_count = 3, .list_len = (uint8_t []){ ROUTE_TYPE_NUM, ROUTE_TYPE_NUM, ROUTE_TYPE_NUM } },
+    [MENU_DUMP] =       { .widget = &widget_color_rect, .menu_count = 3 },
+    [MENU_SETTINGS] =   { .widget = &widget_color_rect, .menu_count = 3 },
 };
 
 // static const lcd_color_t bg = 0x4585E1;
 static const lcd_color_t bg = 0xf08400;
 
-static void redraw(ui_element_t * el)
+static void select_update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
 
     lp(&ctx->title_ctx, &local_title[el->idx].l, &(color_scheme_t){ .fg = local_title[el->idx].color, .bg = bg }, 0, 0, ctx->selector);
     lp_color(&ctx->title_ctx, bg, &title_selector, el->active, 0, 0);
+}
+static const unsigned selector = 1;
 
-    ui_tree_element_draw(ui_tree_child(el));
+static void redraw(ui_element_t * el)
+{
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    select_update(el);
+
+    ui_element_t * item = ui_tree_add(el, &menu_screens[el->idx], ctx->selector);
+    form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
+
+    ui_tree_element_draw(item);
+    ui_tree_debug_print_tree();
+}
+
+static void change_cild(ui_element_t * el)
+{
+    ui_tree_delete_childs(el);
+    redraw(el);
 }
 
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
 
+    ctx->selector = 0;
     ctx->title_form = el->f;
     tf_ctx_calc(&ctx->title_ctx, &ctx->title_form, &screen_title);
     draw_color_form(&ctx->title_form, bg);
 
     lp(&ctx->title_ctx, &title.l, &(color_scheme_t){ .fg = title.color, .bg = bg }, 0, 0, el->idx);
-
-    ui_element_t * item = ui_tree_add(el, &menu_screens[el->idx], ctx->selector);
-    form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
 
     redraw(el);
 }
@@ -141,16 +225,14 @@ static unsigned process(ui_element_t * el, unsigned event)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
 
-    const uint8_t count[] = { 2, 3, 3, 3 };
-
     if (event == EVENT_BTN_DOWN) {
-        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_ADD, 1, 0, count[el->idx] - 1, 1);
-        redraw(el);
+        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_ADD, 1, 0, menu_cfg[el->idx].menu_count - 1, 1);
+        change_cild(el);
         return 1;
     }
     if (event == EVENT_BTN_UP) {
-        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_SUB, 1, 0, count[el->idx] - 1, 1);
-        redraw(el);
+        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_SUB, 1, 0, menu_cfg[el->idx].menu_count - 1, 1);
+        change_cild(el);
         return 1;
     }
     if (event == EVENT_BTN_OK) {
@@ -164,7 +246,7 @@ static unsigned process(ui_element_t * el, unsigned event)
 
 const widget_desc_t widget_screen_debug_metrics = {
     .draw = draw,
-    .select = redraw,
+    .select = select_update,
     .process_event = process,
     .ctx_size = sizeof(ctx_t)
 };
