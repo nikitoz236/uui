@@ -8,17 +8,10 @@
 // получается что это один из вариантов универсального блока интерфейса, допустим еще есть картинки или какаято графика. хз, главное что мы располагая их оперируем формами
 typedef struct {
     const lcd_font_cfg_t * fcfg;
-    xy_t limit_char;
-    // xy_t margin;                // не должно быть. это внешнее свойство как универсальные блоки комбинировать
+    xy_t limit_char;            // если 0 то будет посчитано все доступное пространство
     xy_t padding;               // внутреннее смещение текста от краев
     align_t a;
-
-    // вот тут должна быть расширяемость по обеим координатам
-    // например limit_char может иметь значение 0, тогда тебе надо не менять size по данной координате
-    // и высчитывать его в контексте по размеру ( тоесть в обратную сторону )
 } tf_cfg_t;
-
-typedef tf_cfg_t text_field_t;
 
 typedef struct {
     const tf_cfg_t * tfcfg;
@@ -26,97 +19,21 @@ typedef struct {
     xy_t size;      // вместо limit_char
 } tf_ctx_t;
 
-static inline xy_t text_field_size_px(const text_field_t * cfg)
+// возвращаемое значение показывает получилось ли втиснуться в координаты
+unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const tf_cfg_t * cfg);
+
+// DEPRICATED
+static inline xy_t text_field_size_px(const tf_cfg_t * cfg)
 {
     return size_add_padding(lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->padding);
 }
 
-static inline xy_t text_field_text_pos(const form_t * f, const text_field_t * cfg)
+// DEPRICATED
+static inline xy_t text_field_text_pos(const form_t * f, const tf_cfg_t * cfg)
 {
     return align_form_pos(f, lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->a, cfg->padding);
 }
 
-// надо чтобы возвращаемое значение показывало получилось ли втиснуться в координаты
-static inline unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * cfg)
-{
-    ctx->tfcfg = cfg;
-    unsigned scale = cfg->fcfg->scale;
-    if (scale == 0) {
-        scale = 1;
-    }
-
-    for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
-        unsigned gap = cfg->fcfg->gaps.ca[d];
-        if (gap == 0) {
-            gap = 1;
-            // охуенный план также расширять gaps и scale если там нули
-            // и у тебя упрется по одной из координат всегда текст, и другую координату можно будет уменьшить
-        }
-        unsigned char_linear_size = cfg->fcfg->font->size.ca[d];
-
-        unsigned text_len = 0;
-        unsigned text_linear_size = 0;
-
-        unsigned form_size_px = f->s.ca[d];
-        unsigned available_px = form_size_px - (2 * cfg->padding.ca[d]);
-        unsigned available_chars = (available_px + gap) / ((char_linear_size * scale) + gap);
-
-        if (cfg->limit_char.ca[d]) {
-            // вариант когда мы уменьшаем размер формы
-            text_len = cfg->limit_char.ca[d];
-            if (text_len > available_chars) {
-                // если нужно больше места то возвращаем 0, чтобы list понял что форма не влезла
-                return 0;
-            }
-        } else {
-            // вариант когда мы расширяем по максимуму
-            text_len = available_chars;
-        }
-
-        ctx->size.ca[d] = text_len;
-        text_linear_size = (char_linear_size * text_len * scale) + ((text_len - 1) * gap);
-
-        // перезаписываем размер по данной координате в форме
-        // - надо ли ? основной вопрос
-        if (cfg->limit_char.ca[d]) {
-            form_size_px = text_linear_size + (2 * cfg->padding.ca[d]);
-            f->s.ca[d] = form_size_px;
-        }
-
-        // align
-        ctx->xy.ca[d] = f->p.ca[d];
-        if (cfg->a.ca[d].center) {
-            ctx->xy.ca[d] += (f->s.ca[d] - text_linear_size) / 2;
-        } else {
-            if (cfg->a.ca[d].edge == EDGE_L) {
-                ctx->xy.ca[d] += cfg->padding.ca[d];
-            } else {
-                ctx->xy.ca[d] += f->s.ca[d] - cfg->padding.ca[d] - text_linear_size;
-            }
-        }
-    }
-
-    // ctx->xy = align_form_pos(f,
-    //  text_field_text_pos(f, cfg);
-
-
-    /*
-        задача в имеющуюся родительскую форму вписать какойто произвольный конфиг обьектов
-
-            обьект эт прямоугольник, тоесть form, он может по каждой координате:
-            занять все доступоное пространство - как двум таким умникам поделить одно пространство ?
-            иметь какойто минимум, зависимость от текста который мы хотим в нем расположить
-
-        я хочу заебашить чтобы у меня считалась форма сама по конфигу, и если там в лимитах 0 по кординате то она не меняется
-            либо можно передавать в размеры родительской формы
-
-            опять таки надо координаты
-
-        например часы - там точно 5 символов и тебе надо ебануть это по центру, либо склеить часы из 5 символов с другим полем в котором только секунды чуть меньше размероми все это центрировать
-    */
-
-   return 1;
-}
 
 
 
@@ -131,6 +48,19 @@ static inline unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_
 для статической надписи тебе надо либо указатель на текст, либо на указатель по индексу
 
 для динамической надписи тебе надо указатель на функцию которая преобразует значение в текст
+
+задача в имеющуюся родительскую форму вписать какойто произвольный конфиг обьектов
+
+    обьект эт прямоугольник, тоесть form, он может по каждой координате:
+    занять все доступоное пространство - как двум таким умникам поделить одно пространство ?
+    иметь какойто минимум, зависимость от текста который мы хотим в нем расположить
+
+я хочу заебашить чтобы у меня считалась форма сама по конфигу, и если там в лимитах 0 по кординате то она не меняется
+    либо можно передавать в размеры родительской формы
+
+    опять таки надо координаты
+
+например часы - там точно 5 символов и тебе надо ебануть это по центру, либо склеить часы из 5 символов с другим полем в котором только секунды чуть меньше размероми все это центрировать
 
 */
 
