@@ -17,6 +17,8 @@
 #include "widget_route_list_item.h"
 #include "widget_dlc_dump.h"
 
+#include "honda_dlc_units.h"
+
 extern font_t font_5x7;
 
 tf_cfg_t screen_title = {
@@ -151,7 +153,7 @@ const lp_color_t title = {
 const lp_color_t local_title[] = {
     [MENU_METRICS] =    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
     [MENU_ROUTES] =     { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
-    [MENU_DUMP] =       { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ECU", "SRS", "ABS" }, .t = LP_T_LIDX } },
+    [MENU_DUMP] =       { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .to_str = honda_dlc_unit_name, .t = LP_T_FIDX } },
     [MENU_SETTINGS] =   { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "DATETIME", "ODO", "ANALOG" }, .t = LP_T_LIDX } },
 };
 
@@ -200,7 +202,6 @@ static void redraw(ui_element_t * el)
     form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
 
     ui_tree_element_draw(item);
-    ui_tree_debug_print_tree();
 }
 
 static void change_cild(ui_element_t * el)
