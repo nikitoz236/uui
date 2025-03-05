@@ -73,14 +73,14 @@ typedef struct {
 } ctx_t;
 
 
-static void dump_print_hex(tf_ctx_t * tf, xy_t xy, uint8_t data, color_scheme_t * cs)
+static void dump_print_hex(tf_ctx_t * tf, xy_t xy, uint8_t data, const color_scheme_t * cs)
 {
     char * str = str_val_buf_get();
     hex_to_str(&data, str, 1);
     lcd_color_tf_print(str, tf, cs, &xy, 2);
 }
 
-static void dump_draw_offsets(tf_ctx_t * tf, unsigned len, color_scheme_t * cs)
+static void dump_draw_offsets(tf_ctx_t * tf, unsigned len, const color_scheme_t * cs)
 {
     xy_t xy = {};
     xy.x = (-3 * 16) + 1;
@@ -119,7 +119,7 @@ static void update(ui_element_t * el)
         unsigned dump_line = address / 16;
         uint16_t first_mask = (1 << dump_line);
         xy_t byte_xy = { .x = (-3 * 16) + 1, .y = -16 + dump_line };
-        color_scheme_t * line_cs = &cs[CS_DATA_0 + (dump_line & 1)];
+        const color_scheme_t * line_cs = &cs[CS_DATA_0 + (dump_line & 1)];
 
         for (unsigned i = 0; i < len; i++) {
             // копирование данных в контекст для понимания изменений в дальнейшем
@@ -127,7 +127,7 @@ static void update(ui_element_t * el)
                 ctx->data[address + i] = data[i];
             }
 
-            color_scheme_t * byte_cs = line_cs;
+            const color_scheme_t * byte_cs = line_cs;
             if (ctx->data[address + i] != data[i]) {
                 byte_cs = &cs[CS_DATA_CHANGED];
             }
@@ -204,7 +204,7 @@ static void update(ui_element_t * el)
 
 static void draw(ui_element_t * el)
 {
-    printf("dump draw\n");
+    // printf("dump draw\n");
     ctx_t * ctx = (ctx_t *)el->ctx;
     ctx->first = -1;
     ctx->unit = el->idx;
@@ -216,7 +216,6 @@ static void draw(ui_element_t * el)
     // тут делаем press ok to request dump
     dlc_dump_request(ctx->unit);
 
-    printf("dump ok %d %d\n", ctx->tf.size.x, ctx->tf.size.y);
     el->drawed = 1;
 }
 
