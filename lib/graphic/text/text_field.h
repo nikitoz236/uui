@@ -36,7 +36,8 @@ static inline xy_t text_field_text_pos(const form_t * f, const text_field_t * cf
     return align_form_pos(f, lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->a, cfg->padding);
 }
 
-static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * cfg)
+// надо чтобы возвращаемое значение показывало получилось ли втиснуться в координаты
+static inline unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * cfg)
 {
     ctx->tfcfg = cfg;
     unsigned scale = cfg->fcfg->scale;
@@ -61,8 +62,13 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
             ctx->size.ca[d] = text_len;
             text_linear_size = (char_linear_size * text_len * scale) + ((text_len - 1) * gap);
 
+            unsigned new_size = text_linear_size + (2 * cfg->padding.ca[d]);
+            if (new_size > f->s.ca[d]) {
+                // если нужно больше места то возвращаем 0, чтобы list понял что форма не влезла
+                return 0;
+            }
             // перезаписываем размер по данной координате в форме
-            f->s.ca[d] = text_linear_size + (2 * cfg->padding.ca[d]);
+            f->s.ca[d] = new_size;
 
             // align
             if (cfg->a.ca[d].center) {
@@ -85,7 +91,6 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
     }
 
     // ctx->xy = align_form_pos(f,
-    
     //  text_field_text_pos(f, cfg);
 
 
@@ -104,6 +109,7 @@ static inline void tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const text_field_t * 
         например часы - там точно 5 символов и тебе надо ебануть это по центру, либо склеить часы из 5 символов с другим полем в котором только секунды чуть меньше размероми все это центрировать
     */
 
+   return 1;
 }
 
 
