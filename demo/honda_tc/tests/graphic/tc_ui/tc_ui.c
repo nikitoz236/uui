@@ -125,13 +125,17 @@
 
 
 #include <stdio.h>
+
 #include "emu_tc.h"
-#include "dlc_poll.h"
-#include "routes.h"
 #include "emu_storage.h"
+#include "dlc_emu.h"
+
 #include "storage.h"
 #include "date_time.h"
 #include "rtc.h"
+
+#include "dlc_poll.h"
+#include "routes.h"
 
 
 #include "widget_dlc_dump.h"
@@ -202,6 +206,11 @@ ui_node_desc_t ui = {
     }
 };
 
+void tc_engine_set_status(unsigned state)
+{
+    printf("tc_engine_set_status %d\n", state);
+}
+
 int main()
 {
     printf("test tc ui\r\n");
@@ -215,6 +224,8 @@ int main()
     storage_print_info();
 
     route_load();
+
+    emu_engine_ctrl(1);
 
     emu_ui_node(&ui);
     return 0;

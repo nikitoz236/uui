@@ -4,9 +4,12 @@ LIB = $(PROJECT)/../../lib
 # emu
 INC += ..
 SRC += ../emu_tc.c
-SRC += ../emu_dlc_data.c
+# SRC += ../emu_dlc_data.c
+INC += ../../console/dlc
+SRC += ../../console/dlc/dlc_emu.c
 # dp dependencies
 SRC += $(LIB)/emu/console/emu_dp_usart.c
+SRC += $(LIB)/emu/console/console_getc.c
 
 
 # INC += $(PROJECT)/view
@@ -49,6 +52,7 @@ SRC += ./$(LIB)/emu/storage/emu_storage.c
 
 # dlc_poll.h
 INC += $(PROJECT)/logic
+SRC += $(PROJECT)/logic/dlc_poll.c
 SRC += $(PROJECT)/logic/routes.c
 SRC += $(PROJECT)/logic/metrics_view.c
 SRC += $(PROJECT)/logic/metrics_ecu.c

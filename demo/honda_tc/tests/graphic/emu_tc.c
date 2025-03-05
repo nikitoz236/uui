@@ -10,11 +10,13 @@
 #include "mstimer.h"
 #include "rtc.h"
 
+#include "dlc_poll.h"
+
 volatile unsigned uptime_ms = 0;
 
 void view_process(char key)
 {
-    ui_tree_update();
+    // ui_tree_update();
 
     unsigned event = 0;
     if (key == 'j') {
@@ -40,12 +42,17 @@ void view_process(char key)
     }
 
     uptime_ms = systick_get_uptime_ms();
+    dlc_poll();
 
     // static mstimer_t timer = { .timeout = 1000 };
 
     // if (mstimer_do_period(&timer)) {
     //     printf("uptime: %d\n", uptime_ms);
     // }
+
+    if (event == EVENT_BTN_RIGHT) {
+        ui_tree_debug_print_tree();
+    }
 
     ui_tree_process(event);
 }
@@ -79,7 +86,11 @@ void emu_ui_node(ui_node_desc_t * node)
     uint8_t ui_ctx[1024];
     ui_tree_init(ui_ctx, 1024, node, &lcd_cfg.size);
 
+    // ui_tree_debug_print_tree();
+
     ui_tree_draw();
+
+    // ui_tree_debug_print_tree();
 
     emu_graphic_loop(view_process);
 }
