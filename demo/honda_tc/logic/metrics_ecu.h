@@ -28,8 +28,8 @@ void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len);
     macro(ALTERNATOR_LOAD,  "ALTERN. LOAD", "%",   X1000,  2,     0x18, 1, RMS,    392.156862, 0       ), /* Нагрузка на генератор ALT_FR (%) */ \
     macro(CURRENT,          "CURRENT",      "A",   X1000,  2,     0x19, 1, SRM,    394.150802, 77060   ), /* Электрическая нагрузка блок ELD (А) */ \
     macro(ERG_VALVE_V,      "ERG VALVE",    "V",   X1,     0,     0x1B, 1, RMS,    19.493177,  0       ), /* Датчик положения клапана EGR (В) */ \
-    macro(CORR_SHORT,       "CORR. SHORT",  "%",   X1000,  0,     0x20, 1, RMS,    392.156862, 100000  ), /* Краткосрочная коррекция (%) */ \
-    macro(CORR_LONG,        "CORR. LONG",   "%",   X1000,  0,     0x22, 1, RMS,    392.156862, 100000  ), /* Долгосрочная коррекция (%) */ \
+    macro(CORR_SHORT,       "CORR. SHORT",  "%",   X1000,  2,     0x20, 1, RMS,    392.156862, 100000  ), /* Краткосрочная коррекция (%) */ \
+    macro(CORR_LONG,        "CORR. LONG",   "%",   X1000,  2,     0x22, 1, RMS,    392.156862, 100000  ), /* Долгосрочная коррекция (%) */ \
     macro(INJECTION,        "INJECTION",    "MS",  X1000,  3,     0x24, 2, RMS,    4,          0       ), /* Время впрыска(мс) */ \
     macro(IDLING_ANGLE,     "IGN. ANGLE",   0,     X1000,  1,     0x26, 1, RSM,    500,        128     ), /* Угол Опережения Зажигания - IngAdv */ \
     macro(IDLING_LIMIT,     "IGN. LIMIT",   0,     X1000,  1,     0x27, 1, RSM,    500,        128     ), /* Ограничение УОЗ по ДД - IngLim */ \
