@@ -29,7 +29,7 @@ ui_node_desc_t ui = {
     .widget = &widget_screen_switch,
     .cfg = &(widget_screen_switch_cfg_t){
         .screens_num = 4,
-        .title_cfg = &(text_field_t){
+        .title_cfg = &(tf_cfg_t){
             .fcfg = &(lcd_font_cfg_t){
                 .font = &font_5x7,
                 .gaps = { .x = 2, .y = 2 },
