@@ -1,3 +1,4 @@
+#pragma once
 #include "color_scheme_type.h"
 #include "text_field.h"
 
