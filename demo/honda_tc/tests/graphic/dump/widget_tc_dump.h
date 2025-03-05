@@ -1,7 +1,7 @@
 #pragma once
 #include "ui_tree.h"
 
-extern const widget_desc_t __widget_tc_dump;
+extern const widget_desc_t widget_dlc_dump;
 
 /*
     цвета
