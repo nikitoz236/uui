@@ -26,10 +26,9 @@ SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
 SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/val_mod.c
+SRC += $(LIB)/common/str_utils.c
 
-
-#depricated
-SRC += $(LIB)/graphic/align_forms.c
+SRC += $(LIB)/emu/console/emu_dp_usart.c
 
 TEST_NAME = test_widget_metric_list
 
