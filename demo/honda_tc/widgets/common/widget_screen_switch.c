@@ -17,7 +17,11 @@ static void redraw(ui_element_t * el)
 
     widget_screen_switch_cfg_t * cfg = (widget_screen_switch_cfg_t *)el->ui_node->cfg;
 
-    ui_node_desc_t * node = &cfg->screens_list[ctx->selector];
+
+    ui_node_desc_t * node = &cfg->screens_list[0];
+    if (cfg->different_nodes) {
+        node = &cfg->screens_list[ctx->selector];
+    }
     ui_element_t * item = ui_tree_add(el, node, ctx->selector);
 
     if (cfg->title_cfg) {
