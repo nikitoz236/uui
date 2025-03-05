@@ -16,10 +16,12 @@ SRC += $(LIB)/graphic/lcd_color/*.c
 
 # forms_edge.h
 INC += $(LIB)/graphic/forms
+SRC += $(LIB)/graphic/forms/forms_split.c
 
 # text_field.h
 INC += $(LIB)/graphic/text
 SRC += $(LIB)/graphic/text/text_label_color.c
+SRC += $(LIB)/graphic/text/text_field.c
 
 # for text_label_color
 SRC += $(LIB)/common/str_val.c

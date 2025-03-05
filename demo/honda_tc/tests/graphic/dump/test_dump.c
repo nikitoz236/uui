@@ -5,18 +5,15 @@
 #include "widget_dlc_dump.h"
 #include "widget_screen_switch.h"
 
-uint8_t selector = 0;
-
 ui_node_desc_t ui = {
-    .widget = &__widget_screen_switch,
-    .cfg = &(__widget_screen_switch_cfg_t){
+    .widget = &widget_screen_switch,
+    .cfg = &(widget_screen_switch_cfg_t){
         .screens_num = 1,
         .screens_list = (ui_node_desc_t[]){
             {
-                .widget = &__widget_tc_dump
+                .widget = &widget_dlc_dump
             }
         },
-        .selector_ptr = &selector,
     }
 };
 

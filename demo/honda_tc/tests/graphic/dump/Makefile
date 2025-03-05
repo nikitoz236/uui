@@ -5,21 +5,22 @@ LIB = $(PROJECT)/../../lib
 # emu_tc.h
 INC += ..
 SRC += ../emu_tc.c
+SRC += $(LIB)/emu/console/emu_dp_usart.c
 
 INC += .
-SRC += widget_tc_dump.c
 
 
 
+INC += $(PROJECT)/widgets
 INC += $(PROJECT)/widgets/common
+
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+SRC += $(PROJECT)/widgets/widget_dlc_dump.c
 
 # dlc_poll.h
 INC += ../../../logic/
 SRC += ../emu_dlc_data.c
 SRC += ../../../logic/honda_dlc_units.c
-
-SRC += $(LIB)/graphic/forms/forms_split.c
 
 # systick.h
 INC += $(LIB)/hw/include/
