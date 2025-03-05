@@ -127,6 +127,12 @@
 #include <stdio.h>
 #include "emu_tc.h"
 #include "dlc_poll.h"
+#include "routes.h"
+#include "emu_storage.h"
+#include "storage.h"
+#include "date_time.h"
+#include "rtc.h"
+
 
 #include "widget_tc_dump.h"
 #include "widget_screen_switch.h"
@@ -154,9 +160,9 @@ ui_node_desc_t ui = {
             {
                 .widget = &widget_screen_debug_metrics,
             },
-            {
-                .widget = &widget_dlc_dump
-            },
+            // {
+            //     .widget = &widget_dlc_dump
+            // },
             // {
             //     .widget = &widget_screen_switch,
             //     .cfg = &(widget_screen_switch_cfg_t){
@@ -199,6 +205,17 @@ ui_node_desc_t ui = {
 int main()
 {
     printf("test tc ui\r\n");
+
+    init_rtc();
+    rtc_set_time_s(date_time_to_s(&(date_t){ .y = 2025, .m = MONTH_FEB, .d = 19 }, &(time_t){ .h = 11, .m = 43, .s = 12 }));
+
+    emu_storage_load();
+
+    storage_init();
+    storage_print_info();
+
+    route_load();
+
     emu_ui_node(&ui);
     return 0;
 }

@@ -14,26 +14,28 @@ SRC += $(LIB)/emu/console/emu_dp_usart.c
 
 
 INC += $(PROJECT)/widgets
-
 INC += $(PROJECT)/widgets/common/
-# SRC += $(PROJECT)/widgets/widget_debug_metrics.c
-
-SRC += $(PROJECT)/widgets/common/widget_metric_list.c
-SRC += $(PROJECT)/widgets/widget_metric_list_item.c
-
-SRC += $(PROJECT)/widgets/widget_debug_metrics.c
-
-SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
-# SRC += $(PROJECT)/widgets/common/widget_titled_screen.c
-
 INC += $(LIB)/graphic/ui_tree/widgets
-# SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
-
 
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
-#depricated
-SRC += $(LIB)/graphic/align_forms.c
+SRC += $(PROJECT)/widgets/widget_debug_metrics.c
+SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
 
+# SRC += $(PROJECT)/widgets/widget_debug_metrics.c
+
+# SRC += $(PROJECT)/widgets/common/widget_metric_list.c
+SRC += $(PROJECT)/widgets/widget_metric_list_item.c
+SRC += $(PROJECT)/widgets/widget_screen_by_idx.c
+
+
+# SRC += $(PROJECT)/widgets/common/widget_titled_screen.c
+
+# SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
+
+SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
+
+INC += ../route_lists
+SRC += ../route_lists/widget_route_list_item.c
 
 INC += ../dump
 SRC += ../dump/widget_tc_dump.c
@@ -41,8 +43,17 @@ SRC += ../dump/widget_tc_dump.c
 
 SRC += $(LIB)/graphic/forms/forms_split.c
 
+
+# storage
+INC += ./$(LIB)/../tests/console/storage/
+INC += ./$(LIB)/storage/
+SRC += ./$(LIB)/storage/storage.c
+INC += ./$(LIB)/emu/storage/
+SRC += ./$(LIB)/emu/storage/emu_storage.c
+
 # dlc_poll.h
 INC += $(PROJECT)/logic
+SRC += $(PROJECT)/logic/routes.c
 SRC += $(PROJECT)/logic/metrics_view.c
 SRC += $(PROJECT)/logic/metrics_ecu.c
 SRC += $(PROJECT)/logic/trip_integrate.c
@@ -60,6 +71,8 @@ SRC += $(LIB)/common/str_val_buf.c
 SRC += $(LIB)/common/str_utils.c
 SRC += $(LIB)/common/val_text.c
 SRC += $(LIB)/common/val_mod.c
+SRC += $(LIB)/common/date_time.c
+
 
 TEST_NAME = tc_ui
 
