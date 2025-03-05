@@ -100,7 +100,13 @@ static const label_list_t ll_static[] = {
 
 static const label_list_t ll_value[] = {
     [METRIC_LIST_VAL] = { .count = ARRAY_SIZE(label_val), .wrap_list = label_val, .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_real },
-    [METRIC_LIST_BOOL] = { .count = 1, .wrap_list = label_val, .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_bool },
+    [METRIC_LIST_BOOL] = {
+        .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_bool,
+        .count = 1,
+        .wrap_list = (const lp_color_t []) {
+            { .color = 0x52AD6F, .l = { .len = 1, .rep = { .vs = VAL_SIZE_32 }, .t = LP_V, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 }, } },
+        },
+    },
 };
 
 /*
