@@ -163,8 +163,7 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
         scale = 1;
     }
 
-    // printf("lcd_color_text_raw_print str %s, len %d, x %d y %d, lim x %d, lim y %d \n", str, len, char_idx.x, char_idx.y, limit_chars->x, limit_chars->y);
-
+    // printf("lcd_color_text_raw_print len %d, x %d y %d, lim x %d, lim y %d, str %s \n", len, pos_chars->x, pos_chars->y, limit_chars->x, limit_chars->y, str);
 
     for (unsigned i = 0; i < DIMENSION_COUNT; i++) {
         gap = cfg->gaps.ca[i];
@@ -182,14 +181,25 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
 
             if (shift < 0) {
                 if (limit_chars) {
-                    shift = limit_chars->ca[i] + shift - len + 1;
+                    shift = limit_chars->ca[i] + shift;
+                    if (i == DIMENSION_X) {
+                        shift -= len - 2;
+                        // я ниибу почему здесь 2. подогнал экспериментально
+                        // это както связано с идиотским желанием равнять по правому краю,
+                        // при этом я немогу 0 передать в pos_chars чтобы прижать к правому краю
+                        // возможно даже у меня такое соглашение с самим собой что если есть длина то там должно быть на 1 меньше
+                        // пример:
+                        //      -1 это левый край самого правого символа если len = 0
+                        //      однако если сделать len 1 то тогда -1 будет правым краем тогоже символа
+
+                    }
                     if (shift < 0) {
-                        printf("lcd_color_text_raw_print error left edge - shift %d limit %d\n", shift, limit_chars->ca[i]);
+                        // printf("lcd_color_text_raw_print error left edge - shift %d limit %d\n", shift, limit_chars->ca[i]);
                         // не влезает в форму слева
                         return;
                     }
                 } else {
-                    printf("lcd_color_text_raw_print error no limits - shift %d\n", shift);
+                    // printf("lcd_color_text_raw_print error no limits - shift %d\n", shift);
                     // без лимитов непонятно откуда вычитать сдиг
                     return;
                 }
@@ -198,7 +208,7 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
                 if (limit_chars) {
                     if (shift >= limit_chars->ca[i]) {
                         // не влезает в форму справа
-                        printf("lcd_color_text_raw_print error right edge - shift %d limit %d\n", shift, limit_chars->ca[i]);
+                        // printf("lcd_color_text_raw_print error right edge - shift %d limit %d\n", shift, limit_chars->ca[i]);
                         return;
                     }
                 }
@@ -209,7 +219,7 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
         }
     }
 
-    // printf("lcd_color_text_raw_print str %s, len %d\n", str, len);
+    // printf("lcd_color_text_raw_print len %d pos px x %d y %d char idx x %d y %d, str %s\n", len, char_pos_px.x, char_pos_px.y, char_idx.x, char_idx.y, str);
 
     while (1) {
         char c = 0;
@@ -234,7 +244,7 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
             c = ' ';
         }
 
-        // printf("lcd_color_text_raw_print char %c\n", c);
+        // printf("lcd_color_text_raw_print char %c px x %d y %d, idx x %d y %d\n", c, char_pos_px.x, char_pos_px.y, char_idx.x, char_idx.y);
 
         if (c == ' ') {
             lcd_rect(char_pos_px.x, char_pos_px.y, (cfg->font->size.w * scale), (cfg->font->size.h * scale), cs->bg);
