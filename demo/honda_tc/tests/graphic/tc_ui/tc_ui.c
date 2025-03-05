@@ -154,55 +154,8 @@ ui_node_desc_t ui = {
         .screens_list = (ui_node_desc_t[]){
             {
                 .widget = &widget_menu_screen,
-            },
-            {
-                .widget = &widget_menu_screen,
-            },
-            {
-                .widget = &widget_menu_screen,
-            },
-            {
-                .widget = &widget_menu_screen,
-            },
-            // {
-            //     .widget = &widget_dlc_dump
-            // },
-            // {
-            //     .widget = &widget_screen_switch,
-            //     .cfg = &(widget_screen_switch_cfg_t){
-            //         .screens_num = 2,
-            //         .title_cfg = &screen_title,
-            //         .titles = (const char *[]){
-            //             "Debug Metrics Real",
-            //             "Debug Metrics Bool"
-            //         },
-            //         .screens_list = (ui_node_desc_t[]){
-            //             {
-            //                 .widget = &__widget_selectable_list,
-            //                 .cfg = &(__widget_selectable_list_cfg_t){
-            //                     .ui_node = &(ui_node_desc_t){
-            //                         .widget = &__widget_metric_list_item_real,
-            //                     },
-            //                     .margin = { .x = 0, .y = 0 },
-            //                     .num = METRIC_VAR_ID_NUM,
-            //                     .different_nodes = 0
-            //                 }
-            //             },
-            //             {
-            //                 .widget = &__widget_selectable_list,
-            //                 .cfg = &(__widget_selectable_list_cfg_t){
-            //                     .ui_node = &(ui_node_desc_t){
-            //                         .widget = &__widget_metric_list_item_bool,
-            //                     },
-            //                     .margin = { .x = 0, .y = 0 },
-            //                     .num = METRIC_BOOL_ID_NUM,
-            //                     .different_nodes = 0
-            //                 }
-            //             },
-            //         }
-            //     }
-            // }
-        },
+            }
+        }
     }
 };
 
