@@ -20,8 +20,8 @@ int time_zone_get(void)
 uint8_t selector = 0;
 
 ui_node_desc_t ui = {
-    .widget = &__widget_selectable_list,
-    .cfg = &(__widget_selectable_list_cfg_t){
+    .widget = &widget_selectable_list,
+    .cfg = &(widget_selectable_list_cfg_t){
         .different_nodes = 0,
         .margin = { .x = 2, .y = 2 },
         .num = ROUTE_TYPE_NUM,
