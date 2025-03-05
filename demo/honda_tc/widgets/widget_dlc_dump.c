@@ -1,4 +1,4 @@
-#include "widget_tc_dump.h"
+#include "widget_dlc_dump.h"
 #include "draw_color.h"
 #include "lcd_text_color.h"
 #include "lcd_color.h"
@@ -27,7 +27,7 @@ extern font_t font_5x7;
 //     .padding = { .x = 10, .y = 4 },
 // };
 
-text_field_t dump_tf = {
+tf_cfg_t dump_tf = {
     .fcfg = &(lcd_font_cfg_t){
         .font = &font_5x7,
         .gaps = { .x = 1, .y = 5 },

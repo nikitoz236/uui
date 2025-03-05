@@ -1,6 +1,6 @@
 #include "ui_tree.h"
 
-#include "widget_tc_dump.h"
+#include "widget_dlc_dump.h"
 
 // uint8_t screen_selector = 0;
 

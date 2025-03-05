@@ -18,31 +18,27 @@ INC += $(PROJECT)/widgets/common/
 INC += $(LIB)/graphic/ui_tree/widgets
 
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
-SRC += $(PROJECT)/widgets/widget_debug_metrics.c
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+SRC += $(PROJECT)/widgets/common/widget_screen_by_idx.c
 
-# SRC += $(PROJECT)/widgets/widget_debug_metrics.c
+SRC += $(PROJECT)/widgets/widget_menu_screen.c
 
-# SRC += $(PROJECT)/widgets/common/widget_metric_list.c
 SRC += $(PROJECT)/widgets/widget_metric_list_item.c
-SRC += $(PROJECT)/widgets/widget_screen_by_idx.c
+SRC += $(PROJECT)/widgets/widget_route_list_item.c
+SRC += $(PROJECT)/widgets/widget_dlc_dump.c
 
 
-# SRC += $(PROJECT)/widgets/common/widget_titled_screen.c
-
-# SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
-
-SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 
 INC += ../route_lists
-SRC += ../route_lists/widget_route_list_item.c
 
 INC += ../dump
-SRC += ../dump/widget_tc_dump.c
 
 
 SRC += $(LIB)/graphic/forms/forms_split.c
 
+
+# graphic
+SRC += $(LIB)/graphic/text/text_field.c
 
 # storage
 INC += ./$(LIB)/../tests/console/storage/

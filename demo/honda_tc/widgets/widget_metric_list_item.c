@@ -22,7 +22,7 @@ typedef struct {
 
 extern const font_t font_5x7;
 
-static const text_field_t tf = {
+static const tf_cfg_t tf = {
     .fcfg = &(lcd_font_cfg_t){
         .font = &font_5x7,
     },

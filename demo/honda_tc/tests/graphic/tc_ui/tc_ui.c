@@ -134,14 +134,14 @@
 #include "rtc.h"
 
 
-#include "widget_tc_dump.h"
+#include "widget_dlc_dump.h"
 #include "widget_screen_switch.h"
 
 #include "widget_screen_switch.h"
 #include "widget_selectable_list.h"
 #include "widget_metric_list_item.h"
 
-#include "widget_debug_metrics.h"
+#include "widget_menu_screen.h"
 
 ui_node_desc_t ui = {
     .widget = &widget_screen_switch,
@@ -149,16 +149,16 @@ ui_node_desc_t ui = {
         .screens_num = 4,
         .screens_list = (ui_node_desc_t[]){
             {
-                .widget = &widget_screen_debug_metrics,
+                .widget = &widget_menu_screen,
             },
             {
-                .widget = &widget_screen_debug_metrics,
+                .widget = &widget_menu_screen,
             },
             {
-                .widget = &widget_screen_debug_metrics,
+                .widget = &widget_menu_screen,
             },
             {
-                .widget = &widget_screen_debug_metrics,
+                .widget = &widget_menu_screen,
             },
             // {
             //     .widget = &widget_dlc_dump

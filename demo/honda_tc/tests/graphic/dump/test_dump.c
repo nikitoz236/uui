@@ -2,7 +2,7 @@
 #include "emu_tc.h"
 #include "dlc_poll.h"
 
-#include "widget_tc_dump.h"
+#include "widget_dlc_dump.h"
 #include "widget_screen_switch.h"
 
 uint8_t selector = 0;

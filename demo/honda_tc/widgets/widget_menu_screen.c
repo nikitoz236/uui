@@ -8,18 +8,18 @@
 
 #include "event_list.h"
 
-#include "widget_debug_metrics.h"
+#include "widget_menu_screen.h"
 
 #include "widget_selectable_list.h"
 #include "widget_screen_by_idx.h"
 
 #include "widget_metric_list_item.h"
 #include "widget_route_list_item.h"
-#include "widget_tc_dump.h"
+#include "widget_dlc_dump.h"
 
 extern font_t font_5x7;
 
-text_field_t screen_title = {
+tf_cfg_t screen_title = {
     .fcfg = &(lcd_font_cfg_t){
         .font = &font_5x7,
         .gaps = { .x = 2, .y = 2 },
@@ -246,7 +246,7 @@ static unsigned process(ui_element_t * el, unsigned event)
     return 0;
 }
 
-const widget_desc_t widget_screen_debug_metrics = {
+const widget_desc_t widget_menu_screen = {
     .draw = draw,
     .select = select_update,
     .process_event = process,
