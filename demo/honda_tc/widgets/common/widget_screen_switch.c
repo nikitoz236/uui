@@ -26,8 +26,8 @@ static void redraw(ui_element_t * el)
 
     if (cfg->title_cfg) {
         form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
-        draw_color_form(&ctx->title_form, 0x76ab23);
-        lcd_color_tf_print(cfg->titles[ctx->selector], &ctx->title_ctx, &(color_scheme_t){ .bg = 0x76ab23, .fg = 0xAE349E }, 0, 0);
+        draw_color_form(&ctx->title_form, COLOR(0x76ab23));
+        lcd_color_tf_print(cfg->titles[ctx->selector], &ctx->title_ctx, &(color_scheme_t){ .bg = COLOR(0x76ab23), .fg = COLOR(0xAE349E) }, 0, 0);
     }
 
     ui_tree_element_draw(item);

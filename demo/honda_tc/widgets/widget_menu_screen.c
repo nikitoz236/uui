@@ -51,12 +51,11 @@ typedef struct {
 static void widget_color_rect_draw(ui_element_t * el)
 {
     static const lcd_color_t color_list[] = {
-        0xAABBCC,
-        0x11BBCC,
-        0xAA22CC,
-        0xAABB33,
+        COLOR(0xAABBCC),
+        COLOR(0x11BBCC),
+        COLOR(0xAA22CC),
+        COLOR(0xAABB33),
     };
-    const unsigned * color_idx = el->ui_node->cfg;
     draw_color_form(&el->f, color_list[el->idx]);
 }
 
@@ -151,10 +150,10 @@ const lp_color_t title = {
 };
 
 const lp_color_t local_title[] = {
-    [MENU_METRICS] =    { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
-    [MENU_ROUTES] =     { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
-    [MENU_DUMP] =       { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .to_str = honda_dlc_unit_name, .t = LP_T_FIDX } },
-    [MENU_SETTINGS] =   { .color = 0x130e06, .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "DATETIME", "ODO", "ANALOG" }, .t = LP_T_LIDX } },
+    [MENU_METRICS] =    { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
+    [MENU_ROUTES] =     { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
+    [MENU_DUMP] =       { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .to_str = (const char * (*)(unsigned))honda_dlc_unit_name, .t = LP_T_FIDX } },
+    [MENU_SETTINGS] =   { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "DATETIME", "ODO", "ANALOG" }, .t = LP_T_LIDX } },
 };
 
 const label_list_t title_selector = {
@@ -181,17 +180,16 @@ const struct menu_cfg menu_cfg[] = {
     [MENU_SETTINGS] =   { .widget = &widget_color_rect, .menu_count = 3 },
 };
 
-// static const lcd_color_t bg = 0x4585E1;
-static const lcd_color_t bg = 0xf08400;
+// static const lcd_color_t bg = COLOR(0x4585E1);
+static const lcd_color_t bg = COLOR(0xf08400);
 
 static void select_update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
 
     lp(&ctx->title_ctx, &local_title[el->idx].l, &(color_scheme_t){ .fg = local_title[el->idx].color, .bg = bg }, 0, 0, ctx->selector);
-    lp_color(&ctx->title_ctx, 0x4585E1, &title_selector, el->active, 0, 0);
+    lp_color(&ctx->title_ctx, COLOR(0x4585E1), &title_selector, el->active, 0, 0);
 }
-static const unsigned selector = 1;
 
 static void redraw(ui_element_t * el)
 {

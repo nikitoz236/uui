@@ -31,7 +31,7 @@ static const tf_cfg_t tf = {
     .a = ALIGN_LIC,
 };
 
-static const lcd_color_t bg[] = { 0x111111, 0x113222 };
+static const lcd_color_t bg[] = { COLOR(0x111111), COLOR(0x113222) };
 
 static const char * metric_str_bool(unsigned idx)
 {
@@ -69,17 +69,17 @@ metric name       -12345678901  units     0000
 */
 
 static const lp_color_t label_static_real[] = {
-    { .color = 0x524D3F, .l = { .to_str = metric_var_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, } },
-    { .color = 0x1D5F90, .l = { .to_str = metric_var_get_unit, .t = LP_T_FIDX, .xy = { .x = 32 }, } },
+    { .color = COLOR(0x524D3F), .l = { .to_str = (const char * (*)(unsigned))metric_var_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, } },
+    { .color = COLOR(0x1D5F90), .l = { .to_str = (const char * (*)(unsigned))metric_var_get_unit, .t = LP_T_FIDX, .xy = { .x = 32 }, } },
 };
 
 static const lp_color_t label_static_bool = {
-      .color = 0x1D5F90, .l = { .to_str = metric_bool_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, }
+      .color = COLOR(0x1D5F90), .l = { .to_str = (const char * (*)(unsigned))metric_bool_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, }
 };
 
 static const lp_color_t label_val[] = {
-    { .color = 0x52AD6F, .l = { .len = 10, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LVFI, .vt_by_idx = metric_vt, .ofs = offsetof(uv_t, val), .xy = { .x = 18 }, } },
-    { .color = 0xAB4422, .l = { .len = 4,  .rep = { .vs = VAL_SIZE_32 }, .t = LF, .to_str = raw_hex, .ofs = offsetof(uv_t, raw), .xy = { .x = 42 }, } },
+    { .color = COLOR(0x52AD6F), .l = { .len = 10, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LVFI, .vt_by_idx = metric_vt, .ofs = offsetof(uv_t, val), .xy = { .x = 18 }, } },
+    { .color = COLOR(0xAB4422), .l = { .len = 4,  .rep = { .vs = VAL_SIZE_32 }, .t = LF, .to_str = raw_hex, .ofs = offsetof(uv_t, raw), .xy = { .x = 42 }, } },
 };
 
 static void update_uv_real(uv_t * uv, unsigned idx)
@@ -99,12 +99,13 @@ static const label_list_t ll_static[] = {
 };
 
 static const label_list_t ll_value[] = {
-    [METRIC_LIST_VAL] = { .count = ARRAY_SIZE(label_val), .wrap_list = label_val, .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_real },
+    [METRIC_LIST_VAL] = { .count = ARRAY_SIZE(label_val), .wrap_list = label_val, .ctx_update = (void(*)(void *, unsigned))update_uv_real },
     [METRIC_LIST_BOOL] = {
-        .ctx_update = (void(*)(void * ctx, unsigned x))update_uv_bool,
-        .count = 1,
+        .ctx_update = (void(*)(void *, unsigned))update_uv_bool,
+        .count = 2,
         .wrap_list = (const lp_color_t []) {
-            { .color = 0x52AD6F, .l = { .len = 1, .rep = { .vs = VAL_SIZE_32 }, .t = LP_V, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 }, } },
+            { .color = COLOR(0xAD526F), .l = { .len = 5, .rep = { .vs = VAL_SIZE_32 }, .text_list = (char * []){"[OFF]", 0 }, .t = LP_T_LV, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 }, } },
+            { .color = COLOR(0x52AD6F), .l = { .len = 4, .rep = { .vs = VAL_SIZE_32 }, .text_list = (char * []){ 0, "[ON]" }, .t = LP_T_LV, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 + 8 }, } },
         },
     },
 };

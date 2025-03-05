@@ -23,7 +23,7 @@ const tf_cfg_t tf = {
     .limit_char = { .y = 4 },      // ну вот он же может расширятся, и интерфейс может расширятся, есть поля привязаные к правому краю, хм
 };
 
-const lcd_color_t bg[] = { 0x111111, 0x113222 };
+const lcd_color_t bg[] = { COLOR(0x111111), COLOR(0x113222) };
 
 typedef struct {
     unsigned h;
@@ -80,31 +80,31 @@ cons: 37.56 L/h 37.56 L/100km   odo: 345674.324 km
 */
 
 static const lp_color_t label_static[] = {
-    { .color = 0x882222, .l = { .t = LP_T_FIDX, .xy = { .x = 0,  .y = 0 }, .to_str = route_name } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 0 }, .text = "time:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 44 - 52, .y = 0 }, .text = ":",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 47 - 52, .y = 0 }, .text = ":",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,       .y = 1 }, .text = "start:",       } },
-    { .color = 0x96A41d, .l = { .t = LP_T, .xy = { .x = 21,      .y = 1 }, .text = ":",            } },
-    { .color = 0x96A41d, .l = { .t = LP_T, .xy = { .x = 24,      .y = 1 }, .text = ":",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 2 }, .text = "dist:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48 - 52, .y = 2 }, .text = "km",           } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,       .y = 2 }, .text = "avg speed:",   } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 18,      .y = 2 }, .text = "km/h",         } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 3 }, .text = "fuel:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 49 - 52, .y = 3 }, .text = "L",            } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 0,       .y = 3 }, .text = "cons:",        } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 12,      .y = 3 }, .text = "L/h",          } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 22,      .y = 3 }, .text = "L/100km",      } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 31 - 52, .y = 1 }, .text = "odo:",         } },
-    { .color = 0x555555, .l = { .t = LP_T, .xy = { .x = 48 - 52, .y = 1 }, .text = "km",           } },
+    { .color = COLOR(0x882222), .l = { .t = LP_T_FIDX, .xy = { .x = 0,  .y = 0 }, .to_str = (const char * (*)(unsigned))route_name } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 0 }, .text = "time:",        } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 44 - 52, .y = 0 }, .text = ":",            } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 47 - 52, .y = 0 }, .text = ":",            } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 0,       .y = 1 }, .text = "start:",       } },
+    { .color = COLOR(0x96A41d), .l = { .t = LP_T, .xy = { .x = 21,      .y = 1 }, .text = ":",            } },
+    { .color = COLOR(0x96A41d), .l = { .t = LP_T, .xy = { .x = 24,      .y = 1 }, .text = ":",            } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 2 }, .text = "dist:",        } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 48 - 52, .y = 2 }, .text = "km",           } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 0,       .y = 2 }, .text = "avg speed:",   } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 18,      .y = 2 }, .text = "km/h",         } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 3 }, .text = "fuel:",        } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 49 - 52, .y = 3 }, .text = "L",            } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 0,       .y = 3 }, .text = "cons:",        } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 12,      .y = 3 }, .text = "L/h",          } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 22,      .y = 3 }, .text = "L/100km",      } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 31 - 52, .y = 1 }, .text = "odo:",         } },
+    { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 48 - 52, .y = 1 }, .text = "km",           } },
 };
 
 static const label_list_t ll_static = { .count = ARRAY_SIZE(label_static), .wrap_list = label_static };
 
 static const label_list_t ll_restart = {
     .count = 1, .wrap_list = (const lp_color_t []){
-        { .color = 0xFF0000, .l = { .t = LP_T_LV, .xy = { .x = 14, .y = 0 }, .text_list = (const char *[]){ 0, "OK to RESTART" }, .len = 13, .rep = { .vs = VAL_SIZE_8 }, .ofs = offsetof(ctx_t, restart_engaged) } }
+        { .color = COLOR(0xFF0000), .l = { .t = LP_T_LV, .xy = { .x = 14, .y = 0 }, .text_list = (const char *[]){ 0, "OK to RESTART" }, .len = 13, .rep = { .vs = VAL_SIZE_8 }, .ofs = offsetof(ctx_t, restart_engaged) } }
     }
 };
 
@@ -124,14 +124,14 @@ static const label_t labels_route_since[] = {
 };
 
 static const lp_color_t labels_vals[] = {
-    { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 36, .y = 2 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_DIST]) } },
-    { .color = 0x96A4Ad, .l = { .t = LV, .xy = { .x = 37, .y = 3 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_FUEL]) } },
-    { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 37, .y = 1 }, .len = 10,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_ODO]) } },
-    { .color = 0x96A41d, .l = { .t = LV, .xy = { .x = 11, .y = 2 }, .len = 6,   .vt = { .f = X1000, .p = 2, .zr = 0}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_AVG_SPEED]) } },
-    { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 16, .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_CONS_DIST]) } },
-    { .color = 0x12fa44, .l = { .t = LV, .xy = { .x = 6,  .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_CONS_TIME]) } },
-    { .color = 0xE6A7bd, .l = { .t = LS, .sofs = offsetof(uv_t, since), .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_TIME]), .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_since, .list = labels_route_since, .count = 6 } } },
-    { .color = 0x96A41d, .l = { .t = LS, .sofs = offsetof(uv_t, time),  .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_TIME]),       .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time,  .list = labels_route_time,  .count = 3 } } },
+    { .color = COLOR(0x96A41d), .l = { .t = LV, .xy = { .x = 36, .y = 2 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_DIST]) } },
+    { .color = COLOR(0x96A4Ad), .l = { .t = LV, .xy = { .x = 37, .y = 3 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_FUEL]) } },
+    { .color = COLOR(0x96A41d), .l = { .t = LV, .xy = { .x = 37, .y = 1 }, .len = 10,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_ODO]) } },
+    { .color = COLOR(0x96A41d), .l = { .t = LV, .xy = { .x = 11, .y = 2 }, .len = 6,   .vt = { .f = X1000, .p = 2, .zr = 0}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_AVG_SPEED]) } },
+    { .color = COLOR(0x12fa44), .l = { .t = LV, .xy = { .x = 16, .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_CONS_DIST]) } },
+    { .color = COLOR(0x12fa44), .l = { .t = LV, .xy = { .x = 6,  .y = 3 }, .len = 5,   .vt = { .f = X1000, .p = 2, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_CONS_TIME]) } },
+    { .color = COLOR(0xE6A7bd), .l = { .t = LS, .sofs = offsetof(uv_t, since), .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_TIME]), .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_since, .list = labels_route_since, .count = 6 } } },
+    { .color = COLOR(0x96A41d), .l = { .t = LS, .sofs = offsetof(uv_t, time),  .rep = { .vs = VAL_SIZE_32}, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_TIME]),       .sl = &(const label_list_t){ .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_time,  .list = labels_route_time,  .count = 3 } } },
 };
 
 static const label_list_t ll_vals = { .count = ARRAY_SIZE(labels_vals), .wrap_list = labels_vals, .ctx_update = (void(*)(void * ctx, unsigned x))ctx_update_vals };
@@ -158,7 +158,6 @@ static void select(ui_element_t * el)
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    form_t f_bkp = el->f;
     if (tf_ctx_calc(&ctx->tf, &el->f, &tf)) {
         select(el);
         el->drawed = 1;
