@@ -70,7 +70,6 @@ SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
 INC += $(PROJECT)/widgets/common/
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
-SRC += $(PROJECT)/widgets/common/widget_screen_by_idx.c
 
 INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/widget_menu_screen.c

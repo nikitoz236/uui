@@ -70,68 +70,78 @@ enum {
     MENU_SETTINGS
 };
 
-ui_node_desc_t menu_screens[] = {
+struct menu {
+    ui_node_desc_t * screen_list;
+    uint8_t screen_num;
+    uint8_t by_idx;
+};
+
+static const struct menu menu_list[] = {
     [MENU_METRICS] = {
-        .widget = &widget_screen_by_idx,
-        .cfg = &(widget_screen_by_idx_cfg_t){
-            .screens_num = 2,
-            .screens_list = (ui_node_desc_t[]){
-                {
-                    .widget = &widget_selectable_list,
-                    .cfg = &(widget_selectable_list_cfg_t){
-                        .margin = { .x = 0, .y = 2 },
-                        .num = METRIC_VAR_ID_NUM,
-                        .ui_node = &(ui_node_desc_t){
-                            .widget = &widget_metric_list_item,
-                            .cfg = &(widget_metric_list_item_cfg_t) {
-                                .type = METRIC_LIST_VAL,
-                            }
-                        },
-                    }
-                },
-                {
-                    .widget = &widget_selectable_list,
-                    .cfg = &(widget_selectable_list_cfg_t){
-                        .margin = { .x = 0, .y = 2 },
-                        .num = METRIC_BOOL_ID_NUM,
-                        .ui_node = &(ui_node_desc_t){
-                            .widget = &widget_metric_list_item,
-                            .cfg = &(widget_metric_list_item_cfg_t) {
-                                .type = METRIC_LIST_BOOL,
-                            }
-                        },
-                    }
-                },
+        .screen_num = 2,
+        .screen_list = (ui_node_desc_t []){
+            {
+                .widget = &widget_selectable_list,
+                .cfg = &(widget_selectable_list_cfg_t){
+                    .margin = { .x = 0, .y = 2 },
+                    .num = METRIC_VAR_ID_NUM,
+                    .ui_node = &(ui_node_desc_t){
+                        .widget = &widget_metric_list_item,
+                        .cfg = &(widget_metric_list_item_cfg_t) {
+                            .type = METRIC_LIST_VAL,
+                        }
+                    },
+                }
+            },
+            {
+                .widget = &widget_selectable_list,
+                .cfg = &(widget_selectable_list_cfg_t){
+                    .margin = { .x = 0, .y = 2 },
+                    .num = METRIC_BOOL_ID_NUM,
+                    .ui_node = &(ui_node_desc_t){
+                        .widget = &widget_metric_list_item,
+                        .cfg = &(widget_metric_list_item_cfg_t) {
+                            .type = METRIC_LIST_BOOL,
+                        }
+                    },
+                }
             },
         }
     },
     [MENU_ROUTES] = {
-        .widget = &widget_screen_by_idx,
-        .cfg = &(widget_screen_by_idx_cfg_t){
-            .screens_num = 1,
-            .screens_list = (ui_node_desc_t[]){
-                {
-                    .widget = &widget_selectable_list,
-                    .cfg = &(widget_selectable_list_cfg_t){
-                        .num = ROUTE_TYPE_NUM,
-                        .margin = { .x = 2, .y = 2 },
-                        .ui_node = &(ui_node_desc_t){
-                            .widget = &widget_route_list_item,
-                            // .cfg = &(widget_metric_list_item_cfg_t) {
-                            //     .type = METRIC_LIST_VAL,
-                            // }
-                        },
-                    }
-                },
+        .by_idx = 1,
+        .screen_num = 3,
+        .screen_list = (ui_node_desc_t []){
+            {
+                .widget = &widget_selectable_list,
+                .cfg = &(widget_selectable_list_cfg_t){
+                    .num = ROUTE_TYPE_NUM,
+                    .margin = { .x = 2, .y = 2 },
+                    .ui_node = &(ui_node_desc_t){
+                        .widget = &widget_route_list_item,
+                        // .cfg = &(widget_metric_list_item_cfg_t) {
+                        //     .type = METRIC_LIST_VAL,
+                        // }
+                    },
+                }
             },
         }
     },
     [MENU_DUMP] = {
-        .widget = &widget_dlc_dump
+        .by_idx = 1,
+        .screen_num = 3,
+        .screen_list = &(ui_node_desc_t) {
+            .widget = &widget_dlc_dump
+        }
     },
     [MENU_SETTINGS] = {
-        .widget = &widget_color_rect
+        .by_idx = 1,
+        .screen_num = 3,
+        .screen_list = &(ui_node_desc_t) {
+            .widget = &widget_color_rect
+        }
     }
+
 };
 
 const lp_color_t title = {
@@ -166,20 +176,6 @@ const label_list_t title_selector = {
     .count = 4
 };
 
-struct menu_cfg {
-    const widget_desc_t * widget;
-    uint8_t menu_count;
-    uint8_t * list_len;
-    uint8_t confirm;
-};
-
-const struct menu_cfg menu_cfg[] = {
-    [MENU_METRICS] =    { .widget = &widget_metric_list_item, .menu_count = 2, .list_len = (uint8_t []){ METRIC_VAR_ID_NUM, METRIC_BOOL_ID_NUM} },
-    [MENU_ROUTES] =     { .widget = &widget_route_list_item,  .menu_count = 3, .list_len = (uint8_t []){ ROUTE_TYPE_NUM, ROUTE_TYPE_NUM, ROUTE_TYPE_NUM } },
-    [MENU_DUMP] =       { .widget = &widget_color_rect, .menu_count = 3 },
-    [MENU_SETTINGS] =   { .widget = &widget_color_rect, .menu_count = 3 },
-};
-
 // static const lcd_color_t bg = COLOR(0x4585E1);
 static const lcd_color_t bg = COLOR(0xf08400);
 
@@ -196,7 +192,13 @@ static void redraw(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     select_update(el);
 
-    ui_element_t * item = ui_tree_add(el, &menu_screens[el->idx], ctx->selector);
+    ui_element_t * item;
+    if (menu_list[el->idx].by_idx) {
+        item = ui_tree_add(el, menu_list[el->idx].screen_list, ctx->selector);
+    } else {
+        item = ui_tree_add(el, &menu_list[el->idx].screen_list[ctx->selector], 0);
+    }
+
     form_cut(&item->f, DIMENSION_Y, EDGE_U, ctx->title_form.s.h);
 
     ui_tree_element_draw(item);
@@ -227,12 +229,12 @@ static unsigned process(ui_element_t * el, unsigned event)
     ctx_t * ctx = (ctx_t *)el->ctx;
 
     if (event == EVENT_BTN_DOWN) {
-        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_ADD, 1, 0, menu_cfg[el->idx].menu_count - 1, 1);
+        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_ADD, 1, 0, menu_list[el->idx].screen_num - 1, 1);
         change_cild(el);
         return 1;
     }
     if (event == EVENT_BTN_UP) {
-        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_SUB, 1, 0, menu_cfg[el->idx].menu_count - 1, 1);
+        val_mod_unsigned(&ctx->selector, VAL_SIZE_32, MOD_OP_SUB, 1, 0, menu_list[el->idx].screen_num - 1, 1);
         change_cild(el);
         return 1;
     }

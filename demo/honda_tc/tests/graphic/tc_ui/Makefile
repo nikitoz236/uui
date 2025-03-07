@@ -21,7 +21,6 @@ SRC += $(LIB)/emu/console/console_getc.c
 INC += $(PROJECT)/widgets/common/
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
-SRC += $(PROJECT)/widgets/common/widget_screen_by_idx.c
 
 INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/widget_menu_screen.c
