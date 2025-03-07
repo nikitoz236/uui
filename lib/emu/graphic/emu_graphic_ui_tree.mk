@@ -1,4 +1,7 @@
 
+# dp.h
+SRC += $(LIB)/emu/console/emu_dp_usart.c
+
 # ui_tree.h
 INC += $(LIB)/graphic/ui_tree
 SRC += $(LIB)/graphic/ui_tree/ui_tree.c
