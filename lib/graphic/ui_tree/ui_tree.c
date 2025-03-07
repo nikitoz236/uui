@@ -374,12 +374,6 @@ static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
     unsigned result = 0;
     ui_element_t * child = ui_tree_child(element);
 
-    if (element->drawed) {
-        if (element->ui_node->widget->update) {
-            element->ui_node->widget->update(element);
-        }
-    }
-
     while (child) {
         if (ui_tree_element_process(child, event)) {
             result = 1;
@@ -387,11 +381,18 @@ static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
         child = ui_tree_next(child);
     }
 
-    if (event) {
-        if (result == 0) {
-            if (element->active) {
-                if (element->ui_node->widget->process_event) {
-                    result = element->ui_node->widget->process_event(element, event);
+
+    if (element->drawed) {
+        if (element->ui_node->widget->update) {
+            element->ui_node->widget->update(element);
+        }
+
+        if (event) {
+            if (result == 0) {
+                if (element->active) {
+                    if (element->ui_node->widget->process_event) {
+                        result = element->ui_node->widget->process_event(element, event);
+                    }
                 }
             }
         }

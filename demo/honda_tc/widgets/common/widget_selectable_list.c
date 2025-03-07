@@ -68,6 +68,7 @@ static void draw(ui_element_t * el)
     ctx->first = 0;
     ctx->pos = 0;
     recalc(el);
+    el->drawed = 1;
 }
 
 static void select(ui_element_t * el)
