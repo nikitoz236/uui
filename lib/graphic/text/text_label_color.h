@@ -5,8 +5,7 @@
 typedef struct {
     lcd_color_t color;
     label_t l;
-} lp_color_t;
+} label_color_t;
 
-void lp_color(const tf_ctx_t * tf, lcd_color_t bg_color, const label_list_t * list, unsigned idx, void * ctx, void * prev_ctx);
-
-void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev_ctx, void * ctx, unsigned idx);
+void label_color(const tf_ctx_t * tf, const label_color_t * label, lcd_color_t bg_color, unsigned idx, void * ctx, void * prev_ctx);
+void label_color_list(const tf_ctx_t * tf, const label_list_t * list, lcd_color_t bg_color, unsigned idx, void * ctx, void * prev_ctx);

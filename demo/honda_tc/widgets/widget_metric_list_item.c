@@ -68,16 +68,16 @@ metric name       -12345678901  units     0000
 
 */
 
-static const lp_color_t label_static_real[] = {
+static const label_color_t label_static_real[] = {
     { .color = COLOR(0x524D3F), .l = { .to_str = (const char * (*)(unsigned))metric_var_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, } },
     { .color = COLOR(0x1D5F90), .l = { .to_str = (const char * (*)(unsigned))metric_var_get_unit, .t = LP_T_FIDX, .xy = { .x = 32 }, } },
 };
 
-static const lp_color_t label_static_bool = {
+static const label_color_t label_static_bool = {
       .color = COLOR(0x1D5F90), .l = { .to_str = (const char * (*)(unsigned))metric_bool_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, }
 };
 
-static const lp_color_t label_val[] = {
+static const label_color_t label_val[] = {
     { .color = COLOR(0x52AD6F), .l = { .len = 10, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LVFI, .vt_by_idx = metric_vt, .ofs = offsetof(uv_t, val), .xy = { .x = 18 }, } },
     { .color = COLOR(0xAB4422), .l = { .len = 4,  .rep = { .vs = VAL_SIZE_32 }, .t = LF, .to_str = raw_hex, .ofs = offsetof(uv_t, raw), .xy = { .x = 42 }, } },
 };
@@ -103,9 +103,9 @@ static const label_list_t ll_value[] = {
     [METRIC_LIST_BOOL] = {
         .ctx_update = (void(*)(void *, unsigned))update_uv_bool,
         .count = 2,
-        .wrap_list = (const lp_color_t []) {
-            { .color = COLOR(0xAD526F), .l = { .len = 5, .rep = { .vs = VAL_SIZE_32 }, .text_list = (char * []){"[OFF]", 0 }, .t = LP_T_LV, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 }, } },
-            { .color = COLOR(0x52AD6F), .l = { .len = 4, .rep = { .vs = VAL_SIZE_32 }, .text_list = (char * []){ 0, "[ON]" }, .t = LP_T_LV, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 + 8 }, } },
+        .wrap_list = (const label_color_t []) {
+            { .color = COLOR(0xAD526F), .l = { .len = 5, .rep = { .vs = VAL_SIZE_32 }, .text_list = (const char * []){"[OFF]", 0 }, .t = LP_T_LV, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 }, } },
+            { .color = COLOR(0x52AD6F), .l = { .len = 4, .rep = { .vs = VAL_SIZE_32 }, .text_list = (const char * []){ 0, "[ON]" }, .t = LP_T_LV, .ofs = offsetof(uv_t, val), .xy = { .x = 18 + 9 + 8 }, } },
         },
     },
 };
@@ -128,7 +128,7 @@ static void update(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     widget_metric_list_item_cfg_t * cfg = (widget_metric_list_item_cfg_t *)el->ui_node->cfg;
     uv_t uv = {};
-    lp_color(&ctx->tf, bg[el->active], &ll_value[cfg->type], el->idx, &uv, &ctx->uv);
+    label_color_list(&ctx->tf, &ll_value[cfg->type], bg[el->active], el->idx, &uv, &ctx->uv);
 }
 
 static void select_update(ui_element_t * el)
@@ -136,8 +136,8 @@ static void select_update(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     widget_metric_list_item_cfg_t * cfg = (widget_metric_list_item_cfg_t *)el->ui_node->cfg;
     draw_color_form(&el->f, bg[el->active]);
-    lp_color(&ctx->tf, bg[el->active], &ll_static[cfg->type], el->idx, 0, 0);
-    lp_color(&ctx->tf, bg[el->active], &ll_value[cfg->type], el->idx, &ctx->uv, 0);
+    label_color_list(&ctx->tf, &ll_static[cfg->type], bg[el->active], el->idx, 0, 0);
+    label_color_list(&ctx->tf, &ll_value[cfg->type], bg[el->active], el->idx, &ctx->uv, 0);
 }
 
 static void draw(ui_element_t * el)

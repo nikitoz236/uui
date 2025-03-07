@@ -117,14 +117,20 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
     lcd_color_text_raw_print(str, tf->tfcfg->fcfg, cs, &tf->xy, &tf->size, &l->xy, l->len);
 }
 
-void lp_color(const tf_ctx_t * tf, lcd_color_t bg_color, const label_list_t * list, unsigned idx, void * ctx, void * prev_ctx)
+void label_color(const tf_ctx_t * tf, const label_color_t * label, lcd_color_t bg_color, unsigned idx, void * ctx, void * prev_ctx)
+{
+    color_scheme_t cs = { .bg = bg_color, .fg = label->color };
+    lp(tf, &label->l, &cs, prev_ctx, ctx, idx);
+}
+
+void label_color_list(const tf_ctx_t * tf, const label_list_t * list, lcd_color_t bg_color, unsigned idx, void * ctx, void * prev_ctx)
 {
     color_scheme_t cs = { .bg = bg_color };
     if (list->ctx_update) {
         list->ctx_update(ctx, idx);
     }
     for (unsigned i = 0; i < list->count; i++) {
-        lp_color_t * a = (lp_color_t *)list->wrap_list;
+        label_color_t * a = (label_color_t *)list->wrap_list;
         cs.fg = a[i].color;
         lp(tf, &a[i].l, &cs, prev_ctx, ctx, idx);
     }

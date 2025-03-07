@@ -79,7 +79,7 @@ cons: 37.56 L/h 37.56 L/100km   odo: 345674.324 km
 --------------------------------------------------
 */
 
-static const lp_color_t label_static[] = {
+static const label_color_t label_static[] = {
     { .color = COLOR(0x882222), .l = { .t = LP_T_FIDX, .xy = { .x = 0,  .y = 0 }, .to_str = (const char * (*)(unsigned))route_name } },
     { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 30 - 52, .y = 0 }, .text = "time:",        } },
     { .color = COLOR(0x555555), .l = { .t = LP_T, .xy = { .x = 44 - 52, .y = 0 }, .text = ":",            } },
@@ -103,7 +103,7 @@ static const lp_color_t label_static[] = {
 static const label_list_t ll_static = { .count = ARRAY_SIZE(label_static), .wrap_list = label_static };
 
 static const label_list_t ll_restart = {
-    .count = 1, .wrap_list = (const lp_color_t []){
+    .count = 1, .wrap_list = (const label_color_t []){
         { .color = COLOR(0xFF0000), .l = { .t = LP_T_LV, .xy = { .x = 14, .y = 0 }, .text_list = (const char *[]){ 0, "OK to RESTART" }, .len = 13, .rep = { .vs = VAL_SIZE_8 }, .ofs = offsetof(ctx_t, restart_engaged) } }
     }
 };
@@ -123,7 +123,7 @@ static const label_t labels_route_since[] = {
     { .t = LV, .xy = { .x = 25, .y = 1 }, .rep = { .vs = VAL_SIZE_8  }, .len = 2, .vt = { .zl = 1 },     .ofs = offsetof(route_since_t, t.s) },
 };
 
-static const lp_color_t labels_vals[] = {
+static const label_color_t labels_vals[] = {
     { .color = COLOR(0x96A41d), .l = { .t = LV, .xy = { .x = 36, .y = 2 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_DIST]) } },
     { .color = COLOR(0x96A4Ad), .l = { .t = LV, .xy = { .x = 37, .y = 3 }, .len = 11,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_FUEL]) } },
     { .color = COLOR(0x96A41d), .l = { .t = LV, .xy = { .x = 37, .y = 1 }, .len = 10,  .vt = { .f = X1000, .p = 3, .zr = 1}, .rep = { .vs = VAL_SIZE_32 }, .ofs = offsetof(uv_t, rv[ROUTE_VALUE_SINCE_ODO]) } },
@@ -140,7 +140,7 @@ static void update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     uv_t uv;
-    lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &uv, &ctx->uv);
+    label_color_list(&ctx->tf, &ll_vals, bg[el->active], el->idx, &uv, &ctx->uv);
 }
 
 static void select(ui_element_t * el)
@@ -151,8 +151,8 @@ static void select(ui_element_t * el)
 
     draw_color_form(&el->f, bg[el->active]);
 
-    lp_color(&ctx->tf, bg[el->active], &ll_static, el->idx, &ctx->uv, 0);
-    lp_color(&ctx->tf, bg[el->active], &ll_vals, el->idx, &ctx->uv, 0);
+    label_color_list(&ctx->tf, &ll_static, bg[el->active], el->idx, &ctx->uv, 0);
+    label_color_list(&ctx->tf, &ll_vals, bg[el->active], el->idx, &ctx->uv, 0);
 }
 
 static void draw(ui_element_t * el)
@@ -167,7 +167,7 @@ static void draw(ui_element_t * el)
 static void update_restart_engaged(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    lp_color(&ctx->tf, bg[el->active], &ll_restart, el->idx, ctx, 0);
+    label_color_list(&ctx->tf, &ll_restart, bg[el->active], el->idx, ctx, 0);
 
     // проверяй что файл поменялся прежде чем сохранять маршрут
 }

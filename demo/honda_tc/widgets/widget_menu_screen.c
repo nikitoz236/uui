@@ -144,7 +144,7 @@ static const struct menu menu_list[] = {
 
 };
 
-const lp_color_t title = {
+const label_color_t title = {
     .color = 0,
     .l = {
         .xy = { .x = 2 },
@@ -159,7 +159,7 @@ const lp_color_t title = {
     }
 };
 
-const lp_color_t local_title[] = {
+const label_color_t local_title[] = {
     [MENU_METRICS] =    { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
     [MENU_ROUTES] =     { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
     [MENU_DUMP] =       { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .to_str = (const char * (*)(unsigned))honda_dlc_unit_name, .t = LP_T_FIDX } },
@@ -167,7 +167,7 @@ const lp_color_t local_title[] = {
 };
 
 const label_list_t title_selector = {
-    .wrap_list = (lp_color_t []) {
+    .wrap_list = (label_color_t []) {
         { .color = 0, .l = { .xy = { .x =  0 }, .len = 1, .text_list = (const char *[]){ "[", 0 }, .t = LP_T_LIDX } },
         { .color = 0, .l = { .xy = { .x = 11 }, .len = 1, .text_list = (const char *[]){ "]", 0 }, .t = LP_T_LIDX } },
         { .color = 0, .l = { .xy = { .x = -12 }, .len = 1, .text_list = (const char *[]){ 0, "[" }, .t = LP_T_LIDX } },
@@ -182,9 +182,8 @@ static const lcd_color_t bg = COLOR(0xf08400);
 static void select_update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    lp(&ctx->title_ctx, &local_title[el->idx].l, &(color_scheme_t){ .fg = local_title[el->idx].color, .bg = bg }, 0, 0, ctx->selector);
-    lp_color(&ctx->title_ctx, COLOR(0x4585E1), &title_selector, el->active, 0, 0);
+    label_color(&ctx->title_ctx, &local_title[el->idx], bg, ctx->selector, 0, 0);
+    label_color_list(&ctx->title_ctx, &title_selector, COLOR(0x4585E1), el->active, 0, 0);
 }
 
 static void redraw(ui_element_t * el)
@@ -219,7 +218,7 @@ static void draw(ui_element_t * el)
     tf_ctx_calc(&ctx->title_ctx, &ctx->title_form, &screen_title);
     draw_color_form(&ctx->title_form, bg);
 
-    lp(&ctx->title_ctx, &title.l, &(color_scheme_t){ .fg = title.color, .bg = bg }, 0, 0, el->idx);
+    label_color(&ctx->title_ctx, &title, bg, el->idx, 0, 0);
 
     redraw(el);
 }
