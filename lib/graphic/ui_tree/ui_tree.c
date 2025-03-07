@@ -357,7 +357,10 @@ unsigned ui_tree_element_select(ui_element_t * element, unsigned select)
     if (element->ui_node->widget->select) {
         element->ui_node->widget->select(element);
     } else {
-        ui_tree_element_select(ui_tree_child(element), select);
+        ui_element_t * child = ui_tree_child(element);
+        if (child) {
+            ui_tree_element_select(child, select);
+        }
     }
 
     return 1;
