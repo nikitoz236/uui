@@ -133,12 +133,6 @@ int main(void)
     init_button_subsystem(&buttons);
 
     dn();
-    dpn("init display ...");
-    init_lcd_hw(&lcd_cfg);
-    lcd_bl(4);
-    init_lcd(&lcd_cfg);
-
-    dn();
     dpn("init ui ...");
     init_ui();
 

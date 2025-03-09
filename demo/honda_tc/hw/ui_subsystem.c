@@ -82,26 +82,28 @@ static void ui_display_ctrl(unsigned state)
     dp("ui display "); dpd(state, 1); dn();
 
     if (state) {
-        // init_lcd(&lcd_cfg);
+        init_lcd(&lcd_cfg);
+        ui_tree_draw();
         lcd_bl(4);
-        // ui_tree_draw();
     } else {
-        // lcd_pwr(0);
+        lcd_pwr(0);
         lcd_bl(0);
     }
 }
 
 void init_ui(void)
 {
-    // init_lcd_hw(&lcd_cfg);
-
-
-    // init_lcd(&lcd_cfg);
-    // lcd_bl(4);
-
     ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});
+
+    dn();
+    dpn("init display ...");
+
+    init_lcd_hw(&lcd_cfg);
+    init_lcd(&lcd_cfg);
+
     ui_tree_draw();
 
+    lcd_bl(4);
     display_state = 1;
 
     lcd_sleep = 1;
@@ -141,8 +143,6 @@ void ui_process(unsigned x)
             запускаем экран
 
     */
-
-
 }
 
 void ui_set_state(unsigned state)
