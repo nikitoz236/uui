@@ -159,6 +159,20 @@ ui_node_desc_t ui = {
     }
 };
 
+
+int timezone_s = 5 * 60 * 60;
+
+int time_zone_get(void)
+{
+    return timezone_s;
+}
+
+void time_zone_set(int tz)
+{
+    timezone_s = tz;
+}
+
+
 void tc_engine_set_status(unsigned state)
 {
     printf("tc_engine_set_status %d\n", state);
@@ -169,7 +183,7 @@ int main()
     printf("test tc ui\r\n");
 
     init_rtc();
-    rtc_set_time_s(date_time_to_s(&(date_t){ .y = 2025, .m = MONTH_FEB, .d = 19 }, &(time_t){ .h = 11, .m = 43, .s = 12 }));
+    rtc_set_time_s(date_time_to_s(&(date_t){ .y = 2025, .m = MONTH_MAR, .d = 19 }, &(time_t){ .h = 11, .m = 43, .s = 12 }));
 
     emu_storage_load();
 

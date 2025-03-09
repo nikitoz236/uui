@@ -11,17 +11,17 @@
 #include "widget_menu_screen.h"
 
 #include "widget_selectable_list.h"
-#include "widget_screen_by_idx.h"
 
 #include "widget_metric_list_item.h"
 #include "widget_route_list_item.h"
 #include "widget_dlc_dump.h"
+#include "widget_time_settings.h"
 
 #include "honda_dlc_units.h"
 
 extern font_t font_5x7;
 
-tf_cfg_t screen_title = {
+static const tf_cfg_t screen_title = {
     .fcfg = &(lcd_font_cfg_t){
         .font = &font_5x7,
         .gaps = { .x = 2, .y = 2 },
@@ -38,7 +38,6 @@ typedef struct {
     unsigned selector;
 } ctx_t;
 
-
 /*
 ============================================
 0 2         13
@@ -46,22 +45,6 @@ typedef struct {
 
 ============================================
 */
-
-
-static void widget_color_rect_draw(ui_element_t * el)
-{
-    static const lcd_color_t color_list[] = {
-        COLOR(0xAABBCC),
-        COLOR(0x11BBCC),
-        COLOR(0xAA22CC),
-        COLOR(0xAABB33),
-    };
-    draw_color_form(&el->f, color_list[el->idx]);
-}
-
-const widget_desc_t widget_color_rect = {
-    .draw = widget_color_rect_draw
-};
 
 enum {
     MENU_METRICS,
@@ -137,14 +120,25 @@ static const struct menu menu_list[] = {
     [MENU_SETTINGS] = {
         .by_idx = 1,
         .screen_num = 3,
-        .screen_list = &(ui_node_desc_t) {
-            .widget = &widget_color_rect
+        .screen_list = (ui_node_desc_t []){
+            {
+                .widget = &widget_selectable_list,
+                .cfg = &(widget_selectable_list_cfg_t) {
+                    .num = 3,
+                    .margin = { .x = 4, .y = 4 },
+                    .ui_node = (ui_node_desc_t[]) {
+                        {
+                            .widget = &widget_settings_title
+                        },
+                    }
+                }
+            }
         }
     }
 
 };
 
-const label_color_t title = {
+static const label_color_t title = {
     .color = 0,
     .l = {
         .xy = { .x = 2 },
@@ -159,14 +153,14 @@ const label_color_t title = {
     }
 };
 
-const label_color_t local_title[] = {
+static const label_color_t local_title[] = {
     [MENU_METRICS] =    { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "REAL", "BOOL" }, .t = LP_T_LIDX } },
     [MENU_ROUTES] =     { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "ACTUAL", "TRIP", "REFILL" }, .t = LP_T_LIDX } },
     [MENU_DUMP] =       { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .to_str = (const char * (*)(unsigned))honda_dlc_unit_name, .t = LP_T_FIDX } },
     [MENU_SETTINGS] =   { .color = COLOR(0x130e06), .l = { .xy = { .x = -3 }, .len = 8, .text_list = (const char * []){ "DATETIME", "ODO", "ANALOG" }, .t = LP_T_LIDX } },
 };
 
-const label_list_t title_selector = {
+static const label_list_t title_selector = {
     .wrap_list = (label_color_t []) {
         { .color = 0, .l = { .xy = { .x =  0 }, .len = 1, .text_list = (const char *[]){ "[", 0 }, .t = LP_T_LIDX } },
         { .color = 0, .l = { .xy = { .x = 11 }, .len = 1, .text_list = (const char *[]){ "]", 0 }, .t = LP_T_LIDX } },

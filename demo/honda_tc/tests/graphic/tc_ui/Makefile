@@ -29,6 +29,7 @@ SRC += $(PROJECT)/widgets/widget_metric_list_item.c
 SRC += $(PROJECT)/widgets/widget_route_list_item.c
 SRC += $(PROJECT)/widgets/widget_dlc_dump.c
 
+SRC += $(PROJECT)/widgets/widget_time_settings.c
 
 
 INC += ../route_lists
