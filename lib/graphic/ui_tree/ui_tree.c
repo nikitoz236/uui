@@ -15,7 +15,7 @@ unsigned ui_tree_len(void)
 
 static inline ui_element_t * ui_tree_element(uint16_t element_offset)
 {
-    return (ui_element_t *)((void *)ui_tree_ptr + element_offset);
+    return (ui_element_t *)(ui_tree_ptr + element_offset);
 }
 
 static inline uint16_t element_offset(ui_element_t * el)
@@ -30,7 +30,8 @@ static inline unsigned element_size(ui_element_t * el)
 
 static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_offset, unsigned idx)
 {
-    dp("ui_tree add node "); dpd(ui_tree_top, 4); dn();
+    dp("ui tree ptr: "); dpx(ui_tree_ptr, 4); dp(" size: "); dpd(ui_tree_size, 4); dp(" top: "); dpd(ui_tree_top, 4); dn();
+    dp("ui_tree add node "); dpd(ui_tree_top, 4); dp(" owner "); dpd(owner_offset, 4); dn();
     ui_element_t * el = ui_tree_element(ui_tree_top);
     el->ui_node = ui_node;
     el->idx = idx;
@@ -40,22 +41,27 @@ static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_of
     el->active = 0;
     el->drawed = 0;
 
-    if (ui_tree_top) {
-        // при инициализации корневого виджета получается что мы в памяти в одну и туже ячейку пишем ее же содержимое
-        // вроде как зависает микроконтроллер
+    // dpn("   inited fields");
 
-        // дочерний элемент по умолчанию имеет форму родителя и может ее делить по своему усмотрению
-        ui_element_t * owner = ui_tree_element(owner_offset);
-        el->f = owner->f;
-    }
+    // дочерний элемент по умолчанию имеет форму родителя и может ее делить по своему усмотрению
+    ui_element_t * owner = ui_tree_element(owner_offset);
+    el->f = owner->f;
+    // dp("    owner ptr "); dpx(owner, 4); dn();
+    // dp("    owner form "); dpd(owner->f.p.x, 4); dp(" "); dpd(owner->f.p.y, 4); dp(" "); dpd(owner->f.s.x, 4); dp(" "); dpd(owner->f.s.y, 4); dn();
+    // dp("    el ptr "); dpx(el, 4); dn();
+
+    // dpn("   inited form");
 
     // after save ui_node pointer
     ui_tree_top += element_size(el);
+
+    // dp("    new top "); dpd(ui_tree_top, 4); dn();
     return el;
 }
 
 void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, const xy_t * display_size)
 {
+    ui_tree_top = 0;
     ui_tree_ptr = ptr;
     ui_tree_size = size;
     ui_element_t * el = add_node(ui_node, 0, 0);
@@ -110,17 +116,16 @@ static ui_element_t * search_last_child(ui_element_t * owner)
 ui_element_t * ui_tree_add(ui_element_t * owner, const ui_node_desc_t * ui_node, unsigned idx)
 {
     ui_element_t * el;
-    // debug__create("ui tree add owner %d, tree top %d\n", element_offset(owner), ui_tree_top);
+    // dp("ui tree add, owner "); dpd(element_offset(owner), 4), dp(" tree top "); dpd(ui_tree_top, 4); dn();
     if (owner->child == 0) {
         // первый дочерний элемент
-        el = add_node(ui_node, element_offset(owner), 0);
+        el = add_node(ui_node, element_offset(owner), idx);
         owner->child = element_offset(el);
     } else {
         ui_element_t * last = search_last_child(owner);
-        el = add_node(ui_node, element_offset(owner), last->idx + 1);
+        el = add_node(ui_node, element_offset(owner), idx);
         last->next = element_offset(el);
     }
-    el->idx = idx;
     return el;
 }
 
@@ -374,6 +379,7 @@ unsigned ui_tree_element_select(ui_element_t * element, unsigned select)
 
 void ui_tree_draw(void)
 {
+    dpn("ui tree redraw");
     ui_element_t * element = ui_tree_element(0);
     ui_tree_element_draw(element);
 }
