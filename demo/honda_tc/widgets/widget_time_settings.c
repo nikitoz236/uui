@@ -17,9 +17,19 @@
 
 что тут я вообще такого ужасного наделал
 
+получается есть 2 списка, статические и динамические надписи
+    статический рисуется 1 раз
+    динамический может нарисоваться заполняя контекст в первый раз
+    дальше проводит сравнение и перерисовывает только по изменению
+
+также есть настройки
+    это посути для каждой надписи возможность ее выбрать и менять значение
+
+    соответственну нужно механизм только значение надписи поменять одной конкретной отдельно от списка
 
 
-
+    можно вынести как чтото отдельное. но пока не понятно как
+    также можно собрать 2 виджета с заголовком и значением в 1
 */
 
 extern font_t font_5x7;
@@ -35,7 +45,7 @@ static const tf_cfg_t title = {
     .padding = { .x = 6, .y = 4 }
 };
 
-static const bg[] = { COLOR(112233), COLOR(0x556677) };
+static const lcd_color_t bg = COLOR(112233);
 
 enum {
     TIME_SETTINGS_TIME,
@@ -83,7 +93,7 @@ typedef struct {
     uint8_t count;
 } setting_mod_list_t;
 
-static unsigned val_mod(void * ptr, val_rep_t rep, mod_cfg_t * cfg, val_mod_op_t op)
+static unsigned val_mod(void * ptr, val_rep_t rep, const mod_cfg_t * cfg, val_mod_op_t op)
 {
     if (rep.s) {
         return val_mod_signed(ptr, rep.vs, op, cfg->ovf, cfg->min, cfg->max, cfg->step);
@@ -92,10 +102,10 @@ static unsigned val_mod(void * ptr, val_rep_t rep, mod_cfg_t * cfg, val_mod_op_t
     }
 }
 
-void select_val(tf_ctx_t * tf, label_t * l, void * ctx, unsigned select)
+void select_val(const tf_ctx_t * tf, const label_t * l, void * ctx, unsigned select)
 {
     const lcd_color_t c[] = { COLOR(0x1144ff), COLOR(0x886612) };
-    label_color(tf, &(label_color_t){ .color = c[select], .l = *l }, bg[0], 0, ctx, 0);
+    label_color(tf, &(const label_color_t){ .color = c[select], .l = *l }, bg, 0, ctx, 0);
 }
 
 static void ctx_uv_update_time_s(uv_time_t * ctx, unsigned x)
@@ -225,7 +235,7 @@ static void mod_apply_time(ctx_ts_t * ctx)
     rtc_set_time_s(time_change_in_s(&ctx->uv.time.t, time_s) - tz);
 }
 
-static mod_apply_date(ctx_ts_t * ctx)
+static void mod_apply_date(ctx_ts_t * ctx)
 {
     int tz = time_zone_get();
     unsigned time_s = rtc_get_time_s() + tz;
@@ -239,8 +249,8 @@ static void mod_apply_tz(ctx_ts_t * ctx)
 
 static const setting_mod_list_t mod[] = {
     {
-        .apply = mod_apply_time,
-        .prepare = mod_prepare_time,
+        .apply = (void (*)(void *))mod_apply_time,
+        .prepare = (void (*)(void *))mod_prepare_time,
         .count = 2,
         .offset = offsetof(ctx_ts_t, uv.time.t),
         .mod_list = (uv_mod_t []) {
@@ -260,7 +270,7 @@ static const setting_mod_list_t mod[] = {
     {
         .count = 1,
         .offset = offsetof(ctx_ts_t, uv.zone.s),
-        .apply = mod_apply_tz,
+        .apply = (void (*)(void *))mod_apply_tz,
         .mod_list = (uv_mod_t []) {
             {
                 .cfg = { .min = -12 * 60 * 60, .max = 12 * 60 * 60, .step = 15 * 60, .ovf = 0 },
@@ -275,7 +285,7 @@ static void update_time_setting(ui_element_t * el)
     ctx_ts_t * ctx = (ctx_ts_t *)el->ctx;
     if (ctx->state == 0) {
         uv_t uv;
-        label_color_list(&ctx->tf, &ll_time_settings_vals[el->idx], bg[0], 0, &uv, &ctx->uv);
+        label_color_list(&ctx->tf, &ll_time_settings_vals[el->idx], bg, 0, &uv, &ctx->uv);
     }
 }
 
@@ -285,9 +295,9 @@ static void draw_time_setting(ui_element_t * el)
     if (tf_ctx_calc(&ctx->tf, &el->f, &title)) {
         el->drawed = 1;
         ctx->state = 0;
-        draw_color_form(&el->f, bg[0]);
-        label_color_list(&ctx->tf, &ll_time_settings_static[el->idx], bg[0], 0, 0, 0);
-        label_color_list(&ctx->tf, &ll_time_settings_vals[el->idx], bg[0], 0, &ctx->uv, 0);
+        draw_color_form(&el->f, bg);
+        label_color_list(&ctx->tf, &ll_time_settings_static[el->idx], bg, 0, 0, 0);
+        label_color_list(&ctx->tf, &ll_time_settings_vals[el->idx], bg, 0, &ctx->uv, 0);
     }
 }
 
@@ -295,7 +305,7 @@ static unsigned process_time_setting(ui_element_t * el, unsigned event)
 {
     ctx_ts_t * ctx = (ctx_ts_t *)el->ctx;
     unsigned new_state = ctx->state;
-    uv_mod_t * m = &mod[el->idx].mod_list[ctx->state - 1];
+    const uv_mod_t * m = &mod[el->idx].mod_list[ctx->state - 1];
     void * uv = ctx;
     uv += mod[el->idx].offset;
 
@@ -381,7 +391,7 @@ static const label_list_t title_selector = {
 static void select(ui_element_t * el)
 {
     ctx_settings_title_t * ctx = (ctx_settings_title_t *)el->ctx;
-    label_color_list(&ctx->title, &title_selector, bg[0], el->active, 0, 0);
+    label_color_list(&ctx->title, &title_selector, bg, el->active, 0, 0);
     ui_tree_element_select(ui_tree_child(el), el->active);
 }
 
@@ -399,10 +409,10 @@ static void draw(ui_element_t * el)
         if (item->drawed) {
             form_reduce(&el->f, DIMENSION_Y, EDGE_U, f_title.s.h + item->f.s.h);
 
-            draw_color_form(&f_title, bg[0]);
-            // draw_color_form(&el->f, bg[0]);
+            draw_color_form(&f_title, bg);
+            // draw_color_form(&el->f, bg);
 
-            label_color(&ctx->title, &tz_title, bg[0], el->idx, 0, 0);
+            label_color(&ctx->title, &tz_title, bg, el->idx, 0, 0);
             select(el);
 
             el->drawed = 1;
