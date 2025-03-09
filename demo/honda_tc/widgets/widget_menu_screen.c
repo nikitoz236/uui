@@ -177,7 +177,8 @@ static void select_update(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
     label_color(&ctx->title_ctx, &local_title[el->idx], bg, ctx->selector, 0, 0);
-    label_color_list(&ctx->title_ctx, &title_selector, COLOR(0x4585E1), el->active, 0, 0);
+    // label_color_list(&ctx->title_ctx, &title_selector, COLOR(0x4585E1), el->active, 0, 0);
+    label_color_list(&ctx->title_ctx, &title_selector, bg, el->active, 0, 0);
 }
 
 static void redraw(ui_element_t * el)

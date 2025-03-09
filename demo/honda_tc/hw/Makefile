@@ -78,6 +78,8 @@ SRC += $(PROJECT)/widgets/widget_metric_list_item.c
 SRC += $(PROJECT)/widgets/widget_route_list_item.c
 SRC += $(PROJECT)/widgets/widget_dlc_dump.c
 
+SRC += $(PROJECT)/widgets/widget_time_settings.c
+
 # forms_edge.h
 # forms_split.h
 INC += $(LIB)/graphic/forms
