@@ -23,24 +23,6 @@
 #include "button_subsystem.h"
 
 
-// void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
-// {
-//     dp("    -- metric_ecu_data_ready: ");
-//     dpx(addr, 1);
-//     dp(" len: ");
-//     dpd(len, 2);
-//     dp(" data: ");
-//     dpxd(data, 1, len);
-//     dn();
-// }
-
-void tc_engine_set_status(unsigned state)
-{
-    dp("    -- tc_engine_set_status: ");
-    dpd(state, 1);
-    dn();
-}
-
 const gpio_list_t debug_gpio_list = {
     .count = 3,
     .cfg = {
@@ -59,18 +41,49 @@ const gpio_list_t debug_gpio_list = {
 sound_t sound_startup = {
     .notes = (struct sound_note []) {
         { .freq = 610, .ms_x10 = 10, .vol = 20 },
+        { .freq = 610, .ms_x10 = 5, .vol = 0 },
         { .freq = 650, .ms_x10 = 10, .vol = 20 },
+        { .freq = 610, .ms_x10 = 5, .vol = 0 },
         { .freq = 800, .ms_x10 = 15, .vol = 10 },
     },
-    .n = 3
+    .n = 5
 };
 
 sound_t sound_btn_short = {
     .notes = (struct sound_note []) {
-        { .freq = 800, .ms_x10 = 2, .vol = 20 },
+        { .freq = 800, .ms_x10 = 1, .vol = 10 },
     },
     .n = 1
 };
+
+sound_t sound_dlc_state[] = {
+    {
+        .notes = (struct sound_note []) {
+            { .freq = 830, .ms_x10 = 5, .vol = 20 },
+            { .freq = 710, .ms_x10 = 8, .vol = 20 },
+        },
+        .n = 2
+    },
+    {
+        .notes = (struct sound_note []) {
+            { .freq = 710, .ms_x10 = 5, .vol = 20 },
+            { .freq = 830, .ms_x10 = 8, .vol = 20 },
+        },
+        .n = 2
+    }
+};
+
+// надо бы переименовать dlc_status_report
+void tc_engine_set_status(unsigned state)
+{
+    sound_play(&sound_dlc_state[state]);
+
+    ui_set_state(state);
+
+    dp("    -- tc_engine_set_status: ");
+    dpd(state, 1);
+    dn();
+}
 
 int main(void)
 {
@@ -101,22 +114,36 @@ int main(void)
     dn();
     dpn("HONDA K-line trip computer");
 
+    dpn("init storage ...");
     storage_init();
     dn();
     storage_print_info();
 
     dn();
+    dpn("init date time subsystem ...");
     init_date_time_subsystem();
+
+    dn();
+    dpn("init sound subsystem ...");
     init_sound_subsystem(&buz_cfg);
     sound_play(&sound_startup);
 
+    dn();
+    dpn("init button subsystem ...");
     init_button_subsystem(&buttons);
 
+    dn();
+    dpn("init display ...");
     init_lcd_hw(&lcd_cfg);
     lcd_bl(4);
     init_lcd(&lcd_cfg);
 
+    dn();
+    dpn("init ui ...");
     init_ui();
+
+    dn();
+    dpn("READY!");
 
     while (1) {
         dlc_poll();
