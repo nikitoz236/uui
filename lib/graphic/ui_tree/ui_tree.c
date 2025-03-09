@@ -389,13 +389,13 @@ static unsigned ui_tree_element_process(ui_element_t * element, unsigned event)
         if (element->ui_node->widget->update) {
             element->ui_node->widget->update(element);
         }
+    }
 
-        if (event) {
-            if (result == 0) {
-                if (element->active) {
-                    if (element->ui_node->widget->process_event) {
-                        result = element->ui_node->widget->process_event(element, event);
-                    }
+    if (event) {
+        if (result == 0) {
+            if (element->active) {
+                if (element->ui_node->widget->process_event) {
+                    result = element->ui_node->widget->process_event(element, event);
                 }
             }
         }
