@@ -46,6 +46,8 @@ static void draw(ui_element_t * el)
     }
 
     redraw(el);
+
+    el->drawed = 1;
 }
 
 static void draw_new_child(ui_element_t * el)
