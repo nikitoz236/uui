@@ -11,58 +11,20 @@
 #define DP_NAME "UI"
 #include "dp.h"
 
-
-extern font_t font_5x7;
-
-static const tf_cfg_t tf = {
-    .fcfg = &(lcd_font_cfg_t){
-        .font = &font_5x7,
-        .gaps = { .x = 2, .y = 2 },
-        .scale = 2
-    },
-    .limit_char = { .y = 1 },
-    .padding = { .x = 2, .y = 2 },
-    .a = ALIGN_LIC,
-};
-
-static const color_scheme_t bg_list[] = {
-    COLOR(0x654321),
-    COLOR(0x123456),
-};
-
-static const label_color_t labels = {
-    .color = COLOR(0xAB5612),
-    .l = {
-        .t = LP_T_LIDX,
-        .text_list = (const char * []){
-            "Hello, world!",
+ui_node_desc_t ui = {
+    .widget = &widget_screen_switch,
+    .cfg = &(widget_screen_switch_cfg_t){
+        .screens_num = 4,
+        .screens_list = (ui_node_desc_t[]){
+            {
+                .widget = &widget_menu_screen,
+            }
         }
     }
 };
 
-ui_node_desc_t ui = {
-    .widget = &widget_text,
-    .cfg = &(widget_text_cfg_t) {
-        .tf_cfg = &tf,
-        .label = &labels,
-        .bg = bg_list,
-    }
-};
-
-// ui_node_desc_t ui = {
-//     .widget = &widget_screen_switch,
-//     .cfg = &(widget_screen_switch_cfg_t){
-//         .screens_num = 4,
-//         .screens_list = (ui_node_desc_t[]){
-//             {
-//                 .widget = &widget_menu_screen,
-//             }
-//         }
-//     }
-// };
-
 #define UI_MEM_SIZE 2048
-static uint8_t ui_ctx[1024] = {};
+static uint8_t ui_ctx[1024] __attribute__((aligned(4))) = {};
 
 static uint8_t lcd_sleep = 0;
 static uint8_t display_state = 0;
@@ -83,11 +45,15 @@ static void ui_display_ctrl(unsigned state)
 
     if (state) {
         init_lcd(&lcd_cfg);
+        // lcd_pwr(1);
+
+        ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});
         ui_tree_draw();
+
         lcd_bl(4);
     } else {
-        lcd_pwr(0);
         lcd_bl(0);
+        lcd_pwr(0);
     }
 }
 
@@ -125,11 +91,11 @@ void ui_process(unsigned x)
                 dpn("ui wake by button");
                 ui_display_ctrl(1);
             } else {
-                // ui_tree_process(x);
+                ui_tree_process(x);
             }
         }
     } else {
-        // ui_tree_process(x);
+        ui_tree_process(x);
     }
 
     /*
