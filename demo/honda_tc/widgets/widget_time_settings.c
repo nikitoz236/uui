@@ -2,7 +2,6 @@
 
 #include "event_list.h"
 #include "draw_color.h"
-#include "tc_colors.h"
 
 #include "rtc.h"
 #include "time_zone.h"
@@ -172,6 +171,23 @@ static const char * dow_str(unsigned x)
     return day_of_week_name(day_of_week(d));
 }
 
+static const label_color_t label_timezone[] = {
+            {
+                .color = COLOR(0x1144ff),
+                .l = {
+                    .t = LP_S, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .sofs = offsetof(uv_tz_t, t), .ofs = offsetof(uv_tz_t, s),
+                    .sl = &(const label_list_t){
+                        .ctx_update_signed = (void(*)(void *, int))tz_from_s, .count = 3,
+                        .list = (const label_t []) {
+                            { .xy = { .x = -10 }, .rep = { .vs = VAL_SIZE_8 }, .len = 1, .t = LP_T_LV, .text_list = (const char * []){ "+", "-" }, .ofs = offsetof(time_t, s) },
+                            { .xy = { .x = -8  }, .rep = { .vs = VAL_SIZE_8 }, .len = 2, .t = LP_V, .vt = { .zl = 1 }, .ofs = offsetof(time_t, h) },
+                            { .xy = { .x = -5  }, .rep = { .vs = VAL_SIZE_8 }, .len = 2, .t = LP_V, .vt = { .zl = 1 }, .ofs = offsetof(time_t, m) },
+                        }
+                    }
+                }
+            }
+};
+
 static const label_list_t ll_time_settings_vals[] = {
     [TIME_SETTINGS_TIME] = {
         .wrap_list = (label_color_t []) {
@@ -201,22 +217,7 @@ static const label_list_t ll_time_settings_vals[] = {
         .ctx_update = (void(*)(void *, unsigned))ctx_uv_update_date
     },
     [TIME_SETTINGS_TIME_ZONE] = {
-        .wrap_list = (label_color_t []) {
-            {
-                .color = COLOR(0x1144ff),
-                .l = {
-                    .t = LP_S, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .sofs = offsetof(uv_tz_t, t), .ofs = offsetof(uv_tz_t, s),
-                    .sl = &(const label_list_t){
-                        .ctx_update_signed = (void(*)(void *, int))tz_from_s, .count = 3,
-                        .list = (const label_t []) {
-                            { .xy = { .x = -10 }, .rep = { .vs = VAL_SIZE_8 }, .len = 1, .t = LP_T_LV, .text_list = (const char * []){ "+", "-" }, .ofs = offsetof(time_t, s) },
-                            { .xy = { .x = -8  }, .rep = { .vs = VAL_SIZE_8 }, .len = 2, .t = LP_V, .vt = { .zl = 1 }, .ofs = offsetof(time_t, h) },
-                            { .xy = { .x = -5  }, .rep = { .vs = VAL_SIZE_8 }, .len = 2, .t = LP_V, .vt = { .zl = 1 }, .ofs = offsetof(time_t, m) },
-                        }
-                    }
-                }
-            }
-        },
+        .wrap_list = label_timezone,
         .count = 1,
         .ctx_update = (void(*)(void *, unsigned))ctx_uv_update_tz
     }
@@ -253,15 +254,16 @@ static const setting_mod_list_t mod[] = {
         .prepare = (void (*)(void *))mod_prepare_time,
         .count = 2,
         .offset = offsetof(ctx_ts_t, uv.time.t),
-        .mod_list = (uv_mod_t []) {
+        .mod_list = (const uv_mod_t []) {
             { .cfg = { .min = 0,    .max = 23,   .step = 1, .ovf = 1 }, .l = &labels_time[0] },
             { .cfg = { .min = 0,    .max = 59,   .step = 1, .ovf = 1 }, .l = &labels_time[1] }
         }
     },
     {
+        .apply = (void (*)(void *))mod_apply_date,
         .count = 3,
         .offset = offsetof(ctx_ts_t, uv.date.d),
-        .mod_list = (uv_mod_t []) {
+        .mod_list = (const uv_mod_t []) {
             { .cfg = { .min = 1,    .max = 31,   .step = 1, .ovf = 1 }, .l = &labels_date[0] },
             { .cfg = { .min = 0,    .max = 11,   .step = 1, .ovf = 1 }, .l = &labels_date[1] },
             { .cfg = { .min = 2000, .max = 2100, .step = 1, .ovf = 0 }, .l = &labels_date[2] },
@@ -271,10 +273,11 @@ static const setting_mod_list_t mod[] = {
         .count = 1,
         .offset = offsetof(ctx_ts_t, uv.zone.s),
         .apply = (void (*)(void *))mod_apply_tz,
-        .mod_list = (uv_mod_t []) {
+        .mod_list = (const uv_mod_t []) {
             {
                 .cfg = { .min = -12 * 60 * 60, .max = 12 * 60 * 60, .step = 15 * 60, .ovf = 0 },
-                .l = &(((label_color_t *)(ll_time_settings_vals[TIME_SETTINGS_TIME_ZONE].wrap_list))[0].l)
+                .l = &label_timezone[0].l
+                // .l = &(((label_color_t *)(ll_time_settings_vals[TIME_SETTINGS_TIME_ZONE].wrap_list))[0].l)
             },
         }
     }
