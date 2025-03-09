@@ -96,7 +96,12 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
                 if (prev_ctx) {
                    sub_prev_ctx = prev_ctx + l->sofs;
                 }
-                l->sl->ctx_update(sub_ctx, v);
+                if (l->rep.s) {
+                    int sv = val_ptr_to_signed(ctx + l->ofs, l->rep.vs);
+                    l->sl->ctx_update_signed(sub_ctx, sv);
+                } else {
+                    l->sl->ctx_update(sub_ctx, v);
+                }
                 for (unsigned i = 0; i < l->sl->count; i++) {
                     lp(tf, &l->sl->list[i], cs, sub_prev_ctx, sub_ctx, idx);
                 }

@@ -101,7 +101,11 @@ typedef struct {
 } label_t;
 
 struct label_list {
-    void (*ctx_update)(void * ctx, unsigned idx);
+    union {
+        void (*ctx_update)(void * ctx, unsigned idx);
+        void (*ctx_update_signed)(void * ctx, int idx);
+    };
+
     union {
         const label_t * list;
         const void * wrap_list;     // может быть какойто другой тип. на усмотрение реализации печатающей функции.
