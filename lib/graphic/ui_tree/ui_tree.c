@@ -30,6 +30,7 @@ static inline unsigned element_size(ui_element_t * el)
 
 static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_offset, unsigned idx)
 {
+    dp("ui_tree add node "); dpd(ui_tree_top, 4); dn();
     ui_element_t * el = ui_tree_element(ui_tree_top);
     el->ui_node = ui_node;
     el->idx = idx;
@@ -39,9 +40,14 @@ static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_of
     el->active = 0;
     el->drawed = 0;
 
-    // дочерний элемент по умолчанию имеет форму родителя и может ее делить по своему усмотрению
-    ui_element_t * owner = ui_tree_element(owner_offset);
-    el->f = owner->f;
+    if (ui_tree_top) {
+        // при инициализации корневого виджета получается что мы в памяти в одну и туже ячейку пишем ее же содержимое
+        // вроде как зависает микроконтроллер
+
+        // дочерний элемент по умолчанию имеет форму родителя и может ее делить по своему усмотрению
+        ui_element_t * owner = ui_tree_element(owner_offset);
+        el->f = owner->f;
+    }
 
     // after save ui_node pointer
     ui_tree_top += element_size(el);
@@ -58,7 +64,7 @@ void ui_tree_init(void * ptr, unsigned size, const ui_node_desc_t * ui_node, con
     if (display_size) {
         el->f.s = *display_size;
     }
- }
+}
 
 ui_element_t * ui_tree_owner(ui_element_t * element)
 {
