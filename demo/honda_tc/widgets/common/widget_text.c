@@ -11,7 +11,7 @@ static void redraw(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     lcd_color_t bg = cfg->bg[el->active];
 
-    printf ("redraw bg %06X\n", bg);
+    // printf ("redraw bg %06X\n", bg);
 
     label_color_t * label = cfg->label;
     if (cfg->label_array) {
@@ -33,7 +33,7 @@ static void draw(ui_element_t * el)
     }
 
     if (tf_ctx_calc(&ctx->tf, &el->f, tf_cfg)) {
-        printf("calculated form %d %d %d %d, text %d %d, pos %d %d\n", el->f.s.x, el->f.s.y, el->f.p.x, el->f.p.y, ctx->tf.size.x, ctx->tf.size.y, ctx->tf.xy.x, ctx->tf.xy.y);
+        // printf("calculated form %d %d %d %d, text %d %d, pos %d %d\n", el->f.s.x, el->f.s.y, el->f.p.x, el->f.p.y, ctx->tf.size.x, ctx->tf.size.y, ctx->tf.xy.x, ctx->tf.xy.y);
         redraw(el);
         el->drawed = 1;
     }
