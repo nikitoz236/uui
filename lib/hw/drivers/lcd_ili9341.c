@@ -191,5 +191,5 @@ void init_lcd(const lcd_cfg_t * cfg)
     }
 
     lcd_pwr(1);
-    lcd_clear();
+    // lcd_clear();
 }
