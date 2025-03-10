@@ -119,7 +119,7 @@ static const struct menu menu_list[] = {
     },
     [MENU_SETTINGS] = {
         .by_idx = 1,
-        .screen_num = 3,
+        .screen_num = 1,
         .screen_list = (ui_node_desc_t []){
             {
                 .widget = &widget_selectable_list,
