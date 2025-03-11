@@ -54,7 +54,7 @@ typedef struct {
     tf_ctx_t tf;
     unsigned state;
     uv_t uv;
-} ctx_ts_t;
+} ctx_t;
 
 
 //  часть про изменения значений
@@ -211,27 +211,27 @@ static const label_list_t ll_time_settings_vals[] = {
     }
 };
 
-static void mod_prepare_time(ctx_ts_t * ctx)
+static void mod_prepare_time(ctx_t * ctx)
 {
     ctx->uv.time.t.s = 0;
     select_val(&ctx->tf, &labels_time[2], &ctx->uv.time.t, 0);
 }
 
-static void mod_apply_time(ctx_ts_t * ctx)
+static void mod_apply_time(ctx_t * ctx)
 {
     int tz = time_zone_get();
     unsigned time_s = rtc_get_time_s() + tz;
     rtc_set_time_s(time_change_in_s(&ctx->uv.time.t, time_s) - tz);
 }
 
-static void mod_apply_date(ctx_ts_t * ctx)
+static void mod_apply_date(ctx_t * ctx)
 {
     int tz = time_zone_get();
     unsigned time_s = rtc_get_time_s() + tz;
     rtc_set_time_s(date_change_in_s(&ctx->uv.date.d, time_s) - tz);
 }
 
-static void mod_apply_tz(ctx_ts_t * ctx)
+static void mod_apply_tz(ctx_t * ctx)
 {
     time_zone_set(ctx->uv.zone.s);
 }
@@ -241,7 +241,7 @@ static const setting_mod_list_t mod[] = {
         .apply = (void (*)(void *))mod_apply_time,
         .prepare = (void (*)(void *))mod_prepare_time,
         .count = 2,
-        .offset = offsetof(ctx_ts_t, uv.time.t),
+        .offset = offsetof(ctx_t, uv.time.t),
         .mod_list = (const uv_mod_t []) {
             { .cfg = { .min = 0,    .max = 23,   .step = 1, .ovf = 1 }, .l = &labels_time[0] },
             { .cfg = { .min = 0,    .max = 59,   .step = 1, .ovf = 1 }, .l = &labels_time[1] }
@@ -250,7 +250,7 @@ static const setting_mod_list_t mod[] = {
     {
         .apply = (void (*)(void *))mod_apply_date,
         .count = 3,
-        .offset = offsetof(ctx_ts_t, uv.date.d),
+        .offset = offsetof(ctx_t, uv.date.d),
         .mod_list = (const uv_mod_t []) {
             { .cfg = { .min = 1,    .max = 31,   .step = 1, .ovf = 1 }, .l = &labels_date[0] },
             { .cfg = { .min = 0,    .max = 11,   .step = 1, .ovf = 1 }, .l = &labels_date[1] },
@@ -259,7 +259,7 @@ static const setting_mod_list_t mod[] = {
     },
     {
         .count = 1,
-        .offset = offsetof(ctx_ts_t, uv.zone.s),
+        .offset = offsetof(ctx_t, uv.zone.s),
         .apply = (void (*)(void *))mod_apply_tz,
         .mod_list = (const uv_mod_t []) {
             {
@@ -271,18 +271,18 @@ static const setting_mod_list_t mod[] = {
     }
 };
 
-static void update_time_setting(ui_element_t * el)
+static void update(ui_element_t * el)
 {
-    ctx_ts_t * ctx = (ctx_ts_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
     if (ctx->state == 0) {
         uv_t uv;
         label_color_list(&ctx->tf, &ll_time_settings_vals[el->idx], bg, 0, &uv, &ctx->uv);
     }
 }
 
-static void draw_time_setting(ui_element_t * el)
+static void draw(ui_element_t * el)
 {
-    ctx_ts_t * ctx = (ctx_ts_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
     if (tf_ctx_calc(&ctx->tf, &el->f, &menu_title_cfg)) {
         el->drawed = 1;
         ctx->state = 0;
@@ -292,9 +292,9 @@ static void draw_time_setting(ui_element_t * el)
     }
 }
 
-static unsigned process_time_setting(ui_element_t * el, unsigned event)
+static unsigned process(ui_element_t * el, unsigned event)
 {
-    ctx_ts_t * ctx = (ctx_ts_t *)el->ctx;
+    ctx_t * ctx = (ctx_t *)el->ctx;
     unsigned new_state = ctx->state;
     const uv_mod_t * m = &mod[el->idx].mod_list[ctx->state - 1];
     void * uv = ctx;
@@ -355,8 +355,8 @@ static unsigned process_time_setting(ui_element_t * el, unsigned event)
 }
 
 const widget_desc_t widget_time_setting = {
-    .draw = draw_time_setting,
-    .update = update_time_setting,
-    .process_event = process_time_setting,
-    .ctx_size = sizeof(ctx_ts_t)
+    .draw = draw,
+    .update = update,
+    .process_event = process,
+    .ctx_size = sizeof(ctx_t)
 };
