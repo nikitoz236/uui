@@ -16,6 +16,7 @@
 #include "widget_route_list_item.h"
 #include "widget_dlc_dump.h"
 #include "widget_time_settings.h"
+#include "widget_settings_title.h"
 
 #include "honda_dlc_units.h"
 
@@ -128,8 +129,18 @@ static const struct menu menu_list[] = {
                     .margin = { .x = 4, .y = 4 },
                     .ui_node = (ui_node_desc_t[]) {
                         {
-                            .widget = &widget_settings_title
-                        },
+                            .widget = &widget_settings_title,
+                            .cfg = &(widget_settings_title_cfg_t){
+                                .title_list = (const char * []) {
+                                    "TIME",
+                                    "DATE",
+                                    "TIME ZONE",
+                                },
+                                .screen = &(ui_node_desc_t){
+                                    .widget = &widget_time_setting,
+                                },
+                            }
+                        }
                     }
                 }
             }
