@@ -70,6 +70,7 @@ SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
 INC += $(PROJECT)/widgets/common/
 SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 SRC += $(PROJECT)/widgets/common/widget_screen_switch.c
+# SRC += $(PROJECT)/widgets/common/widget_text.c
 
 INC += $(PROJECT)/widgets
 SRC += $(PROJECT)/widgets/widget_menu_screen.c
@@ -78,7 +79,12 @@ SRC += $(PROJECT)/widgets/widget_metric_list_item.c
 SRC += $(PROJECT)/widgets/widget_route_list_item.c
 SRC += $(PROJECT)/widgets/widget_dlc_dump.c
 
+SRC += $(PROJECT)/widgets/widget_settings_title.c
 SRC += $(PROJECT)/widgets/widget_time_settings.c
+SRC += $(PROJECT)/widgets/widget_odo_settings.c
+
+INC += $(PROJECT)/ui
+
 
 # forms_edge.h
 # forms_split.h

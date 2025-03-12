@@ -24,7 +24,7 @@ ui_node_desc_t ui = {
 };
 
 #define UI_MEM_SIZE 2048
-static uint8_t ui_ctx[1024] __attribute__((aligned(4))) = {};
+static uint8_t ui_ctx[UI_MEM_SIZE] __attribute__((aligned(4))) = {};
 
 static uint8_t lcd_sleep = 0;
 static uint8_t display_state = 0;
@@ -47,7 +47,7 @@ static void ui_display_ctrl(unsigned state)
         init_lcd(&lcd_cfg);
         // lcd_pwr(1);
 
-        ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});
+        ui_tree_init(ui_ctx, UI_MEM_SIZE, &ui, &(xy_t){ .w = 320, .h = 240});
         ui_tree_draw();
 
         lcd_bl(4);
@@ -59,7 +59,7 @@ static void ui_display_ctrl(unsigned state)
 
 void init_ui(void)
 {
-    ui_tree_init(ui_ctx, 1024, &ui, &(xy_t){ .w = 320, .h = 240});
+    ui_tree_init(ui_ctx, UI_MEM_SIZE, &ui, &(xy_t){ .w = 320, .h = 240});
 
     dn();
     dpn("init display ...");
