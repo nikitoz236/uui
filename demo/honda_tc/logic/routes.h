@@ -65,6 +65,8 @@ void route_trip_end(void);
 // сброс маршрута trip, дергается при запуске двигателя
 void route_trip_start(void);
 
+unsigned route_get_start_odo(void);
+void route_set_start_odo(unsigned odo);
 
 #define TRIP_HISTORY_RECORDS        20
 // slot 0 - последний, slot 1 - предпоследний, (TRIP_HISTORY_RECORDS - 1) - самый старый
