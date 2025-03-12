@@ -16,6 +16,9 @@ SRC += $(PROJECT)/widgets/common/widget_selectable_list.c
 # SRC += $(PROJECT)/widgets/common/widget_text.c
 SRC += $(PROJECT)/widgets/widget_settings_title.c
 
+INC += $(PROJECT)/ui
+# SRC += $(PROJECT)/ui/ui_mod.c
+
 INC += $(LIB)/graphic/ui_tree/widgets
 # SRC += $(LIB)/graphic/ui_tree/widgets/widget_test_rect_with_text.c
 

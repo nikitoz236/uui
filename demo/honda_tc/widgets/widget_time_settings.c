@@ -7,7 +7,7 @@
 #include "time_zone.h"
 #include "date_time.h"
 
-#include "val_mod.h"
+#include "ui_mod.h"
 #include "text_label_color.h"
 #include "forms_split.h"
 #include "widget_text.h"
@@ -20,6 +20,7 @@
     статический рисуется 1 раз
     динамический может нарисоваться заполняя контекст в первый раз
     дальше проводит сравнение и перерисовывает только по изменению
+    могут быть вложенные значения
 
 также есть настройки
     это посути для каждой надписи возможность ее выбрать и менять значение
@@ -58,36 +59,6 @@ typedef struct {
 
 
 //  часть про изменения значений
-
-typedef struct {
-    int min;
-    int max;
-    int step;
-    uint8_t ovf : 1;
-} mod_cfg_t;
-
-typedef struct {
-    mod_cfg_t cfg;
-    const label_t * l;
-} uv_mod_t;
-
-typedef struct {
-    const uv_mod_t * mod_list;
-    void (*prepare)(void * ctx);
-    void (*apply)(void * ctx);
-    void (*change)(void * ctx);
-    uint16_t offset;
-    uint8_t count;
-} setting_mod_list_t;
-
-static unsigned val_mod(void * ptr, val_rep_t rep, const mod_cfg_t * cfg, val_mod_op_t op)
-{
-    if (rep.s) {
-        return val_mod_signed(ptr, rep.vs, op, cfg->ovf, cfg->min, cfg->max, cfg->step);
-    } else {
-        return val_mod_unsigned(ptr, rep.vs, op, cfg->ovf, cfg->min, cfg->max, cfg->step);
-    }
-}
 
 void select_val(const tf_ctx_t * tf, const label_t * l, void * ctx, unsigned select)
 {
@@ -354,7 +325,7 @@ static unsigned process(ui_element_t * el, unsigned event)
     return 0;
 }
 
-const widget_desc_t widget_time_setting = {
+const widget_desc_t widget_time_settings = {
     .draw = draw,
     .update = update,
     .process_event = process,

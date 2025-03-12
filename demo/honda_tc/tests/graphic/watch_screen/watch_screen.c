@@ -41,7 +41,7 @@ ui_node_desc_t ui = {
                         "TIME ZONE",
                     },
                     .screen = &(ui_node_desc_t){
-                        .widget = &widget_time_setting,
+                        .widget = &widget_time_settings,
                     },
                 }
             }
