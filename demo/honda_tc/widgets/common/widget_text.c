@@ -13,13 +13,13 @@ static void redraw(ui_element_t * el)
 
     // printf ("redraw bg %06X\n", bg);
 
-    label_color_t * label = cfg->label;
+    const label_color_t * label = cfg->label;
     if (cfg->label_array) {
         label = &cfg->label[el->idx];
     }
 
     draw_color_form(&el->f, bg);
-    label_color(&ctx->tf, cfg->label, bg, el->idx, 0, 0);
+    label_color(&ctx->tf, label, bg, el->idx, 0, 0);
 }
 
 static void draw(ui_element_t * el)

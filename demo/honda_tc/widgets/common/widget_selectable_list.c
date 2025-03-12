@@ -93,25 +93,25 @@ static void move_list(ui_element_t * el)
     recalc(el);
 }
 
-static void move_selector_dn(ctx_t * ctx, unsigned num)
-{
+// static void move_selector_dn(ctx_t * ctx, unsigned num)
+// {
 
-}
+// }
 
-static void move_selector_up(ctx_t * ctx, unsigned num)
-{
+// static void move_selector_up(ctx_t * ctx, unsigned num)
+// {
 
-}
+// }
 
-static void move_list_dn(void)
-{
+// static void move_list_dn(void)
+// {
 
-}
+// }
 
-static void move_list_up(void)
-{
+// static void move_list_up(void)
+// {
 
-}
+// }
 
 
 static unsigned process_event(ui_element_t * el, unsigned event)

@@ -33,15 +33,6 @@ static const tf_cfg_t tf = {
 
 static const lcd_color_t bg[] = { COLOR(0x111111), COLOR(0x113222) };
 
-static const char * metric_str_bool(unsigned idx)
-{
-    unsigned val = metric_bool_get_val(idx);
-    if (val) {
-        return "ACTIVE";
-    }
-    return "inactive";
-}
-
 static const char * raw_hex(unsigned x)
 {
     char * str = str_val_buf_get();

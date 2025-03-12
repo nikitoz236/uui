@@ -24,7 +24,7 @@ static const tf_cfg_t tf = {
     .a = ALIGN_LIC,
 };
 
-static const color_scheme_t bg_list[] = {
+static const lcd_color_t bg_list[] = {
     COLOR_BG_UNSELECTED,
     COLOR_BG_SELECTED,
 };
