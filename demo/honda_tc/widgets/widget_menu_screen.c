@@ -15,8 +15,9 @@
 #include "widget_metric_list_item.h"
 #include "widget_route_list_item.h"
 #include "widget_dlc_dump.h"
-#include "widget_time_settings.h"
 #include "widget_settings_title.h"
+#include "widget_time_settings.h"
+#include "widget_odo_settings.h"
 
 #include "honda_dlc_units.h"
 
@@ -119,8 +120,7 @@ static const struct menu menu_list[] = {
         }
     },
     [MENU_SETTINGS] = {
-        .by_idx = 1,
-        .screen_num = 1,
+        .screen_num = 2,
         .screen_list = (ui_node_desc_t []){
             {
                 .widget = &widget_selectable_list,
@@ -137,12 +137,33 @@ static const struct menu menu_list[] = {
                                     "TIME ZONE",
                                 },
                                 .screen = &(ui_node_desc_t){
-                                    .widget = &widget_time_setting,
+                                    .widget = &widget_time_settings,
                                 },
                             }
                         }
                     }
                 }
+            },
+            {
+                .widget = &widget_selectable_list,
+                .cfg = &(widget_selectable_list_cfg_t) {
+                    .num = 1,
+                    .margin = { .x = 4, .y = 4 },
+                    .ui_node = (ui_node_desc_t[]) {
+                        {
+                            .widget = &widget_settings_title,
+                            .cfg = &(widget_settings_title_cfg_t){
+                                .title_list = (const char * []) {
+                                    "ODO SHIFT",
+                                },
+                                .screen = &(ui_node_desc_t){
+                                    .widget = &widget_odo_settings,
+                                },
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }

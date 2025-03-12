@@ -31,7 +31,9 @@ SRC += $(PROJECT)/widgets/widget_dlc_dump.c
 
 SRC += $(PROJECT)/widgets/widget_settings_title.c
 SRC += $(PROJECT)/widgets/widget_time_settings.c
+SRC += $(PROJECT)/widgets/widget_odo_settings.c
 
+INC += $(PROJECT)/ui
 
 INC += ../route_lists
 
