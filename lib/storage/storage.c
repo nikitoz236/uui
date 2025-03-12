@@ -3,6 +3,7 @@
 #include "stddef.h"
 #include "storage_hw.h"
 
+#define DP_NAME "STORAGE"
 #include "dp.h"
 
 #define STORAGE_PAGE_MAGIC          0x5A6B
@@ -172,7 +173,7 @@ static unsigned search_file_in_page(unsigned page, file_id_t id, const file_head
 
     for_each_file_in_page_header(ph) {
         if (file->id == id) {
-            dp("      search file in page "); dpd(page, 3); dp("  finded file ptr: "); dpx(file, 4);
+            dp("      search file in page "); dpd(page, 3); dp("  finded file ptr: "); dpx((unsigned)file, 4);
             dp("    id: "); dpd(file->id, 5); dp("    ver: "); dpd(file->version, 5); dn();
             if (file_is_crc_correct(file)) {
                 if ((*result_file == 0) ||
@@ -253,7 +254,7 @@ static void move_usefull_files_from_page(unsigned page)
 
     for_each_file_in_page_header(ph) {
         if (file->len) {
-            dp("            move_usefull_files_from_page. file ptr: "); dpx(file, 4);
+            dp("            move_usefull_files_from_page. file ptr: "); dpx((unsigned)file, 4);
             dp(" id: "); dpd(file->id, 5); dp(" ver: "); dpd(file->version, 5); dn();
             // может быть такое что файл перезаписывался несколько раз подряд
             // в этом случае не нужно искать последнюю версию файла повторно
