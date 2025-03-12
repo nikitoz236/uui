@@ -81,6 +81,10 @@ void kline_usart_irq_handler(void)
 
 void kline_rx_byte_handler(char byte);
 
+// #define KLINE_DEBUG
+
+
+
 const usart_cfg_t kline_usart = {
     .usart = USART3,
     .default_baud = 9600,
@@ -91,7 +95,9 @@ const usart_cfg_t kline_usart = {
         },
         .cfg = {
             .mode = GPIO_MODE_INPUT,
-            .pull = GPIO_PULL_UP,
+            #ifdef KLINE_DEBUG
+                .pull = GPIO_PULL_UP,
+            #endif
         }
     },
     .tx_pin = &(const gpio_t) {
@@ -102,7 +108,9 @@ const usart_cfg_t kline_usart = {
         .cfg = {
             .mode = GPIO_MODE_AF,
             .speed = GPIO_SPEED_HIGH,
-            .type = GPIO_TYPE_OD,
+            #ifdef KLINE_DEBUG
+                .type = GPIO_TYPE_OD,
+            #endif
         }
     },
     .tx_dma = {
