@@ -1,6 +1,7 @@
 #include "widget_settings_title.h"
 #include "text_label_color.h"
 #include "draw_color.h"
+#include "forms_split.h"
 
 extern font_t font_5x7;
 
@@ -20,8 +21,6 @@ static const lcd_color_t bg = COLOR(112233);
 typedef struct {
     tf_ctx_t title;
 } ctx_t;
-
-static const label_color_t tz_title = { .color = COLOR(0x11ff44), .l = { .text_list = (const char * []){ "TIME", "DATE", "TIME ZONE" }, .xy = { .x = 2 }, .t = LP_T_LIDX } };
 
 static const label_list_t title_selector = {
     .wrap_list = (label_color_t []) {

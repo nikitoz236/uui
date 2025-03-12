@@ -30,7 +30,6 @@ static inline unsigned element_size(ui_element_t * el)
 
 static ui_element_t * add_node(const ui_node_desc_t * ui_node, unsigned owner_offset, unsigned idx)
 {
-    dp("ui tree ptr: "); dpx(ui_tree_ptr, 4); dp(" size: "); dpd(ui_tree_size, 4); dp(" top: "); dpd(ui_tree_top, 4); dn();
     dp("ui_tree add node "); dpd(ui_tree_top, 4); dp(" owner "); dpd(owner_offset, 4); dn();
     ui_element_t * el = ui_tree_element(ui_tree_top);
     el->ui_node = ui_node;

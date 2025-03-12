@@ -24,15 +24,9 @@ static const lcd_color_t bg = COLOR(112233);
 
 static void calc_digits_ctx(uv_t * uv, unsigned x)
 {
-    // printf("odo %d\n", x);
-
     for (int i = 6; i >= 0; i--) {
         uv->digit[i] = x % 10;
         x /= 10;
-    }
-
-    for (int i = 0; i < 7; i++) {
-        // printf("odo %d: %d\n", i, uv->digit[i]);
     }
 }
 
@@ -104,10 +98,11 @@ static void draw(ui_element_t * el)
     }
 }
 
+// from widget_time_settings.c
+void select_val(const tf_ctx_t * tf, const label_t * l, void * ctx, unsigned select);
 
 static unsigned process(ui_element_t * el, unsigned event)
 {
-    printf("odo process %d\n", event);
     ctx_t * ctx = (ctx_t *)el->ctx;
     unsigned new_state = ctx->state;
     const setting_mod_list_t * ml = &odo_mod;
@@ -145,7 +140,6 @@ static unsigned process(ui_element_t * el, unsigned event)
     }
 
     if (ctx->state != new_state) {
-        printf("new_state %d\n", new_state);
         if (new_state > ml->count) {
             new_state = 0;
             if (ml->apply) {
