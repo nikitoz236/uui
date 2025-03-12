@@ -256,9 +256,20 @@ void route_reset(route_t route)
     route_save(route);
 }
 
-static void route_starts_load(void)
+unsigned route_get_start_odo(void)
 {
-    dpn("route load");
+    return total_start_odo;
+}
+
+void route_set_start_odo(unsigned odo)
+{
+    dp("set start odo "); dpd(odo, 10); dn();
+    total_start_odo = odo;
+    storage_write_file(ROUTES_FILE_ID, &total_start_odo, sizeof(total_start_odo));
+}
+
+void route_load_total_start_odo(void)
+{
     unsigned len = 0;
     const unsigned * total_start_odo_ptr = storage_search_file(ROUTES_FILE_ID, &len);
     if (len == sizeof(unsigned)) {
@@ -267,7 +278,12 @@ static void route_starts_load(void)
     } else {
         dp("  total start odo not found\n");
     }
+}
 
+static void route_starts_load(void)
+{
+    dpn("route load");
+    unsigned len = 0;
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
         const void * file_ptr = storage_search_file(route_file_id(i), &len);
         if (file_ptr) {
@@ -305,6 +321,7 @@ static void route_starts_load(void)
 
 void route_load(void)
 {
+    route_load_total_start_odo();
     route_starts_load();
     // trip_history_load();
 }
