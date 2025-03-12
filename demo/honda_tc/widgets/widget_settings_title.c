@@ -56,7 +56,17 @@ static void draw(ui_element_t * el)
             draw_color_form(&f_title, bg);
             // draw_color_form(&el->f, bg);
 
-            label_color_t title_label = { .color = COLOR(0x11ff44), .l = { .text_list = cfg->title_list, .xy = { .x = 2 }, .t = LP_T_LIDX } };
+            // label_color_t title_label = { .color = COLOR(0x11ff44), .l = { .text_list = cfg->titlet_list, .xy = { .x = 2 }, .t = LP_T_LIDX } };
+            // memset
+
+            label_color_t title_label;
+            title_label.color = COLOR(0x11ff44);
+            title_label.l.text_list = cfg->title_list;
+            title_label.l.t = LP_T_LIDX;
+            title_label.l.xy.x = 2;
+            title_label.l.xy.y = 0;
+
+
 
             label_color(&ctx->title, &title_label, bg, el->idx, 0, 0);
             select(el);
