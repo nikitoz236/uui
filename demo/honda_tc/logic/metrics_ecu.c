@@ -100,10 +100,10 @@ const ecu_map_t * search_var_map(uint8_t addr, const ecu_map_t * map, unsigned m
     return 0;
 }
 
-static unsigned ecm_t_conv(unsigned raw){
+static int ecm_t_conv(unsigned raw){
     double x = raw;
     double result = (155.04149 - x*3.0414878 + x*x*0.03952185 - x*x*x*0.00029383913 + x*x*x*x*0.0000010792568 - x*x*x*x*x*0.0000000015618437) * 1000;
-    unsigned r = result;
+    int r = result;
     return r;
 }
 
