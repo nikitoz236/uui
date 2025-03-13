@@ -50,10 +50,10 @@ unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const tf_cfg_t * cfg)
         // - надо ли ? основной вопрос
         if (cfg->limit_char.ca[d]) {
             form_size_px = text_linear_size + (2 * cfg->padding.ca[d]);
-            f->s.ca[d] = form_size_px;
         }
 
         // align
+        // printf("    align %d f %d t %d c %d\n", d, f->s.ca[d], text_linear_size, char_linear_size);
         ctx->xy.ca[d] = f->p.ca[d];
         if (cfg->a.ca[d].center) {
             ctx->xy.ca[d] += (f->s.ca[d] - text_linear_size) / 2;
@@ -62,8 +62,14 @@ unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const tf_cfg_t * cfg)
                 ctx->xy.ca[d] += cfg->padding.ca[d];
             } else {
                 ctx->xy.ca[d] += f->s.ca[d] - cfg->padding.ca[d] - text_linear_size;
+
+                // если менялся form_size_px и форма уменьшается, то с в случае с правым краем нам нужно сдвинуть форму
+                f->p.ca[d] += f->s.ca[d] = form_size_px;
             }
         }
+
+        // уменьшать можно только после того как выровняли
+        f->s.ca[d] = form_size_px;
     }
 
    return 1;
