@@ -158,7 +158,7 @@ unsigned route_get_value(route_t route, route_value_t value_type)
     //  ROUTE_VALUE_DIST
     //  ROUTE_VALUE_FUEL
     //  ROUTE_VALUE_TIME
-    return route_start[ROUTE_TYPE_TOTAL][value_type] - route_start[route][value_type];
+    return total_get_value(value_type) - route_start[route][value_type];
 }
 
 static void route_save(route_t route)
