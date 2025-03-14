@@ -25,11 +25,6 @@
     с одной стороны мы можем изначально знать наши максимально доступные размеры ? или не можем
     надо выдать минимум. потом подстроится. хз.
 
-    на стадии calc нам нужно посчитать размер всех декларативно описаных элементов
-
-    дальше надо на стадии extend увеличить то что можно ? scale?
-    выровнять по референсным точкам
-
     не пытайся сделать сразу много, просто ебани минимум чтобы нарисовать компьютер
 
     варианты
@@ -81,14 +76,7 @@
 
 
     список поездок
-
-
     список заправок
-
-
-    еще прикол в том что все обьекты это текст с зазорами и привязками.
-        у текста есть размер, пусть 2-мерный
-        у текста есть отступ и выравнивание, относительно чего ? некой внешней формы ?
 
 */
 
@@ -109,6 +97,14 @@
             внутри второго блока поля выровнены по правому верхнему и правому нижнему краю
 */
 
+
+/*
+    уже колхоз
+
+
+
+*/
+
 #include "widget_dash.h"
 
 #include "text_label_color.h"
@@ -119,7 +115,10 @@
 #include "routes.h"
 
 typedef struct {
-    int v;
+    union {
+        int v;
+        unsigned uval;
+    };
 } uv_t;
 
 typedef struct {
@@ -159,10 +158,10 @@ typedef struct {
 } dash_item_t;
 
 static const dash_item_t items[] = {
+    { .type = DASH_TIME },
     { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
     { .type = DASH_METRIC, .idx = METRIC_ID_INTAKE_T },
-    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
-    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_FUEL, .route_type = ROUTE_TYPE_REFILL },
     { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
 
     { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
@@ -180,7 +179,7 @@ const char * dash_item_name(unsigned idx)
             return metric_var_get_name(item->idx);
         case DASH_ROUTE:
             // меняем местами тип маршрута и имя переменной
-            // return route_name(item->route_type);
+            return route_name(item->route_type);
         case DASH_TIME:
             return 0;
         case DASH_BOOL:
@@ -188,14 +187,32 @@ const char * dash_item_name(unsigned idx)
     }
 }
 
+struct route_val_cfg {
+    const char * name;
+    const char * unit;
+    val_text_t vt;
+};
+
+static const struct route_val_cfg route_val_cfg[] = {
+    [ROUTE_VALUE_DIST]          = { .name = "DIST",         .unit = "KM", .vt = { .f = X1000, .p = 3, .zr = 1 } },
+    [ROUTE_VALUE_FUEL]          = { .name = "FUEL",         .unit = "L", .vt = { .f = X1000, .p = 3, .zr = 1 }  },
+    [ROUTE_VALUE_TIME]          = { .name = "TIME", },
+    [ROUTE_VALUE_SINCE_TIME]    = { .name = "SINCE", },
+    [ROUTE_VALUE_SINCE_ODO]     = { .name = "SINCE",        .unit = "KM", .vt = { .f = X1000, .p = 3, .zr = 1 } },
+    [ROUTE_VALUE_AVG_SPEED]     = { .name = "AVG SPEED",    .unit = "KM/H", .vt = { .f = X1000, .p = 2, .zr = 0 } },
+    [ROUTE_VALUE_CONS_TIME]     = { .name = "CONS",         .unit = "L / H", .vt = { .f = X1000, .p = 2, .zr = 1 } },
+    [ROUTE_VALUE_CONS_DIST]     = { .name = "CONS",         .unit = "L / 100", .vt = { .f = X1000, .p = 2, .zr = 1 } },
+};
+
 const char * dash_item_unit(unsigned idx)
 {
     dash_item_t * item = &items[idx];
+
     switch (item->type) {
         case DASH_METRIC:
             return metric_var_get_unit(item->idx);
         case DASH_ROUTE:
-            return 0;
+            return route_val_cfg[item->idx].unit;
         case DASH_TIME:
             return 0;
         case DASH_BOOL:
@@ -209,15 +226,7 @@ const char * dash_item_route_type(unsigned idx)
     if(item->type != DASH_ROUTE) {
         return 0;
     }
-    static const char * route_val_names[] = {
-        [ROUTE_VALUE_DIST] = "DIST",
-        [ROUTE_VALUE_TIME] = "TIME",
-        [ROUTE_VALUE_SINCE_TIME] = "SINCE",
-        [ROUTE_VALUE_SINCE_ODO] = "SINCE",
-        [ROUTE_VALUE_AVG_SPEED] = "AVG SPEED",
-        [ROUTE_VALUE_CONS_TIME] = "CONS",
-    };
-    return route_val_names[item->idx];
+    return route_val_cfg[item->idx].name;
 }
 
 
@@ -230,7 +239,7 @@ static const label_list_t ll_static = {
     .wrap_list = (label_color_t[]){
         { .color = COLOR_FG, .l = { .to_str = dash_item_name, .t = LP_T_FIDX, .xy = { .x = 0 }, .len = 12, } },
         { .color = COLOR_FG, .l = { .to_str = dash_item_unit, .t = LP_T_FIDX, .xy = { .x = -6 + 2 }, .len = 6, } },
-        { .color = COLOR_FG, .l = { .to_str = dash_item_route_type, .t = LP_T_FIDX, .xy = { .x = 13 }, .len = 4, } },
+        { .color = COLOR_FG, .l = { .to_str = dash_item_route_type, .t = LP_T_FIDX, .xy = { .x = 10 }, .len = 8, } },
     },
 };
 
@@ -241,39 +250,36 @@ static void val_ctx_update(uv_t * uv, unsigned idx)
         case DASH_METRIC:
             uv->v = metric_var_get_real(item->idx);
             break;
+        case DASH_ROUTE:
+            uv->uval = route_get_value(item->route_type, item->idx);
+            break;
         default:
             uv->v = 0;
             break;
     }
 }
 
-// int dash_value(unsigned idx)
-// {
-//     dash_item_t * item = &items[idx];
-//     switch (item->type) {
-//         case DASH_METRIC:
-//             return metric_var_get_value(item->idx);
-//         case DASH_ROUTE:
-//             return route_get_value(item->route_type, item->idx);
-//         case DASH_TIME:
-//             return 0;
-//         case DASH_BOOL:
-//             return metric_bool_get_value(item->idx);
-//     }
-// }
-
 static void dash_vt(val_text_t * vt, unsigned idx)
 {
     dash_item_t * item = &items[idx];
     unsigned point = 0;
     dec_factor_t factor = 0;
-
-    metric_var_get_factor_point(item->idx, &factor, &point);
-    vt->f = factor;
-    vt->p = point;
-    vt->zr = 1;
-    vt->zl = 0;
-
+    switch (item->type) {
+        case DASH_METRIC:
+            metric_var_get_factor_point(item->idx, &factor, &point);
+            vt->f = factor;
+            vt->p = point;
+            vt->zr = 1;
+            vt->zl = 0;
+            break;
+        case DASH_ROUTE:
+            *vt = route_val_cfg[item->idx].vt;
+            break;
+        case DASH_TIME:
+            break;
+        case DASH_BOOL:
+            break;
+    }
 }
 
 static const label_list_t ll_val = {
@@ -316,6 +322,11 @@ const widget_desc_t widget_dash_item = {
     .ctx_size = sizeof(ctx_t),
 };
 
+extern const ui_node_desc_t node_widget_dash_watch;
+
+
+
+
 void form_grid_by_coord(const form_t * p, form_t * f, xy_t size, xy_t margin, xy_t coord)
 {
     for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
@@ -352,7 +363,11 @@ static void draw_dash(ui_element_t * el)
     // draw_color_form(&el->f, COLOR_FG);
     offset *= el->idx;
     while (form_grid_by_idx(&el->f, &f, dash_size, (xy_t){ .x = 2, .y = 2 }, idx)) {
-        ui_element_t * item = ui_tree_add(el, &dash_item_node, offset + idx);
+        ui_node_desc_t * node = &dash_item_node;
+        if (items[offset + idx].type == DASH_TIME) {
+            node = &node_widget_dash_watch;
+        }
+        ui_element_t * item = ui_tree_add(el, node, offset + idx);
         item->f = f;
         ui_tree_element_draw(item);
         printf("dash drawed el %d state %d\n", idx, item->drawed);
