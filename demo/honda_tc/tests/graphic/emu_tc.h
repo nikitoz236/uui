@@ -5,4 +5,4 @@
 #define COLOR_TEXT                  0xfcba03
 #define COLOR_FG_SELECTED           0xff3334
 
-void emu_ui_node(ui_node_desc_t * node);
+void emu_ui_node(const ui_node_desc_t * node);

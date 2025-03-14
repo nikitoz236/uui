@@ -64,7 +64,7 @@ const lcd_color_t tc_colors[] = {
     [TC_COLOR_FG_SELECTED] = COLOR_FG_SELECTED
 };
 
-void emu_ui_node(ui_node_desc_t * node)
+void emu_ui_node(const ui_node_desc_t * node)
 {
     init_systick();
     init_rtc();
