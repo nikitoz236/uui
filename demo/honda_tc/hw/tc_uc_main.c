@@ -144,6 +144,10 @@ int main(void)
     init_ui();
 
     dn();
+    dpn("load routes ...");
+    route_load();
+
+    dn();
     dpn("READY!");
 
     while (1) {
