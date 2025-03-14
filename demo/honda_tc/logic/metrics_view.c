@@ -28,14 +28,14 @@ struct metric_info metric_info[] = {
     { METRIC_TEMP_VAR_NUM, 0, 0 }
 };
 
-static const struct metric_info * find_metric_info(metric_var_id_t id)
+static const struct metric_info * find_metric_info(metric_var_id_t * id)
 {
     unsigned idx = 0;
     while (idx < ARRAY_SIZE(metric_info)) {
-        if (id < metric_info[idx].len) {
+        if (*id < metric_info[idx].len) {
             return &metric_info[idx];
         }
-        id -= metric_info[idx].len;
+        *id -= metric_info[idx].len;
         idx++;
     }
     return 0;
@@ -51,7 +51,7 @@ unsigned metric_bool_get_val(metric_bool_id_t id)
 
 int metric_var_get_real(metric_var_id_t id)
 {
-    const struct metric_info * info = find_metric_info(id);
+    const struct metric_info * info = find_metric_info(&id);
     if (info) {
         if (info->real) {
             return info->real(id);
@@ -62,7 +62,7 @@ int metric_var_get_real(metric_var_id_t id)
 
 unsigned metric_var_get_raw(metric_var_id_t id)
 {
-    const struct metric_info * info = find_metric_info(id);
+    const struct metric_info * info = find_metric_info(&id);
     if (info) {
         if (info->raw) {
             return info->raw(id);
