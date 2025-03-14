@@ -115,8 +115,11 @@
 #include "draw_color.h"
 #include "lcd_color.h"
 
+#include "metrics_view.h"
+#include "routes.h"
+
 typedef struct {
-    unsigned v;
+    int v;
 } uv_t;
 
 typedef struct {
@@ -149,39 +152,167 @@ static const tf_cfg_t tf_cfg_val = {
     .a = ALIGN_CDI
 };
 
+typedef struct {
+    enum { DASH_METRIC, DASH_ROUTE, DASH_TIME, DASH_BOOL } type : 8;
+    uint8_t route_type;
+    uint8_t idx;
+} dash_item_t;
+
+static const dash_item_t items[] = {
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_INTAKE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+};
+
+const char * dash_item_name(unsigned idx)
+{
+    dash_item_t * item = &items[idx];
+    switch (item->type) {
+        case DASH_METRIC:
+            return metric_var_get_name(item->idx);
+        case DASH_ROUTE:
+            // меняем местами тип маршрута и имя переменной
+            // return route_name(item->route_type);
+        case DASH_TIME:
+            return 0;
+        case DASH_BOOL:
+            return metric_bool_get_name;
+    }
+}
+
+const char * dash_item_unit(unsigned idx)
+{
+    dash_item_t * item = &items[idx];
+    switch (item->type) {
+        case DASH_METRIC:
+            return metric_var_get_unit(item->idx);
+        case DASH_ROUTE:
+            return 0;
+        case DASH_TIME:
+            return 0;
+        case DASH_BOOL:
+            return 0;
+    }
+}
+
+const char * dash_item_route_type(unsigned idx)
+{
+    dash_item_t * item = &items[idx];
+    if(item->type != DASH_ROUTE) {
+        return 0;
+    }
+    static const char * route_val_names[] = {
+        [ROUTE_VALUE_DIST] = "DIST",
+        [ROUTE_VALUE_TIME] = "TIME",
+        [ROUTE_VALUE_SINCE_TIME] = "SINCE",
+        [ROUTE_VALUE_SINCE_ODO] = "SINCE",
+        [ROUTE_VALUE_AVG_SPEED] = "AVG SPEED",
+        [ROUTE_VALUE_CONS_TIME] = "CONS",
+    };
+    return route_val_names[item->idx];
+}
+
+
+
+#define COLOR_FG        COLOR(0xE76a35)
+#define COLOR_BG        COLOR(0x3A0D12)
+
+static const label_list_t ll_static = {
+    .count = 3,
+    .wrap_list = (label_color_t[]){
+        { .color = COLOR_FG, .l = { .to_str = dash_item_name, .t = LP_T_FIDX, .xy = { .x = 0 }, .len = 12, } },
+        { .color = COLOR_FG, .l = { .to_str = dash_item_unit, .t = LP_T_FIDX, .xy = { .x = -6 + 2 }, .len = 6, } },
+        { .color = COLOR_FG, .l = { .to_str = dash_item_route_type, .t = LP_T_FIDX, .xy = { .x = 13 }, .len = 4, } },
+    },
+};
+
+static void val_ctx_update(uv_t * uv, unsigned idx)
+{
+    dash_item_t * item = &items[idx];
+    switch (item->type) {
+        case DASH_METRIC:
+            uv->v = metric_var_get_real(item->idx);
+            break;
+        default:
+            uv->v = 0;
+            break;
+    }
+}
+
+// int dash_value(unsigned idx)
+// {
+//     dash_item_t * item = &items[idx];
+//     switch (item->type) {
+//         case DASH_METRIC:
+//             return metric_var_get_value(item->idx);
+//         case DASH_ROUTE:
+//             return route_get_value(item->route_type, item->idx);
+//         case DASH_TIME:
+//             return 0;
+//         case DASH_BOOL:
+//             return metric_bool_get_value(item->idx);
+//     }
+// }
+
+static void dash_vt(val_text_t * vt, unsigned idx)
+{
+    dash_item_t * item = &items[idx];
+    unsigned point = 0;
+    dec_factor_t factor = 0;
+
+    metric_var_get_factor_point(item->idx, &factor, &point);
+    vt->f = factor;
+    vt->p = point;
+    vt->zr = 1;
+    vt->zl = 0;
+
+}
+
+static const label_list_t ll_val = {
+    .count = 1,
+    .ctx_update = (void(*)(void *, unsigned))val_ctx_update,
+    .wrap_list = (label_color_t[]){
+        { .color = COLOR_FG, .l = { .len = 7, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LP_V_FIDX, .vt_by_idx = dash_vt, .ofs = offsetof(uv_t, v) } },
+    },
+};
+
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-    draw_color_form(&el->f, COLOR(0xAABB11));
-    printf("draw %d %d %d %d\n", el->f.p.x, el->f.p.y, el->f.s.x, el->f.s.y);
 
+    draw_color_form(&el->f, COLOR_BG);
     tf_ctx_t title;
     form_t f = el->f;
 
-    printf("form %d %d %d %d\n", f.p.x, f.p.y, f.s.x, f.s.y);
-
     tf_ctx_calc(&title, &f, &tf_cfg_title);
-    printf("title: %d %d %d %d\n", title.xy.x, title.xy.y, title.size.x, title.size.y);
-
-    lcd_color_tf_print("    ", &title, &(color_scheme_t){ .bg = COLOR(0x334411), .fg = COLOR(0x000000) }, 0, title.size.x);
+    label_color_list(&title, &ll_static, COLOR_BG, el->idx, 0, 0);
 
     f = el->f;
-    printf("form %d %d %d %d\n", f.p.x, f.p.y, f.s.x, f.s.y);
-
-    printf("pf %d %d %d %d\n", el->f.p.x, el->f.p.y, el->f.s.x, el->f.s.y);
     tf_ctx_calc(&ctx->tf, &f, &tf_cfg_val);
-    printf("val: %d %d %d %d\n", ctx->tf.xy.x, ctx->tf.xy.y, ctx->tf.size.x, ctx->tf.size.y);
-    lcd_color_tf_print("    ", &ctx->tf, &(color_scheme_t){ .bg = COLOR(0x334411), .fg = COLOR(0x000000) }, 0, ctx->tf.size.x);
+    label_color_list(&ctx->tf, &ll_val, COLOR_BG, el->idx, &ctx->uv, 0);
+
+    el->drawed = 1;
 }
 
-static void update(ui_element_t * el)
+static void update_dash_item(ui_element_t * el)
 {
-    printf("update\n");
+    // printf("update\n");
+    ctx_t * ctx = (ctx_t *)el->ctx;
+    uv_t uv;
+    label_color_list(&ctx->tf, &ll_val, COLOR_BG, el->idx, &uv, &ctx->uv);
 }
 
 const widget_desc_t widget_dash_item = {
     .draw = draw,
-    .update = update,
+    .update = update_dash_item,
     .ctx_size = sizeof(ctx_t),
 };
 
@@ -205,14 +336,26 @@ unsigned form_grid_by_idx(const form_t * p, form_t * f, xy_t size, xy_t margin, 
     return 1;
 }
 
+static const xy_t dash_size = { .x = 2, .y = 5 };
+
+static const ui_node_desc_t dash_item_node = {
+    .widget = &widget_dash_item,
+};
+
 static void draw_dash(ui_element_t * el)
 {
     unsigned idx = 0;
     form_t f;
-    while (form_grid_by_idx(&el->f, &f, (xy_t){ .x = 2, .y = 5 }, (xy_t){ .x = 2, .y = 2 }, idx)) {
-        ui_element_t * item = ui_tree_add(el, &(ui_node_desc_t){ .widget = &widget_dash_item }, idx);
+    unsigned offset = dash_size.x * dash_size.y;
+
+    printf("update %p\n", update_dash_item);
+    // draw_color_form(&el->f, COLOR_FG);
+    offset *= el->idx;
+    while (form_grid_by_idx(&el->f, &f, dash_size, (xy_t){ .x = 2, .y = 2 }, idx)) {
+        ui_element_t * item = ui_tree_add(el, &dash_item_node, offset + idx);
         item->f = f;
         ui_tree_element_draw(item);
+        printf("dash drawed el %d state %d\n", idx, item->drawed);
         idx++;
     }
 }
