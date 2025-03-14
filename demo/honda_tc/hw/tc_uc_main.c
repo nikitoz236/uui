@@ -79,6 +79,11 @@ void tc_engine_set_status(unsigned state)
     sound_play(&sound_dlc_state[state]);
 
     ui_set_state(state);
+    if (state) {
+        route_trip_start();
+    } else {
+        route_trip_end();
+    }
 
     dp("    -- tc_engine_set_status: ");
     dpd(state, 1);
