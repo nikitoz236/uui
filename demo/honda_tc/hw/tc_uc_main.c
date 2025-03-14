@@ -22,6 +22,8 @@
 #include "ui_subsystem.h"
 #include "button_subsystem.h"
 
+#include "routes.h"
+
 
 const gpio_list_t debug_gpio_list = {
     .count = 3,

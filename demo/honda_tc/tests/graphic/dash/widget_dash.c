@@ -233,6 +233,7 @@ const char * dash_item_name(unsigned idx)
         case DASH_BOOL:
             return metric_bool_get_name(item->idx);
     }
+    return 0;
 }
 
 struct route_val_cfg {
@@ -266,6 +267,7 @@ const char * dash_item_unit(unsigned idx)
         case DASH_BOOL:
             return 0;
     }
+    return 0;
 }
 
 const char * dash_item_route_type(unsigned idx)
