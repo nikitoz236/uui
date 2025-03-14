@@ -105,14 +105,14 @@ void kline_start_transaction(uint8_t * data, unsigned len, uint8_t * response, u
         str_cp(resp_data, &map[req->offset], req->len);
 
         int r = rand();
-        r &= 0x7F;
-        if (r < 0x10) {
+        // r &= 0x3F;
+        if ((r & 0x400) == 0x400) {
             printf("DLC emu - data random pick!\n");
-            resp_data[r]++;
+            resp_data[r & 0xF] += (r >> 8) & 0xF;
         }
 
         resp[req->len + 2] = calc_cs(resp, req->len + 2);
-        mstimer_start_timeout(&timeout, 200);
+        mstimer_start_timeout(&timeout, 50);
     }
 }
 
