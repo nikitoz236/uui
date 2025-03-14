@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
+
 #include "mstimer.h"
 #include "str_utils.h"
 #include "honda_dlc_units.h"

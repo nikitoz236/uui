@@ -114,6 +114,8 @@
 #include "metrics_view.h"
 #include "routes.h"
 
+#include "widget_menu_screen.h"
+
 typedef struct {
     unsigned h;
     uint8_t s;
@@ -219,7 +221,7 @@ static const dash_item_t items[] = {
 
 const char * dash_item_name(unsigned idx)
 {
-    dash_item_t * item = &items[idx];
+    const dash_item_t * item = &items[idx];
     switch (item->type) {
         case DASH_METRIC:
             return metric_var_get_name(item->idx);
@@ -229,7 +231,7 @@ const char * dash_item_name(unsigned idx)
         case DASH_TIME:
             return 0;
         case DASH_BOOL:
-            return metric_bool_get_name;
+            return metric_bool_get_name(item->idx);
     }
 }
 
@@ -252,7 +254,7 @@ static const struct route_val_cfg route_val_cfg[] = {
 
 const char * dash_item_unit(unsigned idx)
 {
-    dash_item_t * item = &items[idx];
+    const dash_item_t * item = &items[idx];
 
     switch (item->type) {
         case DASH_METRIC:
@@ -268,7 +270,7 @@ const char * dash_item_unit(unsigned idx)
 
 const char * dash_item_route_type(unsigned idx)
 {
-    dash_item_t * item = &items[idx];
+    const dash_item_t * item = &items[idx];
     if(item->type != DASH_ROUTE) {
         return 0;
     }
@@ -289,7 +291,7 @@ static const label_list_t ll_static = {
 
 static void val_ctx_update(uv_t * uv, unsigned idx)
 {
-    dash_item_t * item = &items[idx];
+    const dash_item_t * item = &items[idx];
     switch (item->type) {
         case DASH_METRIC:
             uv->v = metric_var_get_real(item->idx);
@@ -305,7 +307,7 @@ static void val_ctx_update(uv_t * uv, unsigned idx)
 
 static void dash_vt(val_text_t * vt, unsigned idx)
 {
-    dash_item_t * item = &items[idx];
+    const dash_item_t * item = &items[idx];
     unsigned point = 0;
     dec_factor_t factor = 0;
     switch (item->type) {
@@ -443,7 +445,7 @@ static void draw_dash(ui_element_t * el)
     draw_color_form(&el->f, 0);
     offset *= el->idx;
     while (form_grid_by_idx(&el->f, &f, dash_size, (xy_t){ .x = 2, .y = 2 }, idx)) {
-        ui_node_desc_t * node = &node_widget_dash_item;
+        const ui_node_desc_t * node = &node_widget_dash_item;
         if (items[offset + idx].type == DASH_TIME) {
             node = &node_widget_dash_watch;
         }

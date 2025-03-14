@@ -38,7 +38,7 @@ static void draw(ui_element_t * el)
 
 #include "event_list.h"
 
-static void process(ui_element_t * el, unsigned event)
+static unsigned process(ui_element_t * el, unsigned event)
 {
     // printf("process %d\n", event);
     if (event == EVENT_BTN_MODE) {
