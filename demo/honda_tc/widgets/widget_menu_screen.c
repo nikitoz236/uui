@@ -10,6 +10,7 @@
 
 #include "widget_menu_screen.h"
 
+#include "widget_screen_switch.h"
 #include "widget_selectable_list.h"
 
 #include "widget_metric_list_item.h"
@@ -273,9 +274,21 @@ static unsigned process(ui_element_t * el, unsigned event)
     return 0;
 }
 
-const widget_desc_t widget_menu_screen = {
+static const widget_desc_t widget_menu_screen = {
     .draw = draw,
     .select = select_update,
     .process_event = process,
     .ctx_size = sizeof(ctx_t)
+};
+
+const ui_node_desc_t node_widget_menu_screen = {
+    .widget = &widget_screen_switch,
+    .cfg = &(widget_screen_switch_cfg_t){
+        .screens_num = 4,
+        .screens_list = (ui_node_desc_t[]){
+            {
+                .widget = &widget_menu_screen,
+            }
+        }
+    }
 };

@@ -423,7 +423,7 @@ static void draw_dash(ui_element_t * el)
     form_t f;
     unsigned offset = dash_size.x * dash_size.y;
 
-    // draw_color_form(&el->f, COLOR_FG);
+    draw_color_form(&el->f, 0);
     offset *= el->idx;
     while (form_grid_by_idx(&el->f, &f, dash_size, (xy_t){ .x = 2, .y = 2 }, idx)) {
         ui_node_desc_t * node = &node_widget_dash_item;

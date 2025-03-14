@@ -35,10 +35,9 @@ SRC += $(PROJECT)/widgets/widget_odo_settings.c
 
 INC += $(PROJECT)/ui
 
-INC += ../route_lists
-
-INC += ../dump
-
+INC += ../dash
+SRC += ../dash/widget_dash.c
+SRC += ../dash/node_widget_dash_watch.c
 
 SRC += $(LIB)/graphic/forms/forms_split.c
 
