@@ -13,6 +13,7 @@ void sound_play(sound_t * sound)
 {
     sidx = 0;
     s = sound;
+    // sound_subsystem_process();
 }
 
 void init_sound_subsystem(const pwm_cfg_t * cfg)
