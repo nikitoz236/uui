@@ -11,17 +11,59 @@
 #define DP_NAME "UI"
 #include "dp.h"
 
-ui_node_desc_t ui = {
+
+#include "widget_dash.h"
+
+
+/////////////////////////////////
+
+static const ui_node_desc_t dash = {
     .widget = &widget_screen_switch,
     .cfg = &(widget_screen_switch_cfg_t){
-        .screens_num = 4,
+        .screens_num = 2,
         .screens_list = (ui_node_desc_t[]){
             {
-                .widget = &widget_menu_screen,
-            }
+                .widget = &widget_dash
+            },
         }
     }
 };
+
+static void draw(ui_element_t * el)
+{
+    ui_element_t * item = ui_tree_add(el, &dash, 0);
+    ui_tree_element_draw(item);
+    ui_tree_element_select(item, 1);
+}
+
+#include "event_list.h"
+
+static void process(ui_element_t * el, unsigned event)
+{
+    // printf("process %d\n", event);
+    if (event == EVENT_BTN_MODE) {
+        ui_tree_delete_childs(el);
+        ui_element_t * item = ui_tree_add(el, &node_widget_menu_screen, 0);
+        ui_tree_element_draw(item);
+        ui_tree_element_select(item, 1);
+        return 1;
+    }
+    if (event == EVENT_BTN_BACK) {
+        ui_tree_delete_childs(el);
+        draw(el);
+        return 1;
+    }
+    return 0;
+}
+
+const ui_node_desc_t ui = {
+    .widget = &(widget_desc_t) {
+        .draw = draw,
+        .process_event = process
+    }
+};
+
+////////////////////////////////////
 
 #define UI_MEM_SIZE 2048
 static uint8_t ui_ctx[UI_MEM_SIZE] __attribute__((aligned(4))) = {};

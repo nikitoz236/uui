@@ -59,7 +59,7 @@ static void draw(ui_element_t * el)
     ctx_t * ctx = (ctx_t *)el->ctx;
     draw_color_form(&el->f, COLOR_BG);
     tf_ctx_calc(&ctx->tf, &el->f, &tf_dash_watch);
-    printf("watch tf size %d %d\n", ctx->tf.size.x, ctx->tf.size.y);
+    // printf("watch tf size %d %d\n", ctx->tf.size.x, ctx->tf.size.y);
     lcd_color_text_raw_print(":", tf_dash_watch.fcfg, &(color_scheme_t) { .bg = COLOR_BG, .fg = COLOR_FG }, &ctx->tf.xy, &ctx->tf.size, &(xy_t){ .x = 2 }, 1);
     label_color_list(&ctx->tf, &ll_var, COLOR_BG, 0, &ctx->uv, 0);
     el->drawed = 1;

@@ -85,6 +85,10 @@ SRC += $(PROJECT)/widgets/widget_odo_settings.c
 
 INC += $(PROJECT)/ui
 
+INC += $(PROJECT)/tests/graphic/dash
+SRC += $(PROJECT)/tests/graphic/dash/widget_dash.c
+SRC += $(PROJECT)/tests/graphic/dash/node_widget_dash_watch.c
+
 
 # forms_edge.h
 # forms_split.h

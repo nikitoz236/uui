@@ -381,7 +381,7 @@ static void draw(ui_element_t * el)
         label_color_list(&ctx->tf, &ll_val, COLOR_BG, el->idx, &ctx->uv, 0);
     }
 
-    printf("size %d\n", ctx->tf.size.x);
+    // printf("size %d\n", ctx->tf.size.x);
 
     el->drawed = 1;
 }
