@@ -151,7 +151,7 @@
 static const ui_node_desc_t dash = {
     .widget = &widget_screen_switch,
     .cfg = &(widget_screen_switch_cfg_t){
-        .screens_num = 1,
+        .screens_num = 2,
         .screens_list = (ui_node_desc_t[]){
             {
                 .widget = &widget_dash
