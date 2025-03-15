@@ -124,6 +124,14 @@ static unsigned calc_cons_time(unsigned time, unsigned fuel)
     return 0;
 }
 
+static unsigned calc_avg_speed(unsigned dist, unsigned time)
+{
+    if (time) {
+        return dist * 3600 / time;
+    }
+    return 0;
+}
+
 unsigned route_get_value(route_t route, route_value_t value_type)
 {
     if (value_type == ROUTE_VALUE_CONS_DIST) {
@@ -139,10 +147,7 @@ unsigned route_get_value(route_t route, route_value_t value_type)
     if (value_type == ROUTE_VALUE_AVG_SPEED) {
         unsigned dist = route_get_value(route, ROUTE_VALUE_DIST);
         unsigned time = route_get_value(route, ROUTE_VALUE_TIME);
-        if (time) {
-            return dist * 3600 / time;
-        }
-        return 0;
+        return calc_avg_speed(dist, time);
     }
 
     if (route == ROUTE_TYPE_TRIP) {
@@ -224,7 +229,7 @@ static void save_trip_to_history(void)
 
 void route_trip_end(void)
 {
-    save_trip_to_history();
+    // save_trip_to_history();
     for (unsigned type = 0; type <= ROUTE_VALUE_TIME; type++) {
         route_ctx[ROUTE_TYPE_TOTAL].start[type] = total_get_value(type);
         if (type == ROUTE_VALUE_DIST) {
@@ -333,5 +338,5 @@ void route_load(void)
 {
     route_load_total_start_odo();
     route_ctx_load();
-    trip_history_load();
+    // trip_history_load();
 }
