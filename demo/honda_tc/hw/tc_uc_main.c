@@ -24,6 +24,8 @@
 
 #include "routes.h"
 
+#include "time_zone.h"
+
 
 const gpio_list_t debug_gpio_list = {
     .count = 3,
@@ -83,6 +85,12 @@ void tc_engine_set_status(unsigned state)
     ui_set_state(state);
     if (state) {
         route_trip_start();
+
+        unsigned route_day = route_get_value(ROUTE_TYPE_DAY, ROUTE_VALUE_SINCE_TIME);
+        unsigned now_day = days_from_s(rtc_get_time_s() + time_zone_get());
+        if (route_day != now_day) {
+            route_reset(ROUTE_TYPE_DAY);
+        }
     } else {
         route_trip_end();
     }
