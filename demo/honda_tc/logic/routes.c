@@ -23,6 +23,8 @@
             замены масла ?
 
             для каждой много записей, допустим 20
+
+            запись занимает 16 байт + 8 байт файловый заголовок. и того 480 байт на 20 записей
 */
 
 #define ROUTES_FILE_ID              800
@@ -30,7 +32,11 @@
 #define TRIP_HISTORY_FILE_ID        840
 #define TRIP_HISTORY_LAST_SLOT      (TRIP_HISTORY_RECORDS - 1)
 
-static unsigned route_start[ROUTE_TYPE_NUM_SAVED][ROUTE_VAL_LOADABLE] = {};
+typedef struct {
+    uint32_t start[ROUTE_VAL_LOADABLE];
+} route_file_t;
+
+static route_file_t route_ctx[ROUTE_TYPE_NUM_SAVED] = {};
 static unsigned trip_start_s = 0;
 static unsigned total_start_odo = 0;
 
@@ -72,7 +78,7 @@ static unsigned total_get_value(route_value_t value_type)
     if (value_type == ROUTE_VALUE_SINCE_ODO) {
         return total_start_odo;
     }
-    unsigned start = route_start[ROUTE_TYPE_TOTAL][value_type];
+    unsigned start = route_ctx[ROUTE_TYPE_TOTAL].start[value_type];
     if (value_type == ROUTE_VALUE_DIST) {
         start += total_start_odo;
     }
@@ -147,18 +153,18 @@ unsigned route_get_value(route_t route, route_value_t value_type)
     }
 
     if (value_type == ROUTE_VALUE_SINCE_ODO) {
-        return route_start[route][ROUTE_VALUE_DIST] + total_start_odo;
+        return route_ctx[route].start[ROUTE_VALUE_DIST] + total_start_odo;
     }
 
     if (value_type == ROUTE_VALUE_SINCE_TIME) {
         // ROUTE_TYPE_TRIP и ROUTE_TYPE_TOTAL обрабатывают SINCE сами отдельно
-        return route_start[route][value_type];
+        return route_ctx[route].start[value_type];
     }
 
     //  ROUTE_VALUE_DIST
     //  ROUTE_VALUE_FUEL
     //  ROUTE_VALUE_TIME
-    return total_get_value(value_type) - route_start[route][value_type];
+    return total_get_value(value_type) - route_ctx[route].start[value_type];
 }
 
 static void route_save(route_t route)
@@ -166,7 +172,7 @@ static void route_save(route_t route)
     if (route >= ROUTE_TYPE_NUM_SAVED) {
         return;
     }
-    storage_write_file(route_file_id(route), &route_start[route], sizeof(route_start[0]));
+    storage_write_file(route_file_id(route), &route_ctx[route], sizeof(route_file_t));
 }
 
 static file_id_t trip_history_file_id(unsigned slot)
@@ -203,9 +209,9 @@ unsigned trip_history_get_value(unsigned slot, route_value_t value_type)
 
 static void save_trip_to_history(void)
 {
-    unsigned trip_data[ROUTE_VAL_LOADABLE];
+    route_file_t trip_data;
     for (unsigned type = 0; type < ROUTE_VAL_LOADABLE; type++) {
-        trip_data[type] = trip_get_value(type);
+        trip_data.start[type] = trip_get_value(type);
     }
     file_id_t file_id = trip_history_file_id(TRIP_HISTORY_LAST_SLOT);
     trip_history_last_index++;
@@ -213,14 +219,17 @@ static void save_trip_to_history(void)
         trip_history_last_index = 0;
     }
     dp("save trip to history to file "); dpd(file_id, 5); dn();
-    storage_write_file(file_id, trip_data, sizeof(trip_data));
+    storage_write_file(file_id, &trip_data, sizeof(route_file_t));
 }
 
 void route_trip_end(void)
 {
     save_trip_to_history();
     for (unsigned type = 0; type <= ROUTE_VALUE_TIME; type++) {
-        route_start[ROUTE_TYPE_TOTAL][type] = total_get_value(type);
+        route_ctx[ROUTE_TYPE_TOTAL].start[type] = total_get_value(type);
+        if (type == ROUTE_VALUE_DIST) {
+            route_ctx[ROUTE_TYPE_TOTAL].start[type] -= total_start_odo;
+        }
     }
     route_save(ROUTE_TYPE_TOTAL);
     trip_start_s = 0;
@@ -245,9 +254,9 @@ static void route_reset_counters(route_t route)
         //  ROUTE_VALUE_DIST
         //  ROUTE_VALUE_FUEL
         //  ROUTE_VALUE_TIME
-        route_start[route][type] = route_start[ROUTE_TYPE_TOTAL][type];
+        route_ctx[route].start[type] = route_ctx[ROUTE_TYPE_TOTAL].start[type];
     }
-    route_start[route][ROUTE_VALUE_SINCE_TIME] = rtc_get_time_s();
+    route_ctx[route].start[ROUTE_VALUE_SINCE_TIME] = rtc_get_time_s();
 }
 
 void route_reset(route_t route)
@@ -280,18 +289,19 @@ void route_load_total_start_odo(void)
     }
 }
 
-static void route_starts_load(void)
+static void route_ctx_load(void)
 {
     dpn("route load");
     unsigned len = 0;
     for (unsigned i = 0; i < ROUTE_TYPE_NUM_SAVED; i++) {
         const void * file_ptr = storage_search_file(route_file_id(i), &len);
         if (file_ptr) {
-            str_cp(&route_start[i], file_ptr, sizeof(route_start[0]));
-            dp("  route "); dpl(route_name(i), 12); dp(" loaded. dist: "); dpd(route_start[i][ROUTE_VALUE_DIST], 10);
-            dp(" fuel: "); dpd(route_start[i][ROUTE_VALUE_FUEL], 10);
-            dp(" time: "); dpd(route_start[i][ROUTE_VALUE_TIME], 10);
-            dp(" since: "); dpd(route_start[i][ROUTE_VALUE_SINCE_TIME], 10);
+            str_cp(&route_ctx[i], file_ptr, sizeof(route_file_t));
+            dp("  route "); dpl(route_name(i), 12);
+            dp(" loaded. dist: "); dpd(route_ctx[i].start[ROUTE_VALUE_DIST], 10);
+            dp(" fuel: "); dpd(route_ctx[i].start[ROUTE_VALUE_FUEL], 10);
+            dp(" time: "); dpd(route_ctx[i].start[ROUTE_VALUE_TIME], 10);
+            dp(" since: "); dpd(route_ctx[i].start[ROUTE_VALUE_SINCE_TIME], 10);
             dn();
         } else {
             dp("route "); dpl(route_name(i), 12); dpn(" - file not found");
@@ -300,28 +310,28 @@ static void route_starts_load(void)
     }
 }
 
-// static void trip_history_load(void)
-// {
-//     unsigned last_since = 0;
-//     for (unsigned i = 0; i < TRIP_HISTORY_RECORDS; i++) {
-//         unsigned len = 0;
-//         const unsigned * history_data = storage_search_file(TRIP_HISTORY_FILE_ID + i, &len);
-//         if (history_data) {
-//             if (last_since < history_data[ROUTE_VALUE_SINCE_TIME]) {
-//                 last_since = history_data[ROUTE_VALUE_SINCE_TIME];
-//                 trip_history_last_index = i;
-//             }
-//         }
-//     }
-//     if (last_since == 0) {
-//         trip_history_last_index = TRIP_HISTORY_LAST_SLOT;
-//     }
-//     dp("trip history last index "); dpd(trip_history_last_index, 2); dn();
-// }
+static void trip_history_load(void)
+{
+    unsigned last_since = 0;
+    for (unsigned i = 0; i < TRIP_HISTORY_RECORDS; i++) {
+        unsigned len = 0;
+        const unsigned * history_data = storage_search_file(TRIP_HISTORY_FILE_ID + i, &len);
+        if (history_data) {
+            if (last_since < history_data[ROUTE_VALUE_SINCE_TIME]) {
+                last_since = history_data[ROUTE_VALUE_SINCE_TIME];
+                trip_history_last_index = i;
+            }
+        }
+    }
+    if (last_since == 0) {
+        trip_history_last_index = TRIP_HISTORY_LAST_SLOT;
+    }
+    dp("trip history last index "); dpd(trip_history_last_index, 2); dn();
+}
 
 void route_load(void)
 {
     route_load_total_start_odo();
-    route_starts_load();
-    // trip_history_load();
+    route_ctx_load();
+    trip_history_load();
 }
