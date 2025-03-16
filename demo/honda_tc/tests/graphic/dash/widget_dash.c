@@ -384,15 +384,18 @@ static unsigned dash_is_inverted_color(unsigned idx)
     return 0;
 }
 
+color_scheme_t dash_get_cs(unsigned idx)
+{
+    if (dash_is_inverted_color(idx)) {
+        return color_scheme_inverted(&dash_cs);
+    }
+    return dash_cs;
+}
+
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
-
-    if (dash_is_inverted_color(el->idx)) {
-        ctx->cs = color_scheme_inverted(&dash_cs);
-    } else {
-        ctx->cs = dash_cs;
-    }
+    ctx->cs = dash_get_cs(el->idx);
 
     draw_color_form(&el->f, ctx->cs.bg);
 
