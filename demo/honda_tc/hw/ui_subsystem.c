@@ -76,7 +76,7 @@ static uint8_t display_state = 0;
 
 static mstimer_t timer = {0};
 
-unsigned br = 4;
+unsigned br = 10;
 
 void ui_set_brightness(unsigned br)
 {
