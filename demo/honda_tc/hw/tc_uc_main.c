@@ -86,7 +86,7 @@ void tc_engine_set_status(unsigned state)
     if (state) {
         route_trip_start();
 
-        unsigned route_day = route_get_value(ROUTE_TYPE_DAY, ROUTE_VALUE_SINCE_TIME);
+        unsigned route_day = days_from_s(route_get_value(ROUTE_TYPE_DAY, ROUTE_VALUE_SINCE_TIME) + time_zone_get());
         unsigned now_day = days_from_s(rtc_get_time_s() + time_zone_get());
         if (route_day != now_day) {
             route_reset(ROUTE_TYPE_DAY);
