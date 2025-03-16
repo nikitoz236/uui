@@ -61,10 +61,10 @@ static const char * str_from_val(void * ptr, val_rep_t rep, val_text_t vt, unsig
 //  const tf_ctx_t * tf         контекст текстового поля
 //  const label_value_t * l     структура с описанием того что и как печатать
 //  color_scheme_t * cs         цветовая схема
-//  void * prev_ctx             контекст в котором хранится предыдущее значение, для сравнения
-//  void * ctx                  контекст в котором хранится значение
 //  unsigned idx                индекс однотипного компонента
-void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev_ctx, void * ctx, unsigned idx)
+//  void * ctx                  контекст в котором хранится значение
+//  void * prev_ctx             контекст в котором хранится предыдущее значение, для сравнения
+void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, unsigned idx, void * ctx, void * prev_ctx)
 {
     unsigned t = l->t;
     const char * str = 0;
@@ -103,7 +103,7 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
                     l->sl->ctx_update(sub_ctx, v);
                 }
                 for (unsigned i = 0; i < l->sl->count; i++) {
-                    lp(tf, &l->sl->list[i], cs, sub_prev_ctx, sub_ctx, idx);
+                    lp(tf, &l->sl->list[i], cs, idx, sub_ctx, sub_prev_ctx);
                 }
                 // lp_color(tf, cs->bg, l->sl, idx, sub_ctx, sub_prev_ctx);
                 return;
@@ -125,7 +125,7 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, void * prev
 void label_color(const tf_ctx_t * tf, const label_color_t * label, lcd_color_t bg_color, unsigned idx, void * ctx, void * prev_ctx)
 {
     color_scheme_t cs = { .bg = bg_color, .fg = label->color };
-    lp(tf, &label->l, &cs, prev_ctx, ctx, idx);
+    lp(tf, &label->l, &cs, idx, ctx, prev_ctx);
 }
 
 void label_color_list(const tf_ctx_t * tf, const label_list_t * list, lcd_color_t bg_color, unsigned idx, void * ctx, void * prev_ctx)
@@ -137,7 +137,7 @@ void label_color_list(const tf_ctx_t * tf, const label_list_t * list, lcd_color_
     for (unsigned i = 0; i < list->count; i++) {
         label_color_t * a = (label_color_t *)list->wrap_list;
         cs.fg = a[i].color;
-        lp(tf, &a[i].l, &cs, prev_ctx, ctx, idx);
+        lp(tf, &a[i].l, &cs, idx, ctx, prev_ctx);
     }
 }
 
@@ -147,6 +147,6 @@ void lcd_label_list(const tf_ctx_t * tf, const label_list_t * list, const color_
         list->ctx_update(ctx, idx);
     }
     for (unsigned i = 0; i < list->count; i++) {
-        lp(tf, &list->list[i], cs, prev_ctx, ctx, idx);
+        lp(tf, &list->list[i], cs, idx, ctx, prev_ctx);
     }
 }
