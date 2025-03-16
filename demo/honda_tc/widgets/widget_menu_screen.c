@@ -156,6 +156,7 @@ static const struct menu menu_list[] = {
                         {
                             .widget = &widget_settings_title,
                             .cfg = &(widget_settings_title_cfg_t){
+                                .different_nodes = 1,
                                 .title_list = (const char * []) {
                                     "BRIGHTNESS",
                                 },
@@ -167,6 +168,7 @@ static const struct menu menu_list[] = {
                         {
                             .widget = &widget_settings_title,
                             .cfg = &(widget_settings_title_cfg_t){
+                                .different_nodes = 1,
                                 .title_list = (const char * []) {
                                     "ODO SHIFT",
                                 },
