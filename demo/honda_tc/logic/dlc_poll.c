@@ -134,7 +134,7 @@ static void dlc_first(void)
 
 unsigned check_rx_frame_valid(void)
 {
-    dp("check_rx_frame_valid: "); dpxd(kline_responce, 1, dlc_req.len + 3);
+    dp("process rx data: "); dpxd(kline_responce, 1, dlc_req.len + 3);
     if (kline_responce[0] != rx_type) {
         dpn("    wrong rx_type");
         return 0;
@@ -160,7 +160,7 @@ static void dlc_send_request(void)
 
 static void dlc_poll_process_rx_data(void)
 {
-    dpn("process rx data");
+    // dpn("process rx data");
 
     if (check_rx_frame_valid()) {
         if (engine_state == 0) {
