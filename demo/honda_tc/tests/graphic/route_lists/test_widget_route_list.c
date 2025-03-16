@@ -17,6 +17,11 @@ int time_zone_get(void)
     return 5 * 60 * 60;
 }
 
+void dlc_poll(void)
+{
+    
+}
+
 uint8_t selector = 0;
 
 ui_node_desc_t ui = {
