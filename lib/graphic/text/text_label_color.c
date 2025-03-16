@@ -140,3 +140,13 @@ void label_color_list(const tf_ctx_t * tf, const label_list_t * list, lcd_color_
         lp(tf, &a[i].l, &cs, prev_ctx, ctx, idx);
     }
 }
+
+void lcd_label_list(const tf_ctx_t * tf, const label_list_t * list, const color_scheme_t * cs, unsigned idx, void * ctx, void * prev_ctx)
+{
+    if (list->ctx_update) {
+        list->ctx_update(ctx, idx);
+    }
+    for (unsigned i = 0; i < list->count; i++) {
+        lp(tf, &list->list[i], cs, prev_ctx, ctx, idx);
+    }
+}
