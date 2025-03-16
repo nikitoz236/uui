@@ -18,8 +18,8 @@ void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len);
 /*                           012345678901234 */ \
     macro(RPM,              "RPM",          0,     X1,     0,     0x00, 2, RMS,    0.25,       0       ), /* Обороты двигателя */ \
     macro(ECU_SPEED,        "SPEED ECU",    "KMh", X1,     0,     0x02, 1, RAW,    0,          0       ), /* Скорость */ \
-    macro(ENGINE_T,         "ENGINE t",     "*C",  X1000,  2,     0x10, 1, TMP,    0,          0       ), /* Температура ОЖ(град) */ \
-    macro(INTAKE_T,         "INTAKE t",     "*C",  X1000,  2,     0x11, 1, TMP,    0,          0       ), /* Температура входящего воздуха(град) */ \
+    macro(ENGINE_T,         "ENGINE T",     "*C",  X1000,  2,     0x10, 1, TMP,    0,          0       ), /* Температура ОЖ(град) */ \
+    macro(INTAKE_T,         "INTAKE T",     "*C",  X1000,  2,     0x11, 1, TMP,    0,          0       ), /* Температура входящего воздуха(град) */ \
     macro(INTAKE_P,         "INTAKE P",     "KPa", X1000,  2,     0x12, 1, RMS,    716,        5000    ), /* Датчик абсолютного давления(кПа) */ \
     macro(ATM_P,            "ATM P",        "KPa", X1000,  2,     0x13, 1, RMS,    716,        5000    ), /* Датчик атмосферного давления(кПа) */ \
     macro(THROTTLE,         "THROTTLE",     "%",   X1000,  2,     0x14, 1, RSM,    500,        24      ), /* Датчик положения ДЗ(%) */ \
