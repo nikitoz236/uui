@@ -58,6 +58,7 @@ static void ctx_update_time(route_time_t * rt, unsigned time_s)
 
 static void ctx_update_since(route_since_t * rs, unsigned since_s)
 {
+    since_s += time_zone_get();
     date_from_s(&rs->d, since_s);
     time_from_s(&rs->t, since_s);
 }
@@ -77,6 +78,15 @@ start: 21 DEC 2024 13:34:23   dist: 1245673.343 km
 avg speed: 253.45 km/h         fuel: 2334567.233 L
 cons: 37.56 L/h 37.56 L/100km   odo: 345674.324 km
 --------------------------------------------------
+
+--------------------------
+JOURNEY      RESTART? (OK)
+124562:34:23 2334567.233 L
+1245673.343 km 253.45 km/h
+37.56 L/h    37.56 L/100km
+start 21 DEC 2024 13:34:23
+             345674.324 km
+--------------------------
 */
 
 static const label_color_t label_static[] = {
