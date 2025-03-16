@@ -19,6 +19,7 @@
 #include "widget_settings_title.h"
 #include "widget_time_settings.h"
 #include "widget_odo_settings.h"
+#include "widget_br_settings.h"
 
 #include "honda_dlc_units.h"
 
@@ -148,9 +149,21 @@ static const struct menu menu_list[] = {
             {
                 .widget = &widget_selectable_list,
                 .cfg = &(widget_selectable_list_cfg_t) {
-                    .num = 1,
+                    .num = 2,
+                    .different_nodes = 1,
                     .margin = { .x = 4, .y = 4 },
                     .ui_node = (ui_node_desc_t[]) {
+                        {
+                            .widget = &widget_settings_title,
+                            .cfg = &(widget_settings_title_cfg_t){
+                                .title_list = (const char * []) {
+                                    "BRIGHTNESS",
+                                },
+                                .screen = &(ui_node_desc_t){
+                                    .widget = &widget_br_settings,
+                                },
+                            }
+                        },
                         {
                             .widget = &widget_settings_title,
                             .cfg = &(widget_settings_title_cfg_t){

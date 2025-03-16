@@ -66,8 +66,11 @@ static void draw(ui_element_t * el)
             title_label.l.xy.y = 0;
 
 
-
-            label_color(&ctx->title, &title_label, bg, el->idx, 0, 0);
+            if (cfg->different_nodes) {
+                label_color(&ctx->title, &title_label, bg, el->idx, 0, 0);
+            } else {
+                label_color(&ctx->title, &title_label, bg, 0, 0, 0);
+            }
             select(el);
 
             el->drawed = 1;

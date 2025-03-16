@@ -195,6 +195,12 @@ const ui_node_desc_t ui = {
 };
 
 
+unsigned br = 5;
+void ui_set_brightness(unsigned br)
+{
+    printf("ui set br %d\r\n", br);
+}
+
 int timezone_s = 5 * 60 * 60;
 
 int time_zone_get(void)
