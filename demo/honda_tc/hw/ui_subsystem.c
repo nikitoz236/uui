@@ -71,8 +71,8 @@ static uint8_t ui_ctx[UI_MEM_SIZE] __attribute__((aligned(4))) = {};
 static uint8_t lcd_sleep = 0;
 static uint8_t display_state = 0;
 
-#define UI_TIMEOUT_DLC      2000
-#define UI_TIMEOUT_BTN      8000
+#define UI_TIMEOUT_DLC      5000
+#define UI_TIMEOUT_BTN      30000
 
 static mstimer_t timer = {0};
 
