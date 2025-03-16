@@ -106,6 +106,7 @@
 */
 
 #include "widget_dash.h"
+#include "forms_grid.h"
 
 #include "text_label_color.h"
 #include "draw_color.h"
@@ -113,8 +114,6 @@
 
 #include "metrics_view.h"
 #include "routes.h"
-
-#include "widget_menu_screen.h"
 
 typedef struct {
     unsigned h;
@@ -140,13 +139,13 @@ typedef struct {
 
 typedef struct {
     tf_ctx_t tf;
+    color_scheme_t cs;
     uv_t uv;
 } ctx_t;
 
 extern const font_t font_5x7;
-// extern font_t font_5x7;
 
-static const tf_cfg_t tf_cfg_title = {
+const tf_cfg_t dash_title_cfg = {
     .fcfg = &(lcd_font_cfg_t) {
         .font = &font_5x7,
         .scale = 1,
@@ -203,20 +202,20 @@ static const dash_item_t items[] = {
 
 
 
-    { .type = DASH_METRIC, .idx = METRIC_ID_INJECTOR_LOAD },
-    { .type = DASH_TIME },
-    { .type = DASH_METRIC, .idx = METRIC_ID_INJECTION },
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_CONS_DIST, .route_type = ROUTE_TYPE_REFILL }, // расход от заправки
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_DIST, .route_type = ROUTE_TYPE_TRAVEL },      // проехал расстояние в поездке
 
-    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_T },
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_TIME, .route_type = ROUTE_TYPE_REFILL },      // проехал от времени от заправки
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_TIME, .route_type = ROUTE_TYPE_DAY },         // проехал времени за сегодня
 
-    { .type = DASH_METRIC, .idx = METRIC_ID_INTAKE_T },
-    { .type = DASH_METRIC, .idx = METRIC_ID_CONS_MOMENT_DIST },
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_DIST, .route_type = ROUTE_TYPE_REFILL },      // проехал расстояние от заправки
+    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_DIST, .route_type = ROUTE_TYPE_DAY },         // проехал растояние за сегодня
 
-    { .type = DASH_METRIC, .idx = METRIC_ID_VOLTAGE_ADC },
-    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_TIME, .route_type = ROUTE_TYPE_TRIP },
+    { .type = DASH_METRIC, .idx = METRIC_ID_ENGINE_LOAD },
+    { .type = DASH_METRIC, .idx = METRIC_ID_INTEGRATE_PERIOD },
 
-    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_FUEL, .route_type = ROUTE_TYPE_REFILL },
-    { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_DIST, .route_type = ROUTE_TYPE_TRIP },
+    { .type = DASH_METRIC, .idx = METRIC_ID_VOLTAGE_MIN },
+    { .type = DASH_METRIC, .idx = METRIC_ID_VOLTAGE_TANK },
 };
 
 const char * dash_item_name(unsigned idx)
@@ -279,17 +278,7 @@ const char * dash_item_route_type(unsigned idx)
     return route_val_cfg[item->idx].name;
 }
 
-#define COLOR_FG        COLOR(0xE76a35)
-#define COLOR_BG        COLOR(0x3A0D12)
-
-static const label_list_t ll_static = {
-    .count = 3,
-    .wrap_list = (label_color_t[]){
-        { .color = COLOR_FG, .l = { .to_str = dash_item_name, .t = LP_T_FIDX, .xy = { .x = 0 }, .len = 12, } },
-        { .color = COLOR_FG, .l = { .to_str = dash_item_unit, .t = LP_T_FIDX, .xy = { .x = -6 + 2 }, .len = 6, } },
-        { .color = COLOR_FG, .l = { .to_str = dash_item_route_type, .t = LP_T_FIDX, .xy = { .x = 9 }, .len = 8, } },
-    },
-};
+static const color_scheme_t dash_cs = { .bg = COLOR(0x000010), .fg = COLOR(0xff5000) };
 
 static void val_ctx_update(uv_t * uv, unsigned idx)
 {
@@ -330,59 +319,101 @@ static void dash_vt(val_text_t * vt, unsigned idx)
     }
 }
 
+static const label_list_t ll_static_metric = {
+    .count = 2,
+    .list = (label_t[]){
+        { .to_str = metric_var_get_name, .t = LP_T_FIDX, .xy = { .x = 0 }, .len = 12 },
+        { .to_str = metric_var_get_unit, .t = LP_T_FIDX, .xy = { .x = -6 + 2 }, .len = 6 },
+    },
+};
+
+
+
+static const label_list_t ll_static = {
+    .count = 3,
+    .list = (label_t[]){
+        { .to_str = dash_item_name, .t = LP_T_FIDX, .xy = { .x = 0 }, .len = 12 },
+        { .to_str = dash_item_unit, .t = LP_T_FIDX, .xy = { .x = -6 + 2 }, .len = 6 },
+        { .to_str = dash_item_route_type, .t = LP_T_FIDX, .xy = { .x = 9 }, .len = 8 },
+    },
+};
+
 static const label_list_t ll_val = {
     .count = 1,
     .ctx_update = (void(*)(void *, unsigned))val_ctx_update,
-    .wrap_list = (label_color_t[]) {
-        { .color = COLOR_FG, .l = { .len = 7, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LP_V_FIDX, .vt_by_idx = dash_vt, .ofs = offsetof(uv_t, v) } },
+    .list = (label_t[]) {
+        { .len = 7, .rep = { .s = 1, .vs = VAL_SIZE_32 }, .t = LP_V_FIDX, .vt_by_idx = dash_vt, .ofs = offsetof(uv_t, v) },
     },
 };
 
 static const label_list_t ll_route = {
     .count = 1,
     .ctx_update = (void(*)(void *, unsigned))val_ctx_update,
-    .wrap_list = (label_color_t[]) {
-        { .color = COLOR_FG, .l = { .len = 9, .rep = { .vs = VAL_SIZE_32 }, .t = LP_V_FIDX, .vt_by_idx = dash_vt, .ofs = offsetof(uv_t, uval) } },
+    .list = (label_t[]) {
+        { .len = 9, .rep = { .vs = VAL_SIZE_32 }, .t = LP_V_FIDX, .vt_by_idx = dash_vt, .ofs = offsetof(uv_t, uval) },
     },
 };
 
 static const label_list_t ll_route_time = {
     .count = 1,
     .ctx_update = (void(*)(void *, unsigned))val_ctx_update,
-    .wrap_list = (label_color_t []) { { .color = COLOR_FG, .l = { .t = LP_S, .ofs = offsetof(uv_t, uval), .rep = { .vs = VAL_SIZE_32 }, .sofs = offsetof(uv_t, rt), .sl = &(const label_list_t) {
+    .list = (label_t []) { { .t = LP_S, .ofs = offsetof(uv_t, uval), .rep = { .vs = VAL_SIZE_32 }, .sofs = offsetof(uv_t, rt), .sl = &(const label_list_t) {
         .ctx_update = (void(*)(void *, unsigned))ctx_update_route_time, .count = 3, .list = (label_t []) {
             { .len = 3, .t = LP_V, .xy = { .x = 0, }, .rep = { .vs = VAL_SIZE_32 }, .vt = { .zl = 0 }, .ofs = offsetof(route_time_t, h) },
             { .len = 2, .t = LP_V, .xy = { .x = 4, }, .rep = { .vs = VAL_SIZE_8  }, .vt = { .zl = 1 }, .ofs = offsetof(route_time_t, m) },
             { .len = 2, .t = LP_V, .xy = { .x = 7, }, .rep = { .vs = VAL_SIZE_8  }, .vt = { .zl = 1 }, .ofs = offsetof(route_time_t, s) },
-        } } } },
+        } } },
     }
 };
+
+static const label_list_t ll_dash_route_time = {
+    .count = 2,
+    .list = (label_t []) {
+        { .text = ":", .len = 1, .t = LP_T, .xy = { .x = 3 } },
+        { .text = ":", .len = 1, .t = LP_T, .xy = { .x = 6 } },
+    }
+};
+
+
+static unsigned dash_is_inverted_color(unsigned idx)
+{
+    idx &= 3;
+    if (idx == 1 || idx == 2) {
+        return 1;
+    }
+    return 0;
+}
 
 static void draw(ui_element_t * el)
 {
     ctx_t * ctx = (ctx_t *)el->ctx;
 
-    draw_color_form(&el->f, COLOR_BG);
+    if (dash_is_inverted_color(el->idx)) {
+        ctx->cs = color_scheme_inverted(&dash_cs);
+    } else {
+        ctx->cs = dash_cs;
+    }
+
+    draw_color_form(&el->f, ctx->cs.bg);
+
     tf_ctx_t title;
     form_t f = el->f;
 
-    tf_ctx_calc(&title, &f, &tf_cfg_title);
-    label_color_list(&title, &ll_static, COLOR_BG, el->idx, 0, 0);
-    // lcd_color_text_raw_print(0, title.tfcfg->fcfg, &(color_scheme_t) { .bg = COLOR_FG, .fg = COLOR_FG }, &title.xy, &title.size, 0, title.size.x);
+    tf_ctx_calc(&title, &f, &dash_title_cfg);
+    lcd_label_list(&title, &ll_static, &ctx->cs, el->idx, 0, 0);
 
     f = el->f;
     if (items[el->idx].type == DASH_ROUTE) {
         tf_ctx_calc(&ctx->tf, &f, &tf_cfg_route);
         if (items[el->idx].idx == ROUTE_VALUE_TIME) {
-            lcd_color_text_raw_print(":", ctx->tf.tfcfg->fcfg, &(color_scheme_t) { .bg = COLOR_BG, .fg = COLOR_FG }, &ctx->tf.xy, &title.size, &(xy_t){ .x = 3 }, 1);
-            lcd_color_text_raw_print(":", ctx->tf.tfcfg->fcfg, &(color_scheme_t) { .bg = COLOR_BG, .fg = COLOR_FG }, &ctx->tf.xy, &title.size, &(xy_t){ .x = 6 }, 1);
-            label_color_list(&ctx->tf, &ll_route_time, COLOR_BG, el->idx, &ctx->uv, 0);
+            lcd_label_list(&ctx->tf, &ll_dash_route_time, &ctx->cs, el->idx, &ctx->uv, 0);
+            lcd_label_list(&ctx->tf, &ll_route_time, &ctx->cs, el->idx, &ctx->uv, 0);
         } else {
-            label_color_list(&ctx->tf, &ll_route, COLOR_BG, el->idx, &ctx->uv, 0);
+            lcd_label_list(&ctx->tf, &ll_route, &ctx->cs, el->idx, &ctx->uv, 0);
         }
     } else {
         tf_ctx_calc(&ctx->tf, &f, &tf_cfg_val);
-        label_color_list(&ctx->tf, &ll_val, COLOR_BG, el->idx, &ctx->uv, 0);
+        lcd_label_list(&ctx->tf, &ll_val, &ctx->cs, el->idx, &ctx->uv, 0);
     }
 
     // printf("size %d\n", ctx->tf.size.x);
@@ -396,13 +427,12 @@ static void update(ui_element_t * el)
     uv_t uv;
     if (items[el->idx].type == DASH_ROUTE) {
         if (items[el->idx].idx == ROUTE_VALUE_TIME) {
-            label_color_list(&ctx->tf, &ll_route_time, COLOR_BG, el->idx, &uv, &ctx->uv);
+            lcd_label_list(&ctx->tf, &ll_route_time, &ctx->cs, el->idx, &uv, &ctx->uv);
         } else {
-            label_color_list(&ctx->tf, &ll_route, COLOR_BG, el->idx, &uv, &ctx->uv);
+            lcd_label_list(&ctx->tf, &ll_route, &ctx->cs, el->idx, &uv, &ctx->uv);
         }
-
     } else {
-        label_color_list(&ctx->tf, &ll_val, COLOR_BG, el->idx, &uv, &ctx->uv);
+        lcd_label_list(&ctx->tf, &ll_val, &ctx->cs, el->idx, &uv, &ctx->uv);
     }
 }
 
@@ -415,27 +445,6 @@ static const ui_node_desc_t node_widget_dash_item = {
 };
 
 extern const ui_node_desc_t node_widget_dash_watch;
-
-void form_grid_by_coord(const form_t * p, form_t * f, xy_t size, xy_t margin, xy_t coord)
-{
-    for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
-        f->s.ca[d] = ((p->s.ca[d] + margin.ca[d]) / size.ca[d]) - margin.ca[d];
-        f->p.ca[d] = p->p.ca[d] + ((f->s.ca[d] + margin.ca[d]) * coord.ca[d]);
-    }
-}
-
-unsigned form_grid_by_idx(const form_t * p, form_t * f, xy_t size, xy_t margin, unsigned idx)
-{
-    xy_t coord;
-    coord.y = idx / size.x;
-    if (coord.y >= size.y) {
-        return 0;
-    }
-    coord.x = idx % size.x;
-    form_grid_by_coord(p, f, size, margin, coord);
-    return 1;
-}
-
 static const xy_t dash_size = { .x = 2, .y = 5 };
 
 static void draw_dash(ui_element_t * el)
@@ -444,9 +453,9 @@ static void draw_dash(ui_element_t * el)
     form_t f;
     unsigned offset = dash_size.x * dash_size.y;
 
-    draw_color_form(&el->f, 0);
+    // draw_color_form(&el->f, 0);
     offset *= el->idx;
-    while (form_grid_by_idx(&el->f, &f, dash_size, (xy_t){ .x = 2, .y = 2 }, idx)) {
+    while (form_grid_by_idx(&el->f, &f, dash_size, (xy_t){ .x = 0, .y = 0 }, idx)) {
         const ui_node_desc_t * node = &node_widget_dash_item;
         if (items[offset + idx].type == DASH_TIME) {
             node = &node_widget_dash_watch;
