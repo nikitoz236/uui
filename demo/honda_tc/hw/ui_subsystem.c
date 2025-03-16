@@ -76,6 +76,14 @@ static uint8_t display_state = 0;
 
 static mstimer_t timer = {0};
 
+unsigned br = 4;
+
+void ui_set_brightness(unsigned br)
+{
+    dp("ui set br "); dpd(br, 1); dn();
+    lcd_bl(br);
+}
+
 static void ui_display_ctrl(unsigned state)
 {
     if (display_state == state) {
@@ -92,7 +100,7 @@ static void ui_display_ctrl(unsigned state)
         ui_tree_init(ui_ctx, UI_MEM_SIZE, &ui, &(xy_t){ .w = 320, .h = 240});
         ui_tree_draw();
 
-        lcd_bl(4);
+        lcd_bl(br);
     } else {
         lcd_bl(0);
         lcd_pwr(0);
