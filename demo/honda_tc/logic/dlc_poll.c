@@ -134,7 +134,7 @@ static void dlc_first(void)
 
 unsigned check_rx_frame_valid(void)
 {
-    dp("process rx data: "); dpxd(kline_responce, 1, dlc_req.len + 3);
+    dp("<- "); dpxd(kline_responce, 1, dlc_req.len + 3);
     if (kline_responce[0] != rx_type) {
         dpn("    wrong rx_type");
         return 0;
@@ -154,14 +154,13 @@ unsigned check_rx_frame_valid(void)
 
 static void dlc_send_request(void)
 {
+    dp("-> "); dpxd((uint8_t *)&dlc_req, 1,  sizeof(kline_request_t)); dn();
     kline_start_transaction((uint8_t *)&dlc_req, sizeof(kline_request_t), kline_rx_buf, sizeof(kline_request_t) + dlc_req.len + 3);
     mstimer_start_timeout(&timeout, UNIT_RESPONCE_TIMEOUT);
 }
 
 static void dlc_poll_process_rx_data(void)
 {
-    // dpn("process rx data");
-
     if (check_rx_frame_valid()) {
         if (engine_state == 0) {
             engine_state = 1;
