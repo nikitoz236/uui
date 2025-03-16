@@ -78,10 +78,12 @@ static unsigned total_get_value(route_value_t value_type)
     if (value_type == ROUTE_VALUE_SINCE_ODO) {
         return total_start_odo;
     }
+
     unsigned start = route_ctx[ROUTE_TYPE_TOTAL].start[value_type];
     if (value_type == ROUTE_VALUE_DIST) {
         start += total_start_odo;
     }
+
     return start + trip_get_value(value_type);
 }
 
@@ -166,10 +168,16 @@ unsigned route_get_value(route_t route, route_value_t value_type)
         return route_ctx[route].start[value_type];
     }
 
+    unsigned value = total_get_value(value_type) - route_ctx[route].start[value_type];
+
+    if (value_type == ROUTE_VALUE_DIST) {
+        value -= total_start_odo;
+    }
+
     //  ROUTE_VALUE_DIST
     //  ROUTE_VALUE_FUEL
     //  ROUTE_VALUE_TIME
-    return total_get_value(value_type) - route_ctx[route].start[value_type];
+    return value;
 }
 
 static void route_save(route_t route)
@@ -259,7 +267,10 @@ static void route_reset_counters(route_t route)
         //  ROUTE_VALUE_DIST
         //  ROUTE_VALUE_FUEL
         //  ROUTE_VALUE_TIME
-        route_ctx[route].start[type] = route_ctx[ROUTE_TYPE_TOTAL].start[type];
+        route_ctx[route].start[type] = total_get_value(type);
+        if (type == ROUTE_VALUE_DIST) {
+            route_ctx[route].start[type] -= total_start_odo;
+        }
     }
     route_ctx[route].start[ROUTE_VALUE_SINCE_TIME] = rtc_get_time_s();
 }
