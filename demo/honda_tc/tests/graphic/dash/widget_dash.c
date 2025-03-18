@@ -194,7 +194,7 @@ static const dash_item_t items[] = {
     { .type = DASH_METRIC, .idx = METRIC_ID_INTAKE_T },
     { .type = DASH_METRIC, .idx = METRIC_ID_CONS_MOMENT_DIST },
 
-    { .type = DASH_METRIC, .idx = METRIC_ID_VOLTAGE_ADC },
+    { .type = DASH_METRIC, .idx = METRIC_ID_VOLTAGE_ECU },
     { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_TIME, .route_type = ROUTE_TYPE_TRIP },
 
     { .type = DASH_ROUTE,  .idx = ROUTE_VALUE_FUEL, .route_type = ROUTE_TYPE_REFILL },
