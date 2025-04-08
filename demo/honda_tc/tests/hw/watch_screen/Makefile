@@ -53,9 +53,6 @@ INC += $(LIB)/hw/include/
 INC += $(LIB)/graphic/ui_tree
 SRC += $(LIB)/graphic/ui_tree/ui_tree.c
 
-# debug_print.h
-INC += $(LIB)/emu
-
 # fonts.h
 INC += $(LIB)/graphic/fonts
 SRC += $(LIB)/graphic/fonts/fonts.c
