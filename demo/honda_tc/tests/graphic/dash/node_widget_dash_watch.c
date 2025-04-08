@@ -6,12 +6,12 @@
 #include "time_zone.h"
 #include "lcd_text_color.h"
 
-extern const font_t font_5x7;
+extern const font_t font_3x5;
 
 static const tf_cfg_t tf_dash_watch = {
     .fcfg = &(lcd_font_cfg_t){
-        .font = &font_5x7,
-        .scale = 5,
+        .font = &font_3x5,
+        .scale = 8,
         .gaps = { .x = 5 },
     },
     .padding = { .x = 0, .y = 0 },

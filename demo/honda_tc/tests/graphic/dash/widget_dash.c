@@ -144,6 +144,7 @@ typedef struct {
 } ctx_t;
 
 extern const font_t font_5x7;
+extern const font_t font_3x5;
 
 const tf_cfg_t dash_title_cfg = {
     .fcfg = &(lcd_font_cfg_t) {
@@ -158,9 +159,10 @@ const tf_cfg_t dash_title_cfg = {
 
 static const tf_cfg_t tf_cfg_val = {
     .fcfg = &(lcd_font_cfg_t) {
-        .font = &font_5x7,
-        .scale = 4,
-        .gaps = { .x = 3 },
+        // .font = &font_5x7,
+        .font = &font_3x5,
+        .scale = 6,
+        .gaps = { .x = 4 },
     },
     .limit_char = { .y = 1 },
     .padding = { .x = 0, .y = 4 },
@@ -169,9 +171,9 @@ static const tf_cfg_t tf_cfg_val = {
 
 static const tf_cfg_t tf_cfg_route = {
     .fcfg = &(lcd_font_cfg_t) {
-        .font = &font_5x7,
-        .scale = 3,
-        .gaps = { .x = 2 },
+        .font = &font_3x5,
+        .scale = 5,
+        .gaps = { .x = 3 },
     },
     .limit_char = { .y = 1 },
     .padding = { .x = 0, .y = 4 },
@@ -417,6 +419,9 @@ static void draw(ui_element_t * el)
     } else {
         tf_ctx_calc(&ctx->tf, &f, &tf_cfg_val);
         lcd_label_list(&ctx->tf, &ll_val, &ctx->cs, el->idx, &ctx->uv, 0);
+
+        // для примерки количества знакомест
+        // lcd_color_text_raw_print(0, ctx->tf.tfcfg->fcfg, &(color_scheme_t){.bg = 0x561200 }, &ctx->tf.xy, &ctx->tf.size, 0, 100);
     }
 
     // printf("size %d\n", ctx->tf.size.x);
