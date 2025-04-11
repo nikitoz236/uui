@@ -16,6 +16,9 @@ INC += .
 
 SRC += $(TARGET).c
 
+INC += $(PROJECT)/hw
+SRC += $(PROJECT)/hw/adc_subsystem.c
+
 
 INC += $(LIB)/hw/uc_hw
 SRC += $(LIB)/hw/uc_hw/stm_usart.c

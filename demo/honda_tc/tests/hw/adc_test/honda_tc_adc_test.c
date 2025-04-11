@@ -9,6 +9,7 @@
 #include "delay_blocking.h"
 #include "array_size.h"
 
+#include "adc_subsystem.h"
 
 const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
@@ -63,11 +64,26 @@ int main(void)
     init_systick();
     usart_set_cfg(&debug_usart);
 
+    init_adc();
     __enable_irq();
 
     dpn("Hey bitch ! this is honda tc adc test");
 
-    while (1) {};
+    uint16_t adc_result[2] = {};
+    unsigned redraw = 1;
+
+    while (1) {
+        for (unsigned i = 0; i < 2; i++) {
+            uint16_t v = adc_get(i);
+            if (adc_result[i] != v) {
+                redraw = 1;
+            }
+            adc_result[i] = v;
+        }
+        if (redraw) {
+            dp("\r"); dpd(adc_result[0], 6); dp("  "); dpd(adc_result[1], 6);
+        }
+    };
 
     return 0;
 }
