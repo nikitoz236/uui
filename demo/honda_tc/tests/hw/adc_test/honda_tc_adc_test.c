@@ -9,7 +9,7 @@
 #include "delay_blocking.h"
 #include "array_size.h"
 
-#include "adc_subsystem.h"
+#include "adc_hw.h"
 
 const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
