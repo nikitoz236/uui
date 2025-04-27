@@ -1,15 +1,14 @@
 #include "config.h"
 
-const hw_rcc_cfg_t rcc_cfg = {
+const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
     .pll_src = PLL_SRC_PREDIV,
     .pll_prediv = 1,
     .pll_mul = 6,
     .sysclk_src = SYSCLK_SRC_PLL,
-    .hclk_div = 1,
+    .hclk_div = HCLK_DIV1,
     .apb_div = {
-        [PCLK_BUS_APB1] = APB_DIV1,
-        [PCLK_BUS_APB2] = APB_DIV1,
+        APB_DIV1,
     }
 };
 

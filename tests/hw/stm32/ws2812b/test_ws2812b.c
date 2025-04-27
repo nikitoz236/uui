@@ -5,7 +5,6 @@
 const volatile char __attribute__((section (".section_signature"))) bootloader_signature[12] = BOOTLOADER_SIGNATURE;
 const volatile uint32_t __attribute__((section (".section_flag"))) bootloader_flag = 0xAABBCCDD;
 
-
 #include "stm_dma.h"
 
 /*
@@ -17,8 +16,8 @@ const volatile uint32_t __attribute__((section (".section_flag"))) bootloader_fl
 
 struct ws_cfg {
     TIM_TypeDef * tim;
-    gpio_pin_t gpio;
-    hw_pclk_t tim_pclk;
+    gpio_t gpio;
+    pclk_t tim_pclk;
     uint8_t tim_ch;
     uint8_t dma_ch;
     uint8_t * buf;
@@ -35,11 +34,19 @@ const struct ws_cfg ws_cfg = {
     .dma_ch = 5,
     .tim_ch = 2 - 1,
     .gpio = {
-        .port = GPIO_PORT_B,
-        .pin = 0
+        .cfg = {
+            .mode = GPIO_MODE_AF,
+            .type = GPIO_TYPE_PP,
+            .speed = GPIO_SPEED_HIGH,
+            .af = 2
+        },
+        .gpio = {
+            .port = GPIO_PORT_B,
+            .pin = 0
+        }
     },
     .tim = TIM1,
-    .tim_pclk = HW_PCLK_TIM1
+    .tim_pclk = PCLK_TIM1
 };
 
 
@@ -65,30 +72,6 @@ static void timer_configure_output(TIM_TypeDef * timer, unsigned ch, unsigned mo
 //     ccr[cfg->ch * 2] = val;
 // }
 
-static const gpio_pin_cfg_t pin_cfg_1 = {
-    .gpio = {
-        .port = GPIO_PORT_B,
-        .pin = 7
-    },
-    .cfg = {
-        .mode = GPIO_MODE_OUTPUT,
-        .speed = GPIO_SPEED_HIGH,
-        .type = GPIO_TYPE_PP,
-    }
-};
-
-static const gpio_pin_cfg_t pin_cfg_2 = {
-    .gpio = {
-        .port = GPIO_PORT_B,
-        .pin = 5
-    },
-    .cfg = {
-        .mode = GPIO_MODE_OUTPUT,
-        .speed = GPIO_SPEED_HIGH,
-        .type = GPIO_TYPE_PP,
-    }
-};
-
 void ws_dma_handler(void)
 {
     const struct ws_cfg * cfg = &ws_cfg;
@@ -98,7 +81,7 @@ void ws_dma_handler(void)
     cfg->tim->CCR2 = 0;
 
     cfg->tim->CR1 &= ~TIM_CR1_CEN;
-    gpio_set_state(&pin_cfg_2.gpio, 1);
+    // gpio_set_state(&pin_cfg_2.gpio, 1);
 
     dma_clear_irq_full(cfg->dma_ch);
 }
@@ -116,16 +99,8 @@ void ws_color_pack(uint8_t * buf, uint8_t color)
 
 void init_ws(const struct ws_cfg * cfg)
 {
-    hw_rcc_pclk_ctrl(&cfg->tim_pclk, 1);
-
-    static const gpio_cfg_t gpio_cfg = {
-        .mode = GPIO_MODE_AF,
-        .type = GPIO_TYPE_PP,
-        .speed = GPIO_SPEED_HIGH,
-        .af = 2
-    };
-
-    gpio_set_cfg(&cfg->gpio, &gpio_cfg);
+    pclk_ctrl(&cfg->tim_pclk, 1);
+    init_gpio(&cfg->gpio);
 
     cfg->tim->BDTR |= TIM_BDTR_MOE;
     cfg->tim->CCER |= TIM_CCER_CC2NE;
@@ -149,8 +124,8 @@ void init_ws(const struct ws_cfg * cfg)
     dma_enable_mem_inc(cfg->dma_ch);
 
     // dma_set_size(cfg->dma_ch, DMA_SIZE_16);
-    dma_channel(cfg->dma_ch)->CCR |= DMA_CCR1_PSIZE_0 * DMA_SIZE_16;
-    dma_channel(cfg->dma_ch)->CCR |= DMA_CCR1_MSIZE_0 * DMA_SIZE_8;
+    dma_channel(cfg->dma_ch)->CCR |= DMA_CCR_PSIZE_0 * DMA_SIZE_16;
+    dma_channel(cfg->dma_ch)->CCR |= DMA_CCR_MSIZE_0 * DMA_SIZE_8;
 
     dma_set_periph_tx(cfg->dma_ch, (void *)&cfg->tim->CCR2);
 
@@ -179,22 +154,14 @@ void ws_update(const struct ws_cfg * cfg)
 
 int main(void)
 {
-    hw_rcc_apply_cfg(&rcc_cfg);
-    hw_rcc_pclk_ctrl(&HW_PCLK_GPIOB, 1);
-    hw_rcc_pclk_ctrl(&HW_PCLK_DMA, 1);
-
-
-    gpio_configure(&pin_cfg_1);
-    gpio_configure(&pin_cfg_2);
-
-
-    gpio_set_state(&pin_cfg_1.gpio, 1);
-
+    rcc_apply_cfg(&rcc_cfg);
+    pclk_ctrl(&(pclk_t)PCLK_GPIOB, 1);
+    pclk_ctrl(&(pclk_t)PCLK_DMA, 1);
 
     __enable_irq();
 
-    // init_pwm(ws2812_cfg.pwm_cfg);
-    // pwm_set_ccr(ws2812_cfg.pwm_cfg, 3);
+    // // init_pwm(ws2812_cfg.pwm_cfg);
+    // // pwm_set_ccr(ws2812_cfg.pwm_cfg, 3);
 
     init_ws(&ws_cfg);
 

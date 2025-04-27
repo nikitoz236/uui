@@ -4,18 +4,23 @@ LIB = ../../../../lib
 TARGET = test_ws2812b
 BUILD_DIR = build
 CPU = -mcpu=cortex-m0
-LDSCRIPT = gd32e23x_wbboot.ld
+LDSCRIPT = gd32e23x_mboot.ld
 STACK_SIZE = 512
 OPT = -Os
 
-# DEF += STM32F103
 DEF += STM32F030
 
 INC += .
 INC += $(LIB)/common/
 
-SRC += $(LIB)/hw/uc_hw/stm32f0x_rcc.c
-SRC += $(LIB)/hw/uc_hw/stm32f0x_gpio.c
+PERIPH = $(LIB)/hw/uc_hw/stm32f0x
+
+INC += $(PERIPH)
+INC += $(PERIPH)/../
+
+SRC += $(PERIPH)/periph_rcc.c
+SRC += $(PERIPH)/periph_gpio.c
+
 # SRC += $(LIB)/hw/uc_hw/stm32f10x_pwm.c
 
 SRC += test_ws2812b.c
