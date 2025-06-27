@@ -159,6 +159,7 @@ static inline void dn(void)
     __dp_ctx.started = 0;
 }
 
+// decimal
 static inline void dpd(unsigned d, unsigned w)
 {
     if (__debug_start()) {
@@ -170,6 +171,7 @@ static inline void dpd(unsigned d, unsigned w)
 
 }
 
+// decimal with zero padding
 static inline void dpdz(unsigned d, unsigned w)
 {
     if (__debug_start()) {
@@ -180,6 +182,7 @@ static inline void dpdz(unsigned d, unsigned w)
     __debug_usart_tx_data(str, w);
 }
 
+// hex
 static inline void dpx(unsigned x, unsigned size)
 {
     if (__debug_start()) {
@@ -190,6 +193,7 @@ static inline void dpx(unsigned x, unsigned size)
     __debug_usart_tx_data(str, size * 2);
 }
 
+// hex dump
 static inline void dpxd(const void * x, unsigned size, unsigned count)
 {
     if (__debug_start()) {
@@ -209,4 +213,5 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
     }
 }
 
+// legacy redirector
 #define db dp
