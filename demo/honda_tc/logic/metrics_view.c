@@ -19,12 +19,46 @@ struct metric_info {
     unsigned (*raw)(unsigned id);
 };
 
+// реализовано гдето в подсистеме ацп. все тесты нахуй сломаются
+uint16_t adc_get(unsigned ch);
+uint16_t __attribute__((weak)) adc_get(unsigned ch)
+{
+    return 0;
+}
+
+int16_t corrections[METRIC_ADC_VAR_NUM] = {};
+
+void adc_set_correction(unsigned ch, int16_t correction)
+{
+    if (ch < ARRAY_SIZE(corrections)) {
+        corrections[ch] = correction;
+    }
+}
+
+unsigned adc_raw_corrected(unsigned ch)
+{
+    unsigned val = adc_get(ch);
+    unsigned scale = (1 << 16) + corrections[ch];
+    val *= scale;
+    val >>= 16;
+    return val;
+}
+
+int adc_voltage(unsigned ch)
+{
+    unsigned ru = 52300;
+    unsigned rl = 10000;
+    unsigned val = adc_raw_corrected(ch);
+    unsigned v = (val * (ru + rl)) / (rl / 100);
+    return v;
+}
+
 struct metric_info metric_info[] = {
     /* same oder as in metric_var_id_t */
     { METRIC_ECU_VAR_NUM, metric_ecu_get_real, metric_ecu_get_raw },
     { METRIC_INTEGRATE_VAR_NUM, trip_integrate_get_real, 0 },
+    { METRIC_ADC_VAR_NUM, adc_voltage, adc_raw_corrected },
     { METRIC_CALC_VAR_NUM, 0, 0 },
-    { METRIC_ADC_VAR_NUM, 0, 0 },
     { METRIC_TEMP_VAR_NUM, 0, 0 }
 };
 

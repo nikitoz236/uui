@@ -1,4 +1,6 @@
+#include "metrics_calc.h"
 #include "metrics_ecu.h"
+
 #include "str_utils.h"
 #include "trip_integrate.h"
 
@@ -6,18 +8,6 @@
 
 #define ECU_FLAGS_ADDR                  0x08
 #define ECU_FLAGS_BYTES                 8
-
-#define METRIC_ENUM_NUM(id, ...)        __ECU_VAR_ ## id
-
-enum {
-    METRIC_ECU_VAR_LIST(METRIC_ENUM_NUM),
-    METRIC_ECU_VAR_NUM
-};
-
-enum {
-    METRIC_ECU_BOOL_LIST(METRIC_ENUM_NUM),
-    METRIC_ECU_BOOL_NUM
-};
 
 typedef struct {
     unsigned mull;
@@ -170,8 +160,8 @@ void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len)
                 honda_metric_raw[metric_idx] = raw;
                 honda_metric_real[metric_idx] = real;
 
-                if (metric_idx == __ECU_VAR_INJECTION) {
-                    trip_integrate(honda_metric_raw[__ECU_VAR_RPM], honda_metric_raw[__ECU_VAR_ECU_SPEED], raw);
+                if (metric_idx == ____METRIC_ENUM_INJECTION) {
+                    trip_integrate(honda_metric_raw[____METRIC_ENUM_RPM], honda_metric_raw[____METRIC_ENUM_ECU_SPEED], raw);
                 }
             }
         }
