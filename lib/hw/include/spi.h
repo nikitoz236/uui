@@ -50,3 +50,9 @@ void spi_write_16(const spi_cfg_t * cfg, uint16_t c);
 
 void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len);
 void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len);
+
+/*
+    вообще как будто бы у нас должны быть асинхронные вызовы
+
+    типа зарядить дма, дальше у нас дма дернет прерывание по окончанию отправки.
+*/
