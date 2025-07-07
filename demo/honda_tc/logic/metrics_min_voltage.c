@@ -10,12 +10,12 @@ int metric_voltage_min_get(unsigned id)
 
 void metric_voltage_min_reset(void)
 {
-    min_voltage = metric_adc_get_real(METRIC_ID_VOLTAGE_ADC);
+    min_voltage = metric_var_get_real(METRIC_ID_VOLTAGE_ADC);
 }
 
 void metric_voltage_min_process(void)
 {
-    int voltage = metric_adc_get_real(METRIC_ID_VOLTAGE_ADC);
+    int voltage = metric_var_get_real(METRIC_ID_VOLTAGE_ADC);
     if (voltage < min_voltage) {
         min_voltage = voltage;
     }
