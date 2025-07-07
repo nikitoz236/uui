@@ -57,7 +57,7 @@ uint16_t adc_get(unsigned ch)
     for (unsigned i = 0; i < FILTER_SIZE; i++) {
         val += filter[ch][i];
     }
-    val /= FILTER_SIZE;
+    // так как фильтр домножает на 16 мы получаем за счет усреднения значение 1 ... 4095
     return val;
 }
 
