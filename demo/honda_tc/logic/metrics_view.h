@@ -3,6 +3,7 @@
 
 #include "metrics_ecu.h"
 #include "trip_integrate.h"
+#include "metrics_adc.h"
 #include "metrics_list.h"
 #include "val_text.h"
 

@@ -24,7 +24,7 @@ struct metric_info metric_info[] = {
     { METRIC_ECU_VAR_NUM, metric_ecu_get_real, metric_ecu_get_raw },
     { METRIC_INTEGRATE_VAR_NUM, trip_integrate_get_real, 0 },
     { METRIC_CALC_VAR_NUM, 0, 0 },
-    { METRIC_ADC_VAR_NUM, 0, 0 },
+    { METRIC_ADC_VAR_NUM, metric_adc_get_real, metric_adc_get_raw },
     { METRIC_TEMP_VAR_NUM, 0, 0 }
 };
 

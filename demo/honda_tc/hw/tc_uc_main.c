@@ -26,6 +26,7 @@
 
 #include "time_zone.h"
 
+#include "adc_hw.h"
 
 const gpio_list_t debug_gpio_list = {
     .count = 3,
@@ -123,6 +124,8 @@ int main(void)
 
     usart_set_cfg(&debug_usart);
     usart_set_cfg(&kline_usart);
+
+    init_adc();
 
     dn();
     dn();
