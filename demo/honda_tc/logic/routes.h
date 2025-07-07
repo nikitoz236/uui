@@ -47,8 +47,7 @@ typedef enum {
     ROUTE_VALUE_CONS_DIST,  // расход топлива в мл / 100 км
     ROUTE_VALUE_CONS_TIME,  // расход топлива в мл / час
     ROUTE_VALUE_NUM,
-    ROUTE_VAL_LOADABLE = ROUTE_VALUE_SINCE_TIME + 1,
-    ROUTE_HISTORY_VAL_LOADABLE = ROUTE_VALUE_SINCE_ODO + 1
+    ROUTE_VAL_LOADABLE = ROUTE_VALUE_SINCE_TIME + 1
 } route_value_t;
 
 const char * route_name(route_t route);

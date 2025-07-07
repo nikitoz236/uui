@@ -1,6 +1,15 @@
 #pragma once
 #include <stdint.h>
-#include "metrics_enum_num.h"
+
+// for view variables
+int metric_ecu_get_real(unsigned id);
+unsigned metric_ecu_get_raw(unsigned id);
+
+// for view bool flags
+unsigned metric_ecu_get_bool(unsigned id);
+
+// for load from dlc
+void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len);
 
 // tables
 
@@ -59,23 +68,3 @@
     macro(ECONO,            "ECONO",        (4 * 8) + 7 /* 0x0C:7 */ ), \
     macro(AT_CONTOL,        "AT CONTOL",    (5 * 8) + 3 /* 0x0D:3 */ ), \
     macro(CLOSED_LOOP,      "CLOSED LOOP",  (7 * 8) + 3 /* 0x0F:3 */ )
-
-enum {
-    METRIC_ECU_VAR_LIST(METRIC_ENUM_NUM),
-    METRIC_ECU_VAR_NUM
-};
-
-enum {
-    METRIC_ECU_BOOL_LIST(METRIC_ENUM_NUM),
-    METRIC_ECU_BOOL_NUM
-};
-
-// for view variables
-int metric_ecu_get_real(unsigned id);
-unsigned metric_ecu_get_raw(unsigned id);
-
-// for view bool flags
-unsigned metric_ecu_get_bool(unsigned id);
-
-// for load from dlc
-void metric_ecu_data_ready(unsigned addr, const uint8_t * data, unsigned len);
