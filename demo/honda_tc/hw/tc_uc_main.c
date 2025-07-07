@@ -163,6 +163,8 @@ int main(void)
     dn();
     dpn("READY!");
 
+    metric_voltage_min_reset();
+
     while (1) {
         dlc_poll();
         sound_subsystem_process();
