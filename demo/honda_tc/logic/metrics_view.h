@@ -4,6 +4,7 @@
 #include "metrics_ecu.h"
 #include "trip_integrate.h"
 #include "metrics_adc.h"
+#include "metrics_min_voltage.h"
 #include "metrics_list.h"
 #include "val_text.h"
 
@@ -43,7 +44,8 @@ const char * metric_bool_get_name(metric_bool_id_t id);
 #define METRIC_VAR_LIST(macro) \
     METRIC_ECU_VAR_LIST(macro), \
     TRIP_INTEGRATE_VAR_LIST(macro), \
-    METRIC_CALC_VAR_LIST(macro), \
+    METRIC_INJECTOR_LOAD_VAR_LIST(macro), \
+    METRIC_VOLTAGE_MIN_VAR_LIST(macro), \
     METRIC_ADC_VAR_LIST(macro), \
     METRIC_TEMP_VAR_LIST(macro)
 

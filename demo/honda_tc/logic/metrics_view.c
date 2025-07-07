@@ -9,7 +9,6 @@ enum { METRIC_ECU_BOOL_LIST(METRIC_ENUM_NUM), METRIC_ECU_BOOL_NUM };
 
 enum { METRIC_ECU_VAR_LIST(METRIC_ENUM_NUM), METRIC_ECU_VAR_NUM };
 enum { TRIP_INTEGRATE_VAR_LIST(METRIC_ENUM_NUM), METRIC_INTEGRATE_VAR_NUM };
-enum { METRIC_CALC_VAR_LIST(METRIC_ENUM_NUM), METRIC_CALC_VAR_NUM };
 enum { METRIC_ADC_VAR_LIST(METRIC_ENUM_NUM), METRIC_ADC_VAR_NUM };
 enum { METRIC_TEMP_VAR_LIST(METRIC_ENUM_NUM), METRIC_TEMP_VAR_NUM };
 
@@ -21,11 +20,23 @@ struct metric_info {
 
 struct metric_info metric_info[] = {
     /* same oder as in metric_var_id_t */
-    { METRIC_ECU_VAR_NUM, metric_ecu_get_real, metric_ecu_get_raw },
-    { METRIC_INTEGRATE_VAR_NUM, trip_integrate_get_real, 0 },
-    { METRIC_CALC_VAR_NUM, 0, 0 },
-    { METRIC_ADC_VAR_NUM, metric_adc_get_real, metric_adc_get_raw },
-    { METRIC_TEMP_VAR_NUM, 0, 0 }
+    /* METRIC_ECU_VAR_LIST */
+        { METRIC_ECU_VAR_NUM, metric_ecu_get_real, metric_ecu_get_raw },
+
+    /* TRIP_INTEGRATE_VAR_LIST */
+        { METRIC_INTEGRATE_VAR_NUM, trip_integrate_get_real, 0 },
+
+    /* METRIC_INJECTOR_LOAD_VAR_LIST */
+        { 1, 0, 0 },
+
+    /* METRIC_VOLTAGE_MIN_VAR_LIST */
+        { .len = 1, .real = metric_voltage_min_get },
+
+    /* METRIC_ADC_VAR_LIST */
+        { METRIC_ADC_VAR_NUM, metric_adc_get_real, metric_adc_get_raw },
+
+    /* METRIC_TEMP_VAR_LIST */
+        { METRIC_TEMP_VAR_NUM, 0, 0 }
 };
 
 static const struct metric_info * find_metric_info(metric_var_id_t * id)

@@ -28,6 +28,7 @@ SRC += $(PROJECT)/logic/dlc_poll.c
 SRC += $(PROJECT)/logic/honda_dlc_units.c
 SRC += $(PROJECT)/logic/metrics_ecu.c
 SRC += $(PROJECT)/logic/metrics_adc.c
+SRC += $(PROJECT)/logic/metrics_min_voltage.c
 SRC += $(PROJECT)/logic/metrics_view.c
 SRC += $(PROJECT)/logic/routes.c
 SRC += $(PROJECT)/logic/trip_integrate.c

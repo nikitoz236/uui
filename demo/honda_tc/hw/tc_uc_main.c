@@ -27,6 +27,7 @@
 #include "time_zone.h"
 
 #include "adc_hw.h"
+#include "metrics_min_voltage.h"
 
 const gpio_list_t debug_gpio_list = {
     .count = 3,
@@ -85,6 +86,7 @@ void tc_engine_set_status(unsigned state)
 
     ui_set_state(state);
     if (state) {
+        metric_voltage_min_reset();
         route_trip_start();
 
         unsigned route_day = days_from_s(route_get_value(ROUTE_TYPE_DAY, ROUTE_VALUE_SINCE_TIME) + time_zone_get());
@@ -165,6 +167,7 @@ int main(void)
         dlc_poll();
         sound_subsystem_process();
         storage_prepare_page();
+        metric_voltage_min_process();
 
         unsigned event = btn_get_event();
         if (event) {
