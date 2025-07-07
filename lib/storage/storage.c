@@ -173,8 +173,8 @@ static unsigned search_file_in_page(unsigned page, file_id_t id, const file_head
 
     for_each_file_in_page_header(ph) {
         if (file->id == id) {
-            dp("      search file in page "); dpd(page, 3); dp("  finded file ptr: "); dpx((unsigned)file, 4);
-            dp("    id: "); dpd(file->id, 5); dp("    ver: "); dpd(file->version, 5); dn();
+            // dp("      search file in page "); dpd(page, 3); dp("  finded file ptr: "); dpx((unsigned)file, 4);
+            // dp("    id: "); dpd(file->id, 5); dp("    ver: "); dpd(file->version, 5); dn();
             if (file_is_crc_correct(file)) {
                 if ((*result_file == 0) ||
                     (is_file_version_newer(*result_file, file))
