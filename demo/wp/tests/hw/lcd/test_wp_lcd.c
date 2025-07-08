@@ -7,6 +7,12 @@
 #include "stm_pwm.h"
 #include "lcd_spi.h"
 
+#include "api_lcd_color.h"
+
+#include "stm_usart.h"
+
+#define DP_NOTABLE
+#include "dp.h"
 
 const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
@@ -67,6 +73,7 @@ const lcd_cfg_t lcd_cfg = {
             .clock_div = SPI_DIV_64,
             .spi = SPI1,
             .pclk = PCLK_SPI1,
+            .dma_tx_ch = 3,
             .pin_list = {
                 [SPI_PIN_SCK] = &(gpio_t){
                     .gpio = {
@@ -118,17 +125,44 @@ const lcd_cfg_t lcd_cfg = {
     },
 };
 
+const usart_cfg_t debug_usart = {
+    .usart = USART1,
+    .default_baud = 2000000,
+    .tx_pin = &(const gpio_t) {
+        .gpio = {
+            .port = GPIO_PORT_B,
+            .pin = 6
+        },
+        .cfg = {
+            .mode = GPIO_MODE_AF,
+            .speed = GPIO_SPEED_HIGH,
+            .type = GPIO_TYPE_PP,
+            .af = 0
+        }
+    },
+    .pclk = PCLK_USART1,
+};
+
+void __debug_usart_tx_data(const char * s, unsigned len)
+{
+    usart_tx(&debug_usart, s, len);
+}
+
 int main(void)
 {
     rcc_apply_cfg(&rcc_cfg);
     pclk_ctrl(&(pclk_t)PCLK_GPIOA, 1);
     pclk_ctrl(&(pclk_t)PCLK_GPIOB, 1);
 
-    init_gpio(&status_led);
+    pclk_ctrl(&(pclk_t)PCLK_DMA, 1);
 
+    init_gpio(&status_led);
+    usart_set_cfg(&debug_usart);
 
     init_systick();
     __enable_irq();
+
+    dp("Test WP LCD");
 
     init_lcd_hw(&lcd_cfg);
 
@@ -137,6 +171,13 @@ int main(void)
     lcd_bl(5);
 
     gpio_set_state(&status_led, 1);
+
+    lcd_rect(4, 5, 80, 120, 0xA234);
+
+    lcd_rect(100, 5, 30, 50, COLOR(0xFF0000));
+    lcd_rect(170, 5, 30, 50, COLOR(0x00FF00));
+
+
 
     while (1) {};
 
