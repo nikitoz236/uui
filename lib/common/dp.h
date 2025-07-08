@@ -74,19 +74,22 @@ static inline unsigned __debug_start(void)
         return 1;
     }
 
-    #define NAME_LEN 10
+    #ifndef DP_NOTABLE
 
-    if (__dp_ctx.started == 0) {
-        __dp_ctx.started = 1;
-        if (__dp_ctx.color) {
-            __debug_usart_tx_data("\x1b[m", 3);
-            __dp_ctx.color = 0;
+        #define NAME_LEN 10
+
+        if (__dp_ctx.started == 0) {
+            __dp_ctx.started = 1;
+            if (__dp_ctx.color) {
+                __debug_usart_tx_data("\x1b[m", 3);
+                __dp_ctx.color = 0;
+            }
+            // __debug_usart_tx_data("[", 1);
+            __debug_print_str(__dp_ctx.name, NAME_LEN, ' ');
+            __debug_usart_tx_data("|", 2);
+            // __debug_usart_tx_data("] ", 2);
         }
-        // __debug_usart_tx_data("[", 1);
-        __debug_print_str(__dp_ctx.name, NAME_LEN, ' ');
-        __debug_usart_tx_data("|", 2);
-        // __debug_usart_tx_data("] ", 2);
-    }
+    #endif
     return 0;
 }
 
