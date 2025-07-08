@@ -28,18 +28,71 @@ void lcd_send_cmd_with_data(const lcd_cmd_t * cmd)
     spi_dma_tx_buf(lcd_cfg->spi_dev.spi, cmd->data, cmd->len);
 }
 
+
+const uint8_t lcd_init_cmd_list[] = {
+//  cmd   len       data
+
+    // MADCTL: Memory Access Control
+    //           MY MX MV ML BGR MH 0 0
+    // C8	88 = 1  0  0  0  1   0  0 0
+    0x36, 1,  0xE0,   // MY=1, MX=0, MV=0, BGR=1
+
+    // COLMOD: Pixel Format (RGB565)
+    0x3A, 1,  0x55,
+
+    // Porch Setting
+    0xB2, 5,  0x0C, 0x0C, 0x00, 0x33, 0x33,
+
+    // Gate Control
+    0xB7, 1,  0x35,
+
+    // VCOM
+    0xBB, 1,  0x19,
+
+    // LCM Control
+    0xC0, 1,  0x2C,
+
+    // VDV and VRH enable
+    0xC2, 1,  0x01,
+
+    // VRH Set
+    0xC3, 1,  0x12,
+
+    // VDV Set
+    0xC4, 1,  0x20,
+
+    // Frame Rate
+    0xC6, 1,  0x0F,
+
+    // Power Control
+    0xD0, 2,  0xA4, 0xA1,
+
+    // Positive Gamma Correction
+    0xE0, 14, 0xD0, 0x04, 0x0D, 0x11, 0x13, 0x2B, 0x3F, 0x54, 0x4C, 0x18, 0x0D, 0x0B, 0x1F, 0x23,
+
+    // Negative Gamma Correction
+    0xE1, 14, 0xD0, 0x04, 0x0C, 0x11, 0x13, 0x2C, 0x3F, 0x44, 0x51, 0x2F, 0x1F, 0x1F, 0x20, 0x23,
+
+    // Display Inversion On
+    0x21, 0,
+
+     // Normal Display Mode On
+    0x13, 0,
+};
+
+
 void lcd_pwr(unsigned val)
 {
-    // if (val) {
-    //     lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x11}); // Sleep Out
-    //     // данное время всетаки влияет, 10 мс мало. на экране картинка рассыпается. было 120.
-    //     delay_ms(40);
-    //     lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x29}); // Display on
-    // } else {
-    //     lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x10}); // Enter Sleep Mode
-    //     delay_ms(5);
-    //     lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x28}); // Display off
-    // }
+    if (val) {
+        lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x11}); // Sleep Out
+        // данное время всетаки влияет, 10 мс мало. на экране картинка рассыпается. было 120.
+        delay_ms(10);
+        lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x29}); // Display on
+    } else {
+        lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x10}); // Enter Sleep Mode
+        delay_ms(5);
+        lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x28}); // Display off
+    }
 }
 
 static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
@@ -59,6 +112,11 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
 
     lcd_send_cmd_with_data(&tmp.cmd);
     while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
+
+    // конкретно мой квадратный экран если его шлейфом к верху перевернуть
+    // а также сделать все повороты, то у него верхняя область памяти оказывается
+    // за границами физического экрана
+    y += 320 - 240;
 
     u16_to_be_buf8(tmp.start, y);
     u16_to_be_buf8(tmp.end, y + h - 1);
@@ -114,159 +172,28 @@ void lcd_image(unsigned x, unsigned y, unsigned w, unsigned h, unsigned scale, l
 
 static inline void lcd_clear(void)
 {
-    const lcd_color_t clear_color = 0xACEF;
-    lcd_rect(0, 0, 320, 240, clear_color);
-}
-
-
-#define ST7789_SWRESET 						0x01
-#define ST7789_SLPIN   						0x10
-#define ST7789_SLPOUT  						0x11
-#define ST7789_NORON   						0x13
-#define ST7789_INVOFF  						0x20
-#define ST7789_INVON   						0x21
-#define ST7789_DISPOFF 						0x28
-#define ST7789_DISPON  						0x29
-#define ST7789_CASET   						0x2A
-#define ST7789_RASET   						0x2B
-#define ST7789_RAMWR   						0x2C
-#define ST7789_COLMOD  						0x3A
-#define ST7789_MADCTL  						0x36
-
-#define ST7789_MADCTL_MY  				0x80
-#define ST7789_MADCTL_MX  				0x40
-#define ST7789_MADCTL_MV  				0x20
-#define ST7789_MADCTL_ML  				0x10
-#define ST7789_MADCTL_RGB 				0x00
-#define ST7789_MADCTL_BGR 				0x08
-#define ST7789_MADCTL_MH  				0x04
-
-#define ST7789_ColorMode_65K    	0x50
-#define ST7789_ColorMode_262K   	0x60
-#define ST7789_ColorMode_12bit  	0x03
-#define ST7789_ColorMode_16bit  	0x05
-#define ST7789_ColorMode_18bit  	0x06
-#define ST7789_ColorMode_16M    	0x07
-
-enum type { CMD = 0, DATA = 1 };
-
-static inline void lcd_send_8(const lcd_cfg_t * cfg, uint8_t data, enum type type)
-{
-    while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-    gpio_list_set_state(cfg->ctrl_lines, LCD_DC, type);
-    spi_write_8(cfg->spi_dev.spi, data);
+    const lcd_color_t clear_color = 0x1111;
+    lcd_rect(0, 0, 240, 240, clear_color);
 }
 
 void init_lcd(const lcd_cfg_t * cfg)
 {
     lcd_cfg = cfg;
 
-
     gpio_list_set_state(cfg->ctrl_lines, LCD_RST, 0);
     delay_ms(20);
     gpio_list_set_state(cfg->ctrl_lines, LCD_RST, 1);
     delay_ms(10);
 
+    spi_dev_select(&lcd_cfg->spi_dev);
 
-    spi_set_frame_len(lcd_cfg->spi_dev.spi, 8);
+    unsigned idx = 0;
+    while (idx < ARRAY_SIZE(lcd_init_cmd_list)) {
+        const lcd_cmd_t * cmd = (const lcd_cmd_t *) &lcd_init_cmd_list[idx];
+        lcd_send_cmd_with_data(cmd);
+        idx += sizeof(lcd_cmd_t) + cmd->len;
+    }
 
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_SWRESET, CMD);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-    delay_ms(150);
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_SLPOUT, CMD);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-    delay_ms(250);
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_COLMOD, CMD);
-    lcd_send_8(cfg, ST7789_ColorMode_65K | ST7789_ColorMode_16bit, DATA);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-    delay_ms(10);
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    // ST7789_MADCTL , 1,                 	// 4: Memory access ctrl (directions), 1 arg:
-    //     ST7789_ROTATION,                  //    Row addr/col addr, bottom to top refresh
-    lcd_send_8(cfg, ST7789_MADCTL, CMD);
-    lcd_send_8(cfg, 0, DATA);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_CASET, CMD);
-    lcd_send_8(cfg, 0, DATA);
-    lcd_send_8(cfg, 0, DATA);
-    lcd_send_8(cfg, 0, DATA);
-    lcd_send_8(cfg, 239, DATA);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_RASET, CMD);
-    lcd_send_8(cfg, 0, DATA);
-    lcd_send_8(cfg, 0, DATA);
-    lcd_send_8(cfg, 0, DATA);
-    lcd_send_8(cfg, 239, DATA);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_INVON, CMD);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-    delay_ms(10);
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_NORON, CMD);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-    delay_ms(10);
-
-        spi_dev_select(&lcd_cfg->spi_dev);
-
-    lcd_send_8(cfg, ST7789_DISPON, CMD);
-
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        spi_dev_unselect(&lcd_cfg->spi_dev);
-
-    delay_ms(10);
-
-    // unsigned idx = 0;
-    // while (idx < ARRAY_SIZE(lcd_init_cmd_list)) {
-    //     const lcd_cmd_t * cmd = (const lcd_cmd_t *) &lcd_init_cmd_list[idx];
-    //     lcd_send_cmd_with_data(cmd);
-    //     idx += sizeof(lcd_cmd_t) + cmd->len;
-    // }
-
-    // lcd_pwr(1);
+    lcd_pwr(1);
     // lcd_clear();
 }
