@@ -7,6 +7,8 @@ struct task_ctx * task_list = 0;
     у меня тут связанный список контекстов задач
 
     для добавления мне нужно 
+
+    надо проверять индексы
 */
 
 static struct task_ctx ** search_task_ctx(struct task_desc * task)
@@ -19,7 +21,11 @@ static struct task_ctx ** search_task_ctx(struct task_desc * task)
 void task_schedule_idx(struct task_ctx * task, unsigned idx, unsigned time_ms)
 {
     // может выполнятся в любом контексте
-    // может прерывать сама себя
+    // может прерывать сама себя - нужно с атомарностю разобраться
+
+    if (idx >= 32) {
+        return;
+    }
 
     struct task_ctx * ctx = task_list;
 
@@ -47,11 +53,15 @@ void task_schedule_idx(struct task_ctx * task, unsigned idx, unsigned time_ms)
 void task_unschedule_idx(struct task_ctx * task, unsigned idx)
 {
     // может выполнятся в любом контексте
-    // может прерывать сама себя
+    // может прерывать сама себя - нужно с атомарностю разобраться
+
+    if (idx >= 32) {
+        return;
+    }
 
     struct task_ctx * ctx = task_list;
 
-    // указатель на переменную указатель куда записать новый элемент
+    // указатель на переменную указатель которая ссылалась на удаляемый элемент
     struct task_ctx ** list_prev = &task_list;
 
     while (ctx) {
@@ -74,6 +84,9 @@ void task_unschedule_idx(struct task_ctx * task, unsigned idx)
 
 unsigned task_is_active_idx(struct task_ctx * task, unsigned idx)
 {
+    if (idx >= 32) {
+        return 0;
+    }
     if (task->active_masks & (1 << idx)) {
         return 1;
     }
@@ -93,32 +106,45 @@ void process_tasks(void)
     // всегда выполняется в background
 
     struct task_ctx * ctx = task_list;
+
+    // указатель на переменную указатель которая ссылалась на удаляемый элемент
     struct task_ctx ** list_prev = &task_list;
 
     while (ctx) {
-        // unsigned count = ctx->desc->count;
-        // if (count > 32) {
-        //     count = 32; // ограничение по количеству масок
-        // }
-        // uint32_t mask = 1;
+        unsigned count = ctx->desc->count;
+        printf("process task %p count %u\r\n", ctx, count);
+        if (count > 32) {
+            count = 32; // ограничение по количеству масок
+        }
 
-        // for (unsigned i = 0; i < count; i++) {
-        //     if (ctx->active_masks & mask) {
-        //         if (__time_rel(uptime_ms, ctx->time_ms[i]) < 0) {
-        //             ctx->active_masks &= ~mask; // снимаем активность до вызова функции, в функции может перезапуститься
-        //             if (count == 1) {
-        //                 ctx->desc->func();
-        //             } else {
-        //                 ctx->desc->func_idx(i);
-        //             }
-        //         }
-        //     }
-        // }
+        uint32_t mask = 1;
 
-        // if (ctx->active_masks == 0) {
-        //     // нужно еще удалить из списка
-        //     *list_prev = ctx->next;
-        // }
+        for (unsigned i = 0; i < count; i++) {
+            if (ctx->active_masks & mask) {
+                printf(" check idx %u time %u uptime %u\r\n", i, ctx->time_ms[i], uptime_ms);
+                if (__time_rel(uptime_ms, ctx->time_ms[i]) < 0) {
+                    printf("  task %p idx %u timeout\r\n", ctx, i);
+                    ctx->active_masks &= ~mask; // снимаем активность до вызова функции, в функции может перезапуститься
+                    // функция может дернуть schedule/unschedule и поменять дерево
+                    // допустим что элемент еще в списке, но у него все нет активных индексов
+                    // значит нам надо такое проверять гдето
+                    // либо прямо здесь удалить элемент из списка
+
+                    if (ctx->active_masks == 0) {
+                        // нужно еще удалить из списка
+                        *list_prev = ctx->next;
+                        ctx->next = 0;
+                    }
+
+                    if (count == 1) {
+                        ctx->desc->func_single();
+                    } else {
+                        ctx->desc->func_idx(i);
+                    }
+                }
+            }
+            mask <<= 1;
+        }
 
         list_prev = &ctx->next;
         ctx = ctx->next;
