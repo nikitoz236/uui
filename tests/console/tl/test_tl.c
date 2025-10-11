@@ -7,7 +7,7 @@
 
 volatile unsigned uptime_ms = 0;
 
-struct tl * testtl = TL_CREATE(16);
+tl_t * testtl = TL_CREATE(16);
 
 
 int main()

@@ -25,14 +25,14 @@
 #include "bit_fields.h"
 #include "flex_wrap.h"
 
-struct tl {
+typedef struct {
     unsigned active;
     unsigned time_ms[];
-};
+} tl_t;
 
-#define TL_CREATE(num)  FLEX_WRAP_ELEMENTS(struct tl, unsigned, num)
+#define TL_CREATE(num)  FLEX_WRAP_ELEMENTS(tl_t, unsigned, num)
 
-static inline void tl_run(struct tl * t, unsigned idx, unsigned time_ms)
+static inline void tl_run(tl_t * t, unsigned idx, unsigned time_ms)
 {
     if (idx >= (sizeof(unsigned) * 8)) {
         return;
@@ -41,7 +41,7 @@ static inline void tl_run(struct tl * t, unsigned idx, unsigned time_ms)
     bf_set(&t->active, idx, 1, 1);
 }
 
-static inline void tl_extend(struct tl * t, unsigned idx, unsigned time_ms)
+static inline void tl_extend(tl_t * t, unsigned idx, unsigned time_ms)
 {
     if (idx >= (sizeof(unsigned) * 8)) {
         return;
@@ -50,7 +50,7 @@ static inline void tl_extend(struct tl * t, unsigned idx, unsigned time_ms)
     bf_set(&t->active, idx, 1, 1);
 }
 
-static inline void tl_stop(struct tl * t, unsigned idx)
+static inline void tl_stop(tl_t * t, unsigned idx)
 {
     if (idx >= (sizeof(unsigned) * 8)) {
         return;
@@ -58,7 +58,7 @@ static inline void tl_stop(struct tl * t, unsigned idx)
     bf_set(&t->active, idx, 1, 0);
 }
 
-static inline unsigned tl_remain_ms(struct tl * t, unsigned idx)
+static inline unsigned tl_remain_ms(tl_t * t, unsigned idx)
 {
     if (idx >= (sizeof(unsigned) * 8)) {
         return 0;
@@ -75,7 +75,7 @@ static inline unsigned tl_remain_ms(struct tl * t, unsigned idx)
     return 0;
 }
 
-static inline unsigned tl_is_active(struct tl * t, unsigned idx)
+static inline unsigned tl_is_active(tl_t * t, unsigned idx)
 {
     if (idx >= (sizeof(unsigned) * 8)) {
         return 0;
@@ -90,7 +90,7 @@ static inline unsigned tl_is_active(struct tl * t, unsigned idx)
     return 0;
 }
 
-static inline unsigned tl_is_over(struct tl * t, unsigned idx)
+static inline unsigned tl_is_over(tl_t * t, unsigned idx)
 {
     if (idx >= (sizeof(unsigned) * 8)) {
         return 0;
