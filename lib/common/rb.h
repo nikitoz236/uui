@@ -10,13 +10,19 @@ typedef struct {
 typedef struct __attribute__((packed)) {
     rb_t * rb;
     uint16_t size;
+    uint16_t element_size;
 } rb_desc_t;
 
-#define RB_CREATE(name, size) \
+#define RB_CREATE(name, _size, _element_size) \
     struct { \
         rb_t rb; \
-        uint8_t data[size]; \
-    } name = {}
+        uint8_t data[_size]; \
+    } _rb_ ## name ## _ctx = {}; \
+    const rb_desc_t name = { \
+        .rb = &_rb_ ## name ## _ctx.rb, \
+        .size = _size, \
+        .element_size = _element_size \
+    }
 
 // вообще надо структуру сделать которая хранит размер и указатель на буфер
 
@@ -67,4 +73,24 @@ static inline unsigned rb_is_empty(const rb_desc_t * rb)
         return 1;
     }
     return 0;
+}
+
+static inline unsigned rb_idx_put(const rb_desc_t * rb)
+{
+    unsigned idx = rb->rb->head;
+    rb->rb->head++;
+    if (rb->rb->head == rb->size) {
+        rb->rb->head = 0;
+    }
+    return idx;
+}
+
+static inline unsigned rb_idx_get(const rb_desc_t * rb)
+{
+    unsigned idx = rb->rb->tail;
+    rb->rb->tail++;
+    if (rb->rb->tail == rb->size) {
+        rb->rb->tail = 0;
+    }
+    return idx;
 }
