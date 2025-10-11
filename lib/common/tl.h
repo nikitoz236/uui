@@ -23,17 +23,14 @@
 
 #include "mstimer.h"
 #include "bit_fields.h"
+#include "flex_wrap.h"
 
 struct tl {
     unsigned active;
     unsigned time_ms[];
 };
 
-#define TL_CREATE(num) \
-    (struct tl *) & ( struct { \
-        struct tl tl; \
-        unsigned time[num]; \
-    } ) {}
+#define TL_CREATE(num)  FLEX_WRAP(struct tl, sizeof(unsigned) * num)
 
 static inline void tl_run(struct tl * t, unsigned idx, unsigned time_ms)
 {
