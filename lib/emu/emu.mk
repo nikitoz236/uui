@@ -13,6 +13,8 @@ build_check: $(TEST_NAME)_app
 
 src_print:
 	echo $(SRC)
+	$(shell for s in $(SRC) ; do echo $(s) ; done)
 
 inc_print:
 	echo $(INC)
+	$(shell for s in $(INC) ; do echo $(s) ; done)
