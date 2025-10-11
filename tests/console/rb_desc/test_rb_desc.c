@@ -5,7 +5,8 @@
 #define DP_NOTABLE
 #include "dp.h"
 
-RB_CREATE(testrb, 16, 4);
+RB_DESC_CREATE(testrb, 16, 4);
+
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
 
 
     dp("rb desc dump: "); dpxd(&testrb, 1, sizeof(rb_desc_t)); dn();
-    dp("rb ctx ptr: "); dpx(&rb_testrb_ctx, 4); dn();
+    // dp("rb ctx ptr: "); dpx(, 4); dn();
 
 
 

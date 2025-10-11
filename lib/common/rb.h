@@ -13,16 +13,17 @@ typedef struct __attribute__((packed)) {
     uint16_t element_size;
 } rb_desc_t;
 
-#define RB_CREATE(name, _size, _element_size) \
-    struct { \
+#define RB_CREATE(num, element_size) \
+    (rb_t *) & (struct { \
         rb_t rb; \
-        uint8_t data[_size]; \
-    } _rb_ ## name ## _ctx = {}; \
-    const rb_desc_t name = { \
-        .rb = &_rb_ ## name ## _ctx.rb, \
-        .size = _size, \
-        .element_size = _element_size \
-    }
+        uint8_t data[num * element_size]; \
+    }){}
+
+#define RB_DESC_INIT(_size, _element_size) \
+    { .rb = RB_CREATE(_size, _element_size), .size = _size, .element_size = _element_size }
+
+#define RB_DESC_CREATE(name, _size, _element_size) \
+    rb_desc_t name = RB_DESC_INIT(_size, _element_size)
 
 // вообще надо структуру сделать которая хранит размер и указатель на буфер
 
