@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "flex_wrap.h"
 
 typedef struct {
     volatile uint16_t head;          // данные кладутся по этому индексу
@@ -13,11 +14,7 @@ typedef struct __attribute__((packed)) {
     uint16_t element_size;
 } rb_desc_t;
 
-#define RB_CREATE(num, element_size) \
-    (rb_t *) & (struct { \
-        rb_t rb; \
-        uint8_t data[num * element_size]; \
-    }){}
+#define RB_CREATE(num, element_size)        FLEX_WRAP(rb_t, num * element_size)
 
 #define RB_DESC_INIT(_size, _element_size) \
     { .rb = RB_CREATE(_size, _element_size), .size = _size, .element_size = _element_size }
