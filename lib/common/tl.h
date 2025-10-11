@@ -30,7 +30,7 @@ struct tl {
     unsigned time_ms[];
 };
 
-#define TL_CREATE(num)  FLEX_WRAP(struct tl, sizeof(unsigned) * num)
+#define TL_CREATE(num)  FLEX_WRAP_ELEMENTS(struct tl, unsigned, num)
 
 static inline void tl_run(struct tl * t, unsigned idx, unsigned time_ms)
 {
