@@ -1,5 +1,5 @@
 #include "fonts.h"
-#include "misc.h"
+#include "round_up.h"
 
 /*
     возвращает указатель на первый байт первого столбика символа c в шрифте f

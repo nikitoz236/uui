@@ -1,5 +1,5 @@
 #include "lcd_text.h"
-#include "misc.h"
+#include "round_up.h"
 
 void lcd_text_calc_size(xy_t * size, const lcd_text_cfg_t * cfg)
 {
