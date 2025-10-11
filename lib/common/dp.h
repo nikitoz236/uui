@@ -3,10 +3,24 @@
 #include "str_val_buf.h"
 #include "str_utils.h"
 
+/*
+    #define DP_NOTABLE
+        - отключает табличный вывод, просто печатает как есть
+
+    #define DP_SILENT
+        - отключает вывод из этого модуля
+
+    #define DP_NAME "name"
+        - задает имя модуля, выводится в табличном виде
+        - если не задано, то имя модуля не выводится
+*/
+
 // должно быть обьявлено в проекте
 void __debug_usart_tx_data(const char * s, unsigned len);
 
 // static const char * __debug_module_name = { __FILE__ };
+
+
 
 enum {
     DPC_BLACK,
