@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 static inline unsigned bf_get(void * array, unsigned index, unsigned field_len)

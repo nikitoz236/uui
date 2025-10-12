@@ -47,7 +47,7 @@ struct read_test rt[] = {
 
     { .data = &(uint32_t[]){0xAABBCCDD}, .len = 4, .field_size = 2, .index = 0, .expected_value = 1 },
     { .data = &(uint32_t[]){0xAABBCCDD}, .len = 4, .field_size = 2, .index = 1, .expected_value = 3 },
-    { .data = &(uint32_t[]){0xAABBCCDD}, .len = 4, .field_size = 2, .index = 2, .expected_value = 0 },
+    { .data = &(uint32_t[]){0xAABBCCDD}, .len = 4, .field_size = 4, .index = 2, .expected_value = 0x0C },
 
 };
 
