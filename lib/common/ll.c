@@ -1,9 +1,13 @@
 #include "ll.h"
 
+#define DP_NAME "ll"
+#include "dp.h"
+
 void ll_add(ll_item_t ** head, ll_item_t * item)
 {
     ll_item_t * node = *head;
     while (node) {
+        dp("ll_add: scanning node "); dpx((unsigned)node, 4); dp("for item : "); dpx((unsigned)item, 4); dn();
         if (node == item) {
             // уже в списке
             return;
