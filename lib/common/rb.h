@@ -71,22 +71,22 @@ static inline unsigned rb_is_empty(const rb_desc_t * rb)
     return 0;
 }
 
-static inline unsigned rb_idx_put(const rb_desc_t * rb)
+static inline void * rb_element_put(const rb_desc_t * rb)
 {
     unsigned idx = rb->rb->head;
     rb->rb->head++;
     if (rb->rb->head == rb->size) {
         rb->rb->head = 0;
     }
-    return idx;
+    return &rb->rb->data[idx * rb->element_size];
 }
 
-static inline unsigned rb_idx_get(const rb_desc_t * rb)
+static inline void * rb_element_get(const rb_desc_t * rb)
 {
     unsigned idx = rb->rb->tail;
     rb->rb->tail++;
     if (rb->rb->tail == rb->size) {
         rb->rb->tail = 0;
     }
-    return idx;
+    return &rb->rb->data[idx * rb->element_size];
 }

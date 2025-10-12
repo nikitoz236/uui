@@ -1,4 +1,3 @@
-#pragma once
 #include <stdint.h>
 #include "rb.h"
 
@@ -17,7 +16,9 @@ struct eq_item {
     // } arg_type;
 };
 
-RB_CREATE(eq, 16, sizeof(struct eq_item));
+#define EQ_SIZE 16
+
+const rb_desc_t eq = RB_DESC_INIT(struct eq_item, EQ_SIZE);
 
 void eq_func_single(void (*func)(void))
 {
@@ -39,14 +40,16 @@ void eq_func_idx(void (*func)(unsigned), unsigned idx)
 }
 
 // всегда вызывается в background
-void eq_process(void)
+unsigned eq_process(void)
 {
-    if (!rb_is_empty(&eq)) {
-        struct eq_item * item = (struct eq_item *)rb_element_get(&eq);
-        if (item->has_arg) {
-            item->func_arg(item->idx);
-        } else {
-            item->func_noarg();
-        }
+    if (rb_is_empty(&eq)) {
+        return 0;
     }
+    struct eq_item * item = (struct eq_item *)rb_element_get(&eq);
+    if (item->has_arg) {
+        item->func_arg(item->idx);
+    } else {
+        item->func_noarg();
+    }
+    return 1;
 }

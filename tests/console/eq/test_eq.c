@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "eq.h"
 
 void test_noarg(void)
@@ -19,9 +20,7 @@ int main()
     eq_func_idx(test_arg, 7);
     eq_func_single(test_noarg);
 
-    while (1) {
-        eq_process();
-    }
+    while (eq_process()) {};
 
     return 0;
 }

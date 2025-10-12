@@ -6,4 +6,4 @@
 void eq_func_single(void (*func)(void));
 void eq_func_idx(void (*func)(unsigned), unsigned idx);
 
-void eq_process(void);
+unsigned eq_process(void);
