@@ -87,6 +87,9 @@ unsigned task_is_active_idx(struct task_ctx * task, unsigned idx)
     if (idx >= 32) {
         return 0;
     }
+    if (task == 0) {
+        return 0;
+    }
     if (task->active_masks & (1 << idx)) {
         return 1;
     }
@@ -95,6 +98,12 @@ unsigned task_is_active_idx(struct task_ctx * task, unsigned idx)
 
 unsigned task_time_remain_idx(struct task_ctx * task, unsigned idx)
 {
+    if (idx >= 32) {
+        return 0;
+    }
+    if (task == 0) {
+        return 0;
+    }
     if (task->active_masks & (1 << idx)) {
         return task->time_ms[idx] - uptime_ms;
     }
@@ -117,7 +126,9 @@ void process_tasks(void)
             count = 32; // ограничение по количеству масок
         }
 
+        uint32_t active_bkp = ctx->active_masks;
         uint32_t mask = 1;
+        struct task_ctx * next_ctx = ctx->next; // сохраняем следующий элемент заранее
 
         for (unsigned i = 0; i < count; i++) {
             if (ctx->active_masks & mask) {
@@ -146,7 +157,59 @@ void process_tasks(void)
             mask <<= 1;
         }
 
-        list_prev = &ctx->next;
-        ctx = ctx->next;
+        if (ctx->active_masks) {
+            list_prev = &ctx->next;
+        }
+
+        ctx = next_ctx;
     }
 }
+
+
+/*
+    пиздец конечно идея
+    типа не надо таскменеджер с проверкой времени
+
+
+    а если сделать
+
+
+    задачи какие бывают
+
+    засечь время
+    проверить активно ли время
+    выполнить чтото когда время выйдет
+
+    поэтому нам нужна очередь выполнения !!!
+    типа колбэк + аргумент которые залетают в очередь. а выполняются потом
+    переодические штуки может обременять периодом ?
+
+
+    типа у тебя есть сущности
+        просто временная метка микросекундная
+        временная метка точная
+
+        временная метка + период
+
+
+
+
+
+
+*/
+
+typedef uint32_t timer_ms_t;
+
+struct scheduler_item {
+    struct exec_item * next;
+    uint16_t idx;
+    uint16_t has_arg : 1;
+};
+
+struct task {
+    struct scheduler_item * item;
+    timer_ms_t time_ms;
+    uint32_t period;
+    // если 0 то не периодическая
+    // если в очереди то активная
+};
