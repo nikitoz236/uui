@@ -1,12 +1,7 @@
 LIB = ../../../lib
 
-INC += $(LIB)/common
-SRC += $(LIB)/common/str_val.c
-SRC += $(LIB)/common/str_val_buf.c
-SRC += $(LIB)/common/str_utils.c
-
-SRC += $(LIB)/emu/console/emu_dp_usart.c
-
 TEST_NAME = test_rb_desc
+
+include $(LIB)/emu/emu_dp_dep.mk
 
 include $(LIB)/emu/test_console.mk

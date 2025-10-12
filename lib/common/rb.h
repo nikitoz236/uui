@@ -14,15 +14,13 @@ typedef struct __attribute__((packed)) {
     uint16_t element_size;
 } rb_desc_t;
 
-#define RB_CREATE(num, element_size)        FLEX_WRAP(rb_t, num * element_size)
+#define RB_CREATE(element_type, len)        FLEX_WRAP_ELEMENTS(rb_t, element_type, len)
 
-#define RB_DESC_INIT(_size, _element_size) \
-    { .rb = RB_CREATE(_size, _element_size), .size = _size, .element_size = _element_size }
+#define RB_DESC_INIT(element_type, len) \
+    { .rb = RB_CREATE(element_type, len), .size = len, .element_size = sizeof(element_type) }
 
-#define RB_DESC_CREATE(name, _size, _element_size) \
-    rb_desc_t name = RB_DESC_INIT(_size, _element_size)
-
-// вообще надо структуру сделать которая хранит размер и указатель на буфер
+#define RB_DESC_CREATE(name, element_type, len) \
+    rb_desc_t name = RB_DESC_INIT(element_type, len)
 
 static inline unsigned rb_available(const rb_desc_t * rb)
 {

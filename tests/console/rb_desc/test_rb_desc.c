@@ -5,8 +5,7 @@
 #define DP_NOTABLE
 #include "dp.h"
 
-RB_DESC_CREATE(testrb, 16, 4);
-
+const rb_desc_t testrb = RB_DESC_INIT(uint32_t, 16);
 
 int main()
 {

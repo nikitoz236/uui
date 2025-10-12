@@ -13,11 +13,7 @@ struct {
     uint8_t data[5];
 } rb_ctx;
 
-const rb_desc_t rb_desc = {
-    .rb = &rb_ctx.ri,
-    .size = 5
-};
-
+const rb_desc_t rb_desc = RB_DESC_INIT(uint8_t, 5);
 
 static inline void put(uint8_t val)
 {
