@@ -4,6 +4,9 @@
 #include "str_utils.h"
 
 /*
+    #define DP_OFF
+        - отключает вывод из этого модуля
+
     #define DP_NOTABLE
         - отключает табличный вывод, просто печатает как есть
 
@@ -14,6 +17,20 @@
         - задает имя модуля, выводится в табличном виде
         - если не задано, то имя модуля не выводится
 */
+
+#if defined DP_OFF
+    #define dpcr()
+    #define dpct(color)
+    #define dpcb(color)
+    #define dpl(s, l)
+    #define dp(s)
+    #define dpn(s)
+    #define dn()
+    #define dpd(d, w)
+    #define dpdz(d, w)
+    #define dpx(x, size)
+    #define dpxd(x, size, count)
+#else
 
 // должно быть обьявлено в проекте
 void __debug_usart_tx_data(const char * s, unsigned len);
@@ -229,6 +246,8 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
             __debug_usart_tx_data(str, plen);
     }
 }
+
+#endif
 
 // legacy redirector
 #define db dp
