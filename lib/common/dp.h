@@ -243,7 +243,7 @@ static inline void dpxd(const void * x, unsigned size, unsigned count)
             str[plen] = ' ';
             plen++;
         }
-            __debug_usart_tx_data(str, plen);
+        __debug_usart_tx_data(str, plen);
     }
 }
 
