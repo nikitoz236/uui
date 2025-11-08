@@ -77,7 +77,7 @@ static inline void __debug_print_str(const char * s, unsigned l, char padding_ch
     if (s) {
         unsigned maxlen = l;
         if (maxlen == 0) {
-            maxlen = -1;
+            maxlen = (unsigned)-1;
         }
         len = str_len(s, maxlen);
         __debug_usart_tx_data(s, len);
@@ -139,7 +139,7 @@ static inline void dpct(unsigned color)
         return;
     }
     __dp_ctx.color = 1;
-    char n = '0' + color;
+    char n = (char)('0' + color);
     __debug_usart_tx_data("\x1b[3", 3);
     __debug_usart_tx_data(&n, 1);
     __debug_usart_tx_data("m", 1);
@@ -151,7 +151,7 @@ static inline void dpcb(unsigned color)
         return;
     }
     __dp_ctx.color = 1;
-    char n = '0' + color;
+    char n = (char)('0' + color);
     __debug_usart_tx_data("\x1b[4", 3);
     __debug_usart_tx_data(&n, 1);
     __debug_usart_tx_data("m", 1);

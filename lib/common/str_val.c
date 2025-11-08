@@ -17,7 +17,7 @@ unsigned dec_to_str_right_aligned(unsigned val, char * str, unsigned len, unsign
     while (len) {
         len--;
         if (val) {
-            str[len] = '0' + (val % 10);
+            str[len] = (char)('0' + (val % 10));
             val /= 10;
         } else {
             empty++;
