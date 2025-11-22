@@ -16,6 +16,9 @@ INC += $(LIB)/hw/uc_hw/stm32f0x
 
 SRC += $(TARGET).c
 
+SRC += ../../../drivers/stm_ws2812b.c
+INC += ../../../drivers/
+
 SRC += $(LIB)/hw/uc_hw/stm32f0x/periph_rcc.c
 SRC += $(LIB)/hw/uc_hw/stm32f0x/periph_gpio.c
 
