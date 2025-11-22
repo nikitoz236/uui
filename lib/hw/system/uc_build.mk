@@ -4,7 +4,7 @@ INC += $(LIB)/hw/system/cmsis
 INC += $(LIB)/hw/include
 # INC += $(LIB)/hw/uc_hw
 
-SRC += $(LIB)/hw/system/startup.c
+SRC += $(LIB)/hw/system/startup_cm.c
 
 LD_DIR = $(LIB)/hw/system/ldscripts
 LDSCRIPT += sections.ld
