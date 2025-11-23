@@ -28,15 +28,41 @@ void lcd_send_cmd_with_data(const lcd_cmd_t * cmd)
     spi_dma_tx_buf(lcd_cfg->spi_dev.spi, cmd->data, cmd->len);
 }
 
+void set_madctl(void)
+{
+    struct {
+        lcd_cmd_t cmd;
+        struct {
+            // MADCTL: Memory Access Control
+            //      7   6   5   4   3   2   1   0
+            //      MY  MX  MV  ML  BGR MH  0   0
+            uint8_t reserved: 2;
+            uint8_t MH : 1;
+            uint8_t BGR : 1;
+            uint8_t ML : 1;
+            uint8_t MV : 1;
+            uint8_t MX : 1;
+            uint8_t MY : 1;
+        } madctl;
+    } tmp = {
+        .cmd = {
+            .cmd = 0x36,
+            .len = 1,
+        },
+        .madctl = {
+            .MY = lcd_cfg->y_flip,
+            .MX = lcd_cfg->x_flip,
+            .MV = lcd_cfg->xy_swap,
+            .BGR = 0,
+        }
+    };
+
+    lcd_send_cmd_with_data(&tmp.cmd);
+    while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
+}
 
 const uint8_t lcd_init_cmd_list[] = {
 //  cmd   len       data
-
-    // MADCTL: Memory Access Control
-    //           MY MX MV ML BGR MH 0 0
-    // C8	88 = 1  0  0  0  1   0  0 0
-    0x36, 1,  0xE0,   // MY=1, MX=0, MV=0, BGR=1
-
     // COLMOD: Pixel Format (RGB565)
     0x3A, 1,  0x55,
 
@@ -115,10 +141,6 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
     lcd_send_cmd_with_data(&tmp.cmd);
     while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
 
-    // // конкретно мой квадратный экран если его шлейфом к верху перевернуть
-    // // а также сделать все повороты, то у него верхняя область памяти оказывается
-    // // за границами физического экрана
-    // y += 320 - 240;
     y += lcd_cfg->y_offset;
 
     u16_to_be_buf8(tmp.start, y);
@@ -190,6 +212,7 @@ void init_lcd(const lcd_cfg_t * cfg)
 
     spi_dev_select(&lcd_cfg->spi_dev);
 
+    set_madctl();
     unsigned idx = 0;
     while (idx < ARRAY_SIZE(lcd_init_cmd_list)) {
         const lcd_cmd_t * cmd = (const lcd_cmd_t *) &lcd_init_cmd_list[idx];

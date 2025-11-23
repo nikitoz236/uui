@@ -40,6 +40,9 @@ const gpio_t status_led = {
 
 const lcd_cfg_t lcd_cfg = {
     .y_offset = 320 - 240,
+    .x_flip = 1,
+    .y_flip = 1,
+    .xy_swap = 1,
     .ctrl_lines = &(gpio_list_t){
         .cfg = {
             .mode = GPIO_MODE_OUTPUT,
