@@ -105,6 +105,8 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
 
     tmp.cmd.len = 4;
 
+    x += lcd_cfg->x_offset;
+
     // TODO, костыли потомучто ты не хочешь тратить время на переключение SPI ?
     u16_to_be_buf8(tmp.start, x);
     u16_to_be_buf8(tmp.end, x + w - 1);
@@ -113,10 +115,11 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
     lcd_send_cmd_with_data(&tmp.cmd);
     while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
 
-    // конкретно мой квадратный экран если его шлейфом к верху перевернуть
-    // а также сделать все повороты, то у него верхняя область памяти оказывается
-    // за границами физического экрана
-    y += 320 - 240;
+    // // конкретно мой квадратный экран если его шлейфом к верху перевернуть
+    // // а также сделать все повороты, то у него верхняя область памяти оказывается
+    // // за границами физического экрана
+    // y += 320 - 240;
+    y += lcd_cfg->y_offset;
 
     u16_to_be_buf8(tmp.start, y);
     u16_to_be_buf8(tmp.end, y + h - 1);

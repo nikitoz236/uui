@@ -39,6 +39,7 @@ const gpio_t status_led = {
 
 
 const lcd_cfg_t lcd_cfg = {
+    .y_offset = 320 - 240,
     .ctrl_lines = &(gpio_list_t){
         .cfg = {
             .mode = GPIO_MODE_OUTPUT,
@@ -122,7 +123,7 @@ const lcd_cfg_t lcd_cfg = {
                 .pin = 1
             }
         }
-    },
+    }
 };
 
 const usart_cfg_t debug_usart = {

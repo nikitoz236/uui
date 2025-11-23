@@ -14,6 +14,8 @@ struct lcd_cfg {
     pwm_cfg_t * bl;
     gpio_list_t * ctrl_lines;
     spi_dev_cfg_t spi_dev;
+    uint16_t x_offset;
+    uint16_t y_offset;
 };
 
 typedef const struct lcd_cfg lcd_cfg_t;
