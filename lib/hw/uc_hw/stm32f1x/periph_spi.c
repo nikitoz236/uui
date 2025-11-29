@@ -103,7 +103,7 @@ void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
     // с инкрементом данных в буфере
     while (dma_get_cnt(cfg->dma_tx_ch) != 0) {};
     dma_stop(cfg->dma_tx_ch);
-    dma_channel(cfg->dma_tx_ch)->CCR |= DMA_CCR1_MINC;
+    dma_enable_mem_inc(cfg->dma_tx_ch);
     dma_start(cfg->dma_tx_ch, txdata, len);
 }
 
@@ -112,6 +112,6 @@ void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len)
     // без инкремента одно и тоже значение
     while (dma_get_cnt(cfg->dma_tx_ch) != 0) {};
     dma_stop(cfg->dma_tx_ch);
-    dma_channel(cfg->dma_tx_ch)->CCR &= ~DMA_CCR1_MINC;
+    dma_disable_mem_inc(cfg->dma_tx_ch);
     dma_start(cfg->dma_tx_ch, txdata, len);
 }
