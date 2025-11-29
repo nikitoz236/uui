@@ -1,6 +1,11 @@
 #include "esp32_spi.h"
 #include "round_up.h"
 
+#define DP_OFF
+#define DP_NOTABLE
+#include "dp.h"
+
+static unsigned spi_len = 1;
 
 void init_spi(const spi_cfg_t * cfg)
 {
@@ -25,10 +30,10 @@ void init_spi(const spi_cfg_t * cfg)
     cfg->spi->user.usr_dummy = 0;
     cfg->spi->cmd.conf_bitlen = 0;
 
+    // жестко задаем 8 для начала. потом переопределим
+    cfg->spi->ms_dlen.ms_data_bitlen = 8 - 1;
 
     // cfg->spi->misc.clk_data_dtr_en = 1;
-
-
 
     cfg->spi->user1.usr_addr_bitlen = 7;
     cfg->spi->user1.usr_dummy_cyclelen = 0;
@@ -57,17 +62,19 @@ void spi_tx(const spi_cfg_t * cfg, uint8_t * data, unsigned bit_len)
                 bytes--;
             }
         }
-        // dp("        SPI tmp: "); dpx(tmp, 4); dn();
+        // dp("SPI tmp: "); dpx(tmp, 4); dn();
         cfg->spi->data_buf[data_buf_idx++] = tmp;
     }
 
+    // dpx(cfg->spi->data_buf[0], 4);
     cfg->spi->cmd.update = 1;
     cfg->spi->cmd.usr = 1;
 }
 
-void spi_run(const spi_cfg_t * cfg, unsigned bit_len)
+
+void spi_run(const spi_cfg_t * cfg)
 {
-    cfg->spi->ms_dlen.ms_data_bitlen = bit_len - 1;
+    cfg->spi->dma_int_clr.trans_done = 1;
     cfg->spi->cmd.update = 1;
     cfg->spi->cmd.usr = 1;
 }
@@ -81,12 +88,26 @@ unsigned spi_is_busy(const spi_cfg_t * cfg)
     return 0;
 }
 
-static unsigned spi_len = 8;
 
 void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len)
 {
     while (spi_is_busy(cfg)) {};
-    spi_len = len;
+    spi_len = round_up_deg2(len, 8) / 8;
+    cfg->spi->ms_dlen.ms_data_bitlen = len - 1;
+}
+
+void spi_tx_oct(const spi_cfg_t * cfg, void * data)
+{
+    while (spi_is_busy(cfg)) {};
+
+    uint32_t tmp = 0;
+    for (unsigned i = 0; i < spi_len; i++) {
+        tmp <<= 8;
+        tmp |= *((uint8_t *)data + i);
+    }
+    cfg->spi->data_buf[0] = tmp;
+
+    spi_run(cfg);
 }
 
 uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c)
@@ -96,19 +117,19 @@ uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c)
 
 void spi_write_8(const spi_cfg_t * cfg, uint8_t c)
 {
-    spi_tx(cfg, &c, 8);
+    spi_tx_oct(cfg, &c);
 }
 
 void spi_write_16(const spi_cfg_t * cfg, uint16_t c)
 {
-
+    spi_tx_oct(cfg, &c);
 }
 
 void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 {
     while (len) {
-        spi_tx(cfg, txdata, spi_len);
-        txdata += (round_up_deg2(spi_len, 8) / 8);
+        spi_tx_oct(cfg, txdata);
+        txdata += spi_len;
         len--;
     }
 }
@@ -116,7 +137,7 @@ void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 {
     while (len) {
-        spi_tx(cfg, txdata, spi_len);
+        spi_tx_oct(cfg, txdata);
         len--;
     }
 }
