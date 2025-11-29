@@ -57,8 +57,16 @@ int main(void)
 
     init_lcd(&lcd_cfg);
 
-    lcd_rect(4, 5, 310, 228, 0x1234);
+    lcd_rect(4, 5, 310, 228, COLOR(0xFF0000));
     lcd_rect(34, 25, 45, 28, 0x4567);
+
+    lcd_rect(34, 129, 45, 28, 0);
+
+    lcd_rect(94, 129, 45, 28, 0xFFFF);
+
+    lcd_rect(180, 129, 45, 28, COLOR(0x00FF00));
+
+    lcd_rect(250, 129, 45, 28, COLOR(0x0000FF));
 
     extern font_t font_5x7;
     lcd_text_color_print(
@@ -70,7 +78,7 @@ int main(void)
             .scale = 2,
             .text_size = { .w = 16, .h = 1 }
         },
-        &(color_scheme_t){ .bg = 0xABCD, .fg = 0x166D},
+        &(color_scheme_t){ .bg = COLOR(0xAA0000), .fg = COLOR(0x1122AA)},
         0, 0, 0 );
 
     while (1) {};
