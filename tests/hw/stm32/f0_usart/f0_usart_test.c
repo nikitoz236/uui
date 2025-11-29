@@ -83,6 +83,10 @@ int main()
 
     dpn("STM32F0 usart demo");
 
+    dn();
+    dp("SYS CLOCK: ");
+    dpd(pclk_f_hclk(), 10); dn();
+
     while (1) {};
 
     return 0;
