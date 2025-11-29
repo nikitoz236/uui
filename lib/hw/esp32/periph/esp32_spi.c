@@ -1,0 +1,122 @@
+#include "esp32_spi.h"
+#include "round_up.h"
+
+
+void init_spi(const spi_cfg_t * cfg)
+{
+    init_gpio_list(cfg->gpio_list);
+
+    cfg->spi->clock.clkdiv_pre = 4 - 1;
+    // cfg->spi->clock.clkcnt_n = 50 - 1;
+    cfg->spi->clock.clkcnt_n = 3;
+    cfg->spi->clock.clk_equ_sysclk = 0;
+
+
+    cfg->spi->clk_gate.clk_en = 1;
+    cfg->spi->clk_gate.mst_clk_active = 1;
+
+    cfg->spi->user.doutdin = 0;
+
+    cfg->spi->user.usr_command = 0;
+    cfg->spi->user.usr_addr = 0;
+    cfg->spi->user.usr_mosi = 1;
+    cfg->spi->user.cs_setup = 0;
+    cfg->spi->user.cs_hold = 0;
+    cfg->spi->user.usr_dummy = 0;
+    cfg->spi->cmd.conf_bitlen = 0;
+
+
+    // cfg->spi->misc.clk_data_dtr_en = 1;
+
+
+
+    cfg->spi->user1.usr_addr_bitlen = 7;
+    cfg->spi->user1.usr_dummy_cyclelen = 0;
+
+
+    cfg->spi->dma_int_set.trans_done_int_set = 1;
+}
+
+void spi_tx(const spi_cfg_t * cfg, uint8_t * data, unsigned bit_len)
+{
+    while (spi_is_busy(cfg)) {};
+
+    cfg->spi->dma_int_clr.trans_done = 1;
+
+    cfg->spi->ms_dlen.ms_data_bitlen = bit_len - 1;
+    unsigned data_buf_idx = 0;
+    unsigned bytes = bit_len + 7;
+    bytes >>= 3;
+
+    while(bytes) {
+        uint32_t tmp = 0;
+        uint8_t * ptr = (uint8_t *)&tmp;
+        for (unsigned i = 0; i < sizeof(uint32_t); i++) {
+            if (bytes) {
+                *ptr++ = *data++;
+                bytes--;
+            }
+        }
+        // dp("        SPI tmp: "); dpx(tmp, 4); dn();
+        cfg->spi->data_buf[data_buf_idx++] = tmp;
+    }
+
+    cfg->spi->cmd.update = 1;
+    cfg->spi->cmd.usr = 1;
+}
+
+void spi_run(const spi_cfg_t * cfg, unsigned bit_len)
+{
+    cfg->spi->ms_dlen.ms_data_bitlen = bit_len - 1;
+    cfg->spi->cmd.update = 1;
+    cfg->spi->cmd.usr = 1;
+}
+
+
+unsigned spi_is_busy(const spi_cfg_t * cfg)
+{
+    if (cfg->spi->dma_int_raw.trans_done == 0) {
+        return 1;
+    }
+    return 0;
+}
+
+static unsigned spi_len = 8;
+
+void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len)
+{
+    while (spi_is_busy(cfg)) {};
+    spi_len = len;
+}
+
+uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c)
+{
+
+}
+
+void spi_write_8(const spi_cfg_t * cfg, uint8_t c)
+{
+    spi_tx(cfg, &c, 8);
+}
+
+void spi_write_16(const spi_cfg_t * cfg, uint16_t c)
+{
+
+}
+
+void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
+{
+    while (len) {
+        spi_tx(cfg, txdata, spi_len);
+        txdata += (round_up_deg2(spi_len, 8) / 8);
+        len--;
+    }
+}
+
+void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len)
+{
+    while (len) {
+        spi_tx(cfg, txdata, spi_len);
+        len--;
+    }
+}
