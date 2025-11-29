@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "soc/system_reg.h"
 
 typedef uint8_t pclk_t;
 

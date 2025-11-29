@@ -27,10 +27,8 @@ void usart_set_cfg(const usart_cfg_t * cfg)
     cfg->dev->conf0.txfifo_rst = 0;
     cfg->dev->conf0.rxfifo_rst = 0;
 
-    // cfg->dev->clkdiv.clkdiv = 173;
-
-    cfg->dev->clkdiv.clkdiv = 10;
-
+    const unsigned uart_clk_hz = 20000000;
+    cfg->dev->clkdiv.clkdiv = uart_clk_hz / cfg->baudrate;
 }
 
 void usart_tx(const usart_cfg_t * usart, const void * data, unsigned len)
