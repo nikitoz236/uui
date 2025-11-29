@@ -77,14 +77,6 @@ static inline void dma_set_handler(unsigned ch, void (*handler)(void))
     NVIC_SetHandler(DMA1_Channel1_IRQn + ch - 1, handler);
 }
 
-static inline unsigned dma_is_irq_full(unsigned ch)
-{
-    if (DMA1->ISR & (DMA_ISR_TCIF1 << (4 * (ch - 1)))) {
-        return 1;
-    }
-    return 0;
-}
-
 static inline void dma_enable_mem_inc(unsigned ch)
 {
     dma_channel(ch)->CCR |= DMA_CCR_MINC;
@@ -95,17 +87,40 @@ static inline void dma_disable_mem_inc(unsigned ch)
     dma_channel(ch)->CCR &= ~DMA_CCR_MINC;
 }
 
-static inline void dma_clear_irq_full(unsigned ch)
+enum dma_irq_type {
+    DMA_IRQ_FULL = DMA_ISR_TCIF1,       // = DMA_IFCR_CTCIF1 = DMA_CCR_TCIE
+    DMA_IRQ_HALF = DMA_ISR_HTIF1,       // = DMA_IFCR_CHTIF1 = DMA_CCR_HTIE
+};
+
+static inline void dma_set_irq_en(unsigned ch, enum dma_irq_type type, unsigned en)
 {
-    DMA1->IFCR |= DMA_IFCR_CTCIF1 << (4 * (ch - 1));
+    if (en) {
+        dma_channel(ch)->CCR |= type;
+    } else {
+        dma_channel(ch)->CCR &= ~type;
+    }
 }
 
-static inline void dma_enable_irq_full(unsigned ch)
+static inline unsigned dma_is_irq(unsigned ch, enum dma_irq_type type)
 {
-    dma_channel(ch)->CCR |= DMA_CCR_TCIE;
+    if (DMA1->ISR & (type << (4 * (ch - 1)))) {
+        return 1;
+    }
+    return 0;
 }
 
-static inline void dma_disable_irq_full(unsigned ch)
+static inline void dma_clear_irq(unsigned ch, enum dma_irq_type type)
 {
-    dma_channel(ch)->CCR &= ~DMA_CCR_TCIE;
+    DMA1->IFCR |= (type << (4 * (ch - 1)));
 }
+
+
+
+
+
+
+// LEGACY HELPERS
+static inline unsigned dma_is_irq_full(unsigned ch) { return dma_is_irq(ch, DMA_IRQ_FULL); };
+static inline void dma_clear_irq_full(unsigned ch) { dma_clear_irq(ch, DMA_IRQ_FULL); };
+static inline void dma_enable_irq_full(unsigned ch) { dma_set_irq_en(ch, DMA_IRQ_FULL, 1); };
+static inline void dma_disable_irq_full(unsigned ch) { dma_set_irq_en(ch, DMA_IRQ_FULL, 0); };
