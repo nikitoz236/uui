@@ -50,9 +50,9 @@ void set_madctl(void)
             .len = 1,
         },
         .madctl = {
-            .MY = lcd_cfg->y_flip,
-            .MX = lcd_cfg->x_flip,
-            .MV = lcd_cfg->xy_swap,
+            .MY = lcd_cfg->gcfg.y_flip,
+            .MX = lcd_cfg->gcfg.x_flip,
+            .MV = lcd_cfg->gcfg.xy_swap,
             .BGR = 0,
         }
     };
@@ -131,7 +131,7 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
 
     tmp.cmd.len = 4;
 
-    x += lcd_cfg->x_offset;
+    x += lcd_cfg->gcfg.x_offset;
 
     // TODO, костыли потомучто ты не хочешь тратить время на переключение SPI ?
     u16_to_be_buf8(tmp.start, x);
@@ -141,7 +141,7 @@ static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
     lcd_send_cmd_with_data(&tmp.cmd);
     while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
 
-    y += lcd_cfg->y_offset;
+    y += lcd_cfg->gcfg.y_offset;
 
     u16_to_be_buf8(tmp.start, y);
     u16_to_be_buf8(tmp.end, y + h - 1);
@@ -197,8 +197,8 @@ void lcd_image(unsigned x, unsigned y, unsigned w, unsigned h, unsigned scale, l
 
 static inline void lcd_clear(void)
 {
-    const lcd_color_t clear_color = 0x1111;
-    lcd_rect(0, 0, 240, 240, clear_color);
+    const lcd_color_t clear_color = 0;
+    lcd_rect(0, 0, lcd_cfg->gcfg.width, lcd_cfg->gcfg.height, clear_color);
 }
 
 void init_lcd(const lcd_cfg_t * cfg)
@@ -221,5 +221,5 @@ void init_lcd(const lcd_cfg_t * cfg)
     }
 
     lcd_pwr(1);
-    // lcd_clear();
+    lcd_clear();
 }
