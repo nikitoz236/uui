@@ -3,7 +3,7 @@
 
 #include "soc/ledc_struct.h"
 #include "soc/system_reg.h"
-#include "pclk.h"
+#include "esp32_pclk.h"
 
 
 void pwm_set_freq(const pwm_cfg_t * cfg, unsigned f)
