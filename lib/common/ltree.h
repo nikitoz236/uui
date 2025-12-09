@@ -50,8 +50,8 @@ void lt_init(void * mem, unsigned size);
 unsigned lt_used(void);
 
 unsigned lt_item_offset(lt_item_t * item);
-
 lt_item_t * lt_item_from_offset(unsigned offset);
+
 lt_item_t * lt_next_in_mem(lt_item_t * item);
 
 lt_item_t * lt_add(lt_item_t * owner, const lt_desc_t * desc);

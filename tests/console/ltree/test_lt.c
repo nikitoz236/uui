@@ -30,6 +30,7 @@ void print_lt_linear()
 
         item = lt_next_in_mem(item);
     }
+    dp("    lt size = "); dpd(lt_used(), 6); dn();
 }
 
 void print_tree(lt_item_t * item, unsigned level)
@@ -84,6 +85,15 @@ int main()
     lt_item_t * item_child_1_3 = lt_add(item_root_1, &desc);
     *(unsigned *)&item_child_1_3->ctx = n++;
 
+    print_lt_linear();
+
+    dn();
+    dpn("lt tree rep:");
+    print_tree(item_root_1, 1);
+
+    lt_delete_childs(item_root_1);
+
+    dn();
     print_lt_linear();
 
     dn();

@@ -153,8 +153,15 @@ uint16_t * link_to_item(lt_item_t * item)
     return &pred->next;
 }
 
+
+#define DP_NOTABLE
+#include "dp.h"
+
+
 void move_item(lt_item_t * new, lt_item_t * old)
 {
+    dp(" move from "); dpd(lt_item_offset(old), 6);
+    dp(" to "); dpd(lt_item_offset(new), 6);
     unsigned offset_new = lt_item_offset(new);
 
     // обновление ссылки на элемент
@@ -180,27 +187,40 @@ void move_item(lt_item_t * new, lt_item_t * old)
 static void collect_deleted(void)
 {
     lt_item_t * it = lt_item_from_offset(0);
-    lt_item_t * del = 0;
+    lt_item_t * free = 0;
+    unsigned size = 0;
     while (it) {
-        if (it->owner == -1) {
-            if (del == 0) {
-                del = it;
+        dp("collect "); dpd(lt_item_offset(it), 6);
+        // 1 не может быть смещениемб все смещения выровнены по 4
+        if (it->owner == 1) {
+            size += item_size_in_mem(it);
+            dp(" - deleted");
+            if (free == 0) {
+                dp(" - first");
+                free = it;
             }
         } else {
-            if (del) {
-                move_item(del, it);
+            if (free) {
+                dp(" - first moved");
+                move_item(free, it);
+                free = lt_next_in_mem(free);
             }
         }
+        dn();
+        it = lt_next_in_mem(it);
     }
+    mem_used -= size;
 }
 
 void lt_delete_childs(lt_item_t * item)
 {
     lt_item_t * child = lt_child(item);
+    item->child = 0;
     while (child) {
-        child->owner = -1;
+        child->owner = 1;
         child = lt_next(child);
     }
+    collect_deleted();
 }
 
 void lt_delete(lt_item_t * item)
@@ -217,12 +237,12 @@ void lt_delete(lt_item_t * item)
 
     */
     *link_to_item(item) = item->next;
-    item->owner = -1;
+    item->owner = 1;
 
     lt_item_t * child = lt_child(item);
     while (child) {
-        child->owner = -1;
+        child->owner = 1;
         child = lt_next(child);
     }
-
+    collect_deleted();
 }
