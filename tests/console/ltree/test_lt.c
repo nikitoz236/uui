@@ -13,17 +13,12 @@ lt_desc_t desc = {
     .desc_size = 0,
 };
 
-unsigned item_size_in_mem(lt_item_t * item);
-lt_item_t * item_from_offset(unsigned offset);
-unsigned item_offset(lt_item_t * item);
-
 void print_lt_linear()
 {
     dpn("lt linear dump:");
-    unsigned offset = 0;
-    while (offset < lt_used()) {
-        lt_item_t * item = item_from_offset(offset);
-        dpd(offset, 8);
+    lt_item_t * item = lt_item_from_offset(0);
+    while (item) {
+        dpd(lt_item_offset(item), 8);
         dp("  :  owner "); dpd(item->owner, 4);
         dp("  next "); dpd(item->next, 4);
         dp("  child "); dpd(item->child, 4);
@@ -33,7 +28,7 @@ void print_lt_linear()
         dpxd(&item->ctx, 4, item->desc->ctx_size / 4);
         dn();
 
-        offset += item_size_in_mem(item);
+        item = lt_next_in_mem(item);
     }
 }
 
@@ -44,7 +39,7 @@ void print_tree(lt_item_t * item, unsigned level)
             dp("    ");
         }
 
-        dp("+--"); dpd(item_offset(item), 4);
+        dp("+--"); dpd(lt_item_offset(item), 4);
         dp(" owner "); dpd(item->owner, 4);
         dp(" next "); dpd(item->next, 4);
         dp(" child "); dpd(item->child, 4);
@@ -55,7 +50,7 @@ void print_tree(lt_item_t * item, unsigned level)
         dn();
 
         if (item->child) {
-            print_tree(item_from_offset(item->child), level + 1);
+            print_tree(lt_child(item), level + 1);
         }
         item = lt_next(item);
     }
@@ -91,7 +86,8 @@ int main()
 
     print_lt_linear();
 
-
+    dn();
+    dpn("lt tree rep:");
     print_tree(item_root_1, 1);
 
     return 0;

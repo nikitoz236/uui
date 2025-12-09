@@ -25,7 +25,8 @@
 struct lt_desc {
     uint16_t ctx_size;
     uint16_t desc_size;
-    uint8_t desc[];
+
+    uint8_t desc[] __attribute__ ((aligned(sizeof(uint32_t))));
 };
 
 // контекстная часть ноды в буффере
@@ -36,28 +37,32 @@ struct lt_item {
     uint16_t child;
     uint8_t idx;
     uint8_t flags;
-    uint8_t ctx[];
+    // как будто индексы и флаги это проблемы контекста, такчто можно их выпилить
+
+    uint8_t ctx[] __attribute__ ((aligned(sizeof(uint32_t))));
 };
 
 typedef struct lt_desc lt_desc_t;
 typedef struct lt_item lt_item_t;
 
-
 void lt_init(void * mem, unsigned size);
+
 unsigned lt_used(void);
+
+unsigned lt_item_offset(lt_item_t * item);
+
+lt_item_t * lt_item_from_offset(unsigned offset);
+lt_item_t * lt_next_in_mem(lt_item_t * item);
 
 lt_item_t * lt_add(lt_item_t * owner, const lt_desc_t * desc);
 
 lt_item_t * lt_owner(lt_item_t * item);
 lt_item_t * lt_next(lt_item_t * item);
+lt_item_t * lt_child(lt_item_t * item);
 lt_item_t * lt_child_idx(lt_item_t * item, unsigned idx);
 
 void lt_delete(lt_item_t * item);
-
-static inline unsigned item_idx(lt_item_t * item)
-{
-    return item->idx;
-}
+void lt_delete_childs(lt_item_t * item);
 
 static inline const void * lt_item_desc(lt_item_t * item)
 {
