@@ -44,9 +44,6 @@ lt_item_t * lt_item_from_offset(unsigned offset)
 
 lt_item_t * lt_owner(lt_item_t * item)
 {
-    if (item->owner == 0) {
-        return 0;
-    }
     return lt_item_from_offset(item->owner);
 }
 
@@ -119,30 +116,25 @@ lt_item_t * lt_add(lt_item_t * owner, const lt_desc_t * desc)
     return item;
 }
 
-
-
-/*
-
-тесты
-
-удаление всего
-добавление нескольких корневых элементов
-
-удаление элемента в середине
-удаление элемента в конце
-
-добавление дочерних элементов
-
-
-*/
-
+#define DP_NOTABLE
+#include "dp.h"
 
 uint16_t * link_to_item(lt_item_t * item)
 {
+    dp("  search link for "); dpd(lt_item_offset(item), 6);
+
+    // нельзя создавать больше чем один корневой элемент
+
     lt_item_t * owner = lt_owner(item);
+    // if (lt_item_offset(owner) == 0) {
+    //     dp(" - no link");
+    //     return 0;
+    // }
+
     lt_item_t * pred = lt_child(owner);
 
     if (pred == item) {
+        dp(" - link from owner");
         return &owner->child;
     }
 
@@ -150,22 +142,22 @@ uint16_t * link_to_item(lt_item_t * item)
         pred = lt_next(pred);
     }
 
+    dp(" - link from linear");
     return &pred->next;
 }
 
-
-#define DP_NOTABLE
-#include "dp.h"
-
-
 void move_item(lt_item_t * new, lt_item_t * old)
 {
-    dp(" move from "); dpd(lt_item_offset(old), 6);
+    dp(" , move from "); dpd(lt_item_offset(old), 6);
     dp(" to "); dpd(lt_item_offset(new), 6);
     unsigned offset_new = lt_item_offset(new);
 
     // обновление ссылки на элемент
-    *link_to_item(old) = offset_new;
+    uint16_t * link = link_to_item(old);
+    if (link) {
+        dp("  update link");
+        *link = offset_new;
+    }
 
     // перемещение элемента словами u32
     uint32_t * d = (uint32_t *) new;
@@ -236,7 +228,11 @@ void lt_delete(lt_item_t * item)
         значит обьекты можно двигать по одному, проход слева гарантирует что ссылкибудут обновляться лишь один раз. это у родителей и предыдущих, а child будут
 
     */
-    *link_to_item(item) = item->next;
+
+    uint16_t * link = link_to_item(item);
+    if (link) {
+        *link = item->next;
+    }
     item->owner = 1;
 
     lt_item_t * child = lt_child(item);
