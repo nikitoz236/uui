@@ -1,6 +1,9 @@
 #include "ltree.h"
 #include "round_up.h"
 
+#define DP_NOTABLE
+#include "dp.h"
+
 static void * mem_ptr;
 unsigned mem_used;
 unsigned mem_size;
@@ -116,9 +119,6 @@ lt_item_t * lt_add(lt_item_t * owner, const lt_desc_t * desc)
     return item;
 }
 
-#define DP_NOTABLE
-#include "dp.h"
-
 uint16_t * link_to_item(lt_item_t * item)
 {
     dp("  search link for "); dpd(lt_item_offset(item), 6);
@@ -204,14 +204,20 @@ static void collect_deleted(void)
     mem_used -= size;
 }
 
-void lt_delete_childs(lt_item_t * item)
+static void child_mark_deleted_recursive(lt_item_t * item)
 {
     lt_item_t * child = lt_child(item);
-    item->child = 0;
     while (child) {
+        child_mark_deleted_recursive(child);
         child->owner = 1;
         child = lt_next(child);
     }
+}
+
+void lt_delete_childs(lt_item_t * item)
+{
+    child_mark_deleted_recursive(item);
+    item->child = 0;
     collect_deleted();
 }
 
@@ -233,12 +239,7 @@ void lt_delete(lt_item_t * item)
     if (link) {
         *link = item->next;
     }
+    child_mark_deleted_recursive(item);
     item->owner = 1;
-
-    lt_item_t * child = lt_child(item);
-    while (child) {
-        child->owner = 1;
-        child = lt_next(child);
-    }
     collect_deleted();
 }
