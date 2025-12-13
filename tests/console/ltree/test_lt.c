@@ -17,7 +17,6 @@ lt_desc_t desc = {
 
 void print_lt_linear()
 {
-    dpn("lt linear dump:");
     lt_item_t * item = lt_item_from_offset(0);
     while (item) {
         dpd(lt_item_offset(item), 8);
@@ -61,6 +60,8 @@ void print_tree(lt_item_t * item, unsigned level)
 
 void print_lt(void)
 {
+    dn();
+    dpn("lt linear dump:");
     print_lt_linear();
 
     dn();
@@ -155,27 +156,31 @@ lt_item_t * create_lt(void)
     return root;
 }
 
+void add_lt(lt_item_t * item, unsigned n)
+{
+    lt_item_t * ci;
 
-/*
+    lt_item_t * child_1 = lt_add(item, &desc);
+    *(unsigned *)&child_1->ctx = n++;
 
-тесты
+    lt_item_t * child_2 = lt_add(item, &desc);
+    *(unsigned *)&child_2->ctx = n++;
 
-удаление всего
-добавление нескольких корневых элементов - нельзя, иначе нельзя найти ссылающегося
+    ci = lt_add(child_1, &desc);
+    *(unsigned *)&ci->ctx = n++;
 
-удаление элемента в середине
-удаление элемента в конце
+    ci = lt_add(child_1, &desc);
+    *(unsigned *)&ci->ctx = n++;
 
-добавление дочерних элементов
-
-
-*/
-
+    ci = lt_add(child_2, &desc);
+    *(unsigned *)&ci->ctx = n++;
+}
 
 unsigned exp_created[] = { 0xAA00, 0xAA01, 0xAA02, 0xAA03, 0xAA04, 0xAA05, 0xAA06, 0xAA07, 0xAA08, 0xAA09, 0xAA0A, 0xAA0B, 0xAA0C };
-
-
 unsigned exp_delete_1[] = { 0xAA00, 0xAA02, 0xAA05, 0xAA08, 0xAA09, 0xAA0C };
+unsigned exp_add_1[] = { 0xAA00, 0xAA02, 0xAA05, 0xAA08, 0xAA09, 0xAA0C, 0xCC00, 0xCC01, 0xCC02, 0xCC03, 0xCC04, 0xDD00, 0xDD01, 0xDD02, 0xDD03, 0xDD04, 0xBB00, 0xBB01, 0xBB02, 0xBB03, 0xBB04 };
+unsigned exp_delete_2[] = { 0xAA00, 0xAA02, 0xAA05, 0xAA08, 0xAA09, 0xAA0C, 0xCC00, 0xCC01, 0xCC04, 0xBB00, 0xBB01, 0xBB02, 0xBB03, 0xBB04 };
+unsigned exp_delete_3[] = { 0xAA00, 0xAA08, 0xCC00, 0xCC01, 0xCC04 };
 
 int main()
 {
@@ -194,8 +199,6 @@ int main()
     dpn("node delete:");
     print_tree(n, 1);
 
-    // lt_delete_childs(root);
-
     lt_delete(n);
     print_lt();
 
@@ -203,12 +206,47 @@ int main()
         total_res = 1;
     }
 
-    // dn();
-    // print_lt_linear();
+    add_lt(lt_child_idx(root, 1), 0xCC00);
+    add_lt(
+        lt_child_idx(
+            lt_child_idx(
+                lt_child_idx(
+                    root,
+                    1
+                ),
+                0
+            ),
+            1
+        ),
+        0xDD00
+    );
+    add_lt(lt_child_idx(lt_child_idx(root, 0), 0), 0xBB00);
+    print_lt();
 
-    // dn();
-    // dpn("lt tree rep:");
-    // print_tree(root, 1);
+    if (check_linear_ctx(exp_add_1, ARRAY_SIZE(exp_add_1))) {
+        total_res = 1;
+    }
+
+    lt_delete_childs(
+        lt_child_idx(
+            lt_child_idx(
+                root,
+                1
+            ),
+            0
+        )
+    );
+    print_lt();
+
+    if (check_linear_ctx(exp_delete_2, ARRAY_SIZE(exp_delete_2))) {
+        total_res = 1;
+    }
+
+    lt_delete(lt_child_idx(root, 0));
+    print_lt();
+    if (check_linear_ctx(exp_delete_3, ARRAY_SIZE(exp_delete_3))) {
+        total_res = 1;
+    }
 
     dn(); dp("TOTAL TEST RESULT - "); dp(test_result_text[total_res]); dn();
     return total_res;
