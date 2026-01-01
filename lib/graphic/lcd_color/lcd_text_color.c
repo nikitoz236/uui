@@ -277,3 +277,74 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
         }
     }
 }
+
+
+
+
+
+
+
+
+
+unsigned text_ptr_process_char(tptr_t * tptr, char c)
+{
+    if (c == '\n') {
+        text_ptr_next_str(tptr);
+        // а что делать если закончилось место?
+    }
+}
+
+void lcd_tptr_clear(tptr_t * tptr, color_scheme_t cs, unsigned len)
+{
+
+}
+
+void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, unsigned len)
+{
+    font_t * font = tptr->fcfg->font;
+    unsigned scale = tptr->fcfg->scale;
+    if (scale == 0) {
+        scale = 1;
+    }
+
+    while (1) {
+
+        char c = 0;
+
+        if (str) {
+            c = *str;
+            if (c) {
+                str++;
+            }
+        }
+
+        if (c == 0) {
+            if (len == 0) {
+                return;
+            }
+            // если строка закончилась или отсутствует, но указан len
+            // заполняем оставшиеся от len знакоместа пробелами
+            c = ' ';
+        }
+
+        // а какже перевод строки ? а нужно ли чистить оставшуюся часть строки
+
+        if (c == ' ') {
+            lcd_rect(tptr->cxy.x, tptr->cxy.y, (font->size.w * scale), (font->size.h * scale), cs.bg);
+            // зазор между буквами нужен чтобы не выйти за правый край формы
+        } else {
+            print_char(c, tptr->cxy.x, tptr->cxy.y, font, cs.fg, cs.bg, scale);
+        }
+
+        if (len) {
+            len--;
+            if (len == 0) {
+                return;
+            }
+        }
+
+        if (text_ptr_next_char(tptr) == 0) {
+            return;
+        }
+    }
+}
