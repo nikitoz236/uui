@@ -64,3 +64,11 @@ $(BUILD_DIR):
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+monitor:
+	$(shell gnome-terminal -- python $(LIB)/../serial_monitor/sterm.py /dev/ttyACM0 115200)
+
+reset:
+	python $(LIB)/../serial_monitor/esp_reset.py /dev/ttyACM0
+
+# include esp32_monitor.mk
