@@ -234,6 +234,14 @@ int main(void)
     I2C0.ctr.conf_upgate = 1;
 
     I2C0.ctr.ms_mode = 1;
+    I2C0.ctr.rx_full_ack_level = 0;
+    I2C0.ctr.arbitration_en = 0;
+    I2C0.ctr.scl_force_out = 0;
+    I2C0.ctr.sda_force_out = 0;
+
+    I2C0.filter_cfg.scl_filter_thres = 7;
+    I2C0.filter_cfg.sda_filter_thres = 7;
+
     I2C0.ctr.conf_upgate = 1;
 
     /*
