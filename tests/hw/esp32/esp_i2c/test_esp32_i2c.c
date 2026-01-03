@@ -49,6 +49,7 @@ typedef union {
 pclk_t i2c_pclk = SYSTEM_I2C_EXT0_CLK_EN_S;
 
 
+
 void dump_peripheral(const char * name, void * ptr, unsigned size)
 {
     dp(name); dp(" : 0x"); dpx((unsigned)ptr, 4); dp(" size: 0x"); dpx(size, 2); dn();
@@ -154,8 +155,48 @@ void calc_bus_clk(void)
     hw->to.time_out_en = 1;
 }
 
+#include "i2c.h"
 
+unsigned i2c_status(void)
+{
 
+}
+
+unsigned i2c_status_value = I2C_STATUS_READY;
+
+void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t * rbuf, unsigned rlen)
+{
+    I2C0.int_clr.trans_complete_int_clr = 1;
+    I2C0.int_clr.nack_int_clr = 1;
+
+    unsigned op_idx = 0;
+    I2C0.comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_RSTART }.val;
+
+    I2C0.comd[1].val = (i2c_cmd_t){ .op_code = I2C_OP_WRITE, .byte_n = 1, .ack_value = 0, .ack_exp = 0, .ack_check_en = 1 }.val;
+    I2C0.comd[2].val = (i2c_cmd_t){ .op_code = I2C_OP_STOP }.val;
+
+    // unsigned tx_byte_n = 1 + tlen;
+
+    I2C0.fifo_conf.rx_fifo_rst = 1;
+    I2C0.fifo_conf.tx_fifo_rst = 1;
+
+    I2C0.fifo_conf.rx_fifo_rst = 0;
+    I2C0.fifo_conf.tx_fifo_rst = 0;
+
+    unsigned addr_dir = addr << 1;
+
+    if (tlen == 0) {
+        addr |= 1;
+    }
+
+    I2C0.data.val = addr_dir;
+    I2C0.ctr.conf_upgate = 1;
+
+    I2C0.ctr.trans_start = 1;
+
+    while (I2C0.int_raw.trans_complete_int_raw == 0) {};
+    // if (I2C0.int_raw.trans_complete_int_raw)
+}
 
 int main(void)
 {
@@ -163,44 +204,11 @@ int main(void)
 
     init_gpio_list(&i2c_pins);
     pclk_ctrl(i2c_pclk, 1);
-
-    // dump_peripheral("I2C0", &I2C0, sizeof(I2C0));
-
-    // I2C0.clk_conf.val = (i2c_clk_conf_reg_t){ .sclk_div_num = 25 - 1, .sclk_active = 1 }.val;
-
     calc_bus_clk();
     I2C0.ctr.conf_upgate = 1;
 
-
-    I2C0.fifo_conf.rx_fifo_rst = 1;
-    I2C0.fifo_conf.tx_fifo_rst = 1;
-
-
-    I2C0.fifo_conf.rx_fifo_rst = 0;
-    I2C0.fifo_conf.tx_fifo_rst = 0;
-
     I2C0.ctr.ms_mode = 1;
-    // I2C0.ctr.clk_en = 1;
-    I2C0.fifo_conf.nonfifo_en = 1;
-
     I2C0.ctr.conf_upgate = 1;
-
-
-    // I2C0.data.val = 0x45;
-    // I2C0.data.val = 0x67;
-
-
-    I2C0.comd[0].val = (i2c_cmd_t){ .op_code = I2C_OP_RSTART }.val;
-    I2C0.comd[1].val = (i2c_cmd_t){ .op_code = I2C_OP_WRITE, .byte_n = 1, .ack_value = 0, .ack_exp = 0, .ack_check_en = 0 }.val;
-    I2C0.comd[2].val = (i2c_cmd_t){ .op_code = I2C_OP_STOP }.val;
-    // I2C0.comd[3].val = (i2c_cmd_t){ .op_code = I2C_OP_END }.val;
-
-    // I2C0.slave_addr.val = 0xAE;
-
-    I2C0.txfifo_mem[0] = 0xEA;
-    I2C0.txfifo_mem[1] = 0xBD;
-    I2C0.txfifo_mem[2] = 0xEF;
-
 
     /*
 
@@ -212,23 +220,31 @@ int main(void)
 
             Register 27.22. I2C_INT_RAW_REG (0x0020)
             0b1001001000000010
-        98765432109876543210
+            765432109876543210
 
+
+
+            INT
+            0b1000011010010010
+            765432109876543210
     */
 
-    // I2C0.fifo_conf.nonfifo_en = 0;
-    I2C0.ctr.conf_upgate = 1;
+    dpn("scan i2c bus");
 
-    // dump_peripheral("I2C0", &I2C0, sizeof(I2C0));
-        delay_ms(2000);
-
-    I2C0.ctr.trans_start = 1;
+    for (unsigned i = 1; i < 128; i++) {
+        dp("I2C probe "); dpx(i, 1);
+        i2c_transaction(i, 0, 0, 0, 0);
+        unsigned status = I2C0.int_raw.val;
+        dp(" status "); dpx(status, 4);
+        if (I2C0.int_raw.nack_int_raw) {
+            dp(" - NACK");
+        } else {
+            dp(" - ACK!");
+        }
+        dn();
+    }
     dpn("done");
 
-        // dump_peripheral("I2C0", &I2C0, sizeof(I2C0));
-        delay_ms(2000);
-
-        dump_peripheral("I2C0", &I2C0, sizeof(I2C0));
     while (1) {
 
         // dpn("fuck");
