@@ -49,7 +49,7 @@ void i2c_scan(void)
         if (i2c_status() == I2C_STATUS_NACK) {
             dp("-- ");
         } else {
-            dpx(i,1 );
+            dpx(i, 1);
             dp(" ");
         }
     }
