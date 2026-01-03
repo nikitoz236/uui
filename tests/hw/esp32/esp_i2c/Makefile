@@ -20,6 +20,7 @@ SRC += $(PERIPH)/esp32_systime.c
 
 SRC += $(PERIPH)/esp32_gpio.c
 SRC += $(PERIPH)/esp32_pclk.c
+SRC += $(PERIPH)/esp32_i2c.c
 
 
 
