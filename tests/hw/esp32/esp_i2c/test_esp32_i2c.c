@@ -198,6 +198,32 @@ void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t 
     // if (I2C0.int_raw.trans_complete_int_raw)
 }
 
+void i2c_scan(void)
+{
+    dpn("    00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F");
+    dp( "00:    ");
+
+    unsigned str_dev = 1;
+    for (unsigned i = 1; i < 128; i++) {
+        if ((i & 0x0F) == 0) {
+            dn();
+            dpx(i, 1);
+            dp(": ");
+        }
+        // dp("I2C probe "); dpx(i, 1);
+        i2c_transaction(i, 0, 0, 0, 0);
+        // unsigned status = I2C0.int_raw.val;
+        // dp(" status "); dpx(status, 4);
+        if (I2C0.int_raw.nack_int_raw) {
+            dp("-- ");
+        } else {
+            dpx(i,1 );
+            dp(" ");
+        }
+    }
+    dn();
+}
+
 int main(void)
 {
     dpn("tlora, ok");
@@ -230,19 +256,7 @@ int main(void)
     */
 
     dpn("scan i2c bus");
-
-    for (unsigned i = 1; i < 128; i++) {
-        dp("I2C probe "); dpx(i, 1);
-        i2c_transaction(i, 0, 0, 0, 0);
-        unsigned status = I2C0.int_raw.val;
-        dp(" status "); dpx(status, 4);
-        if (I2C0.int_raw.nack_int_raw) {
-            dp(" - NACK");
-        } else {
-            dp(" - ACK!");
-        }
-        dn();
-    }
+    i2c_scan();
     dpn("done");
 
     while (1) {
