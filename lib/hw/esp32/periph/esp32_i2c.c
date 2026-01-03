@@ -1,5 +1,9 @@
 #include "esp32_i2c.h"
 
+#define DP_NAME "i2c"
+#define DP_OFF
+#include "dp.h"
+
 const i2c_cfg_t * _cfg = 0;
 
 typedef union {
@@ -19,25 +23,24 @@ typedef union {
     };
 } i2c_cmd_t;
 
-
 static void calc_bus_clk(i2c_dev_t * dev, unsigned freq)
 {
     const uint32_t source_clk = 40000000;
-    uint32_t clkm_div = source_clk / (freq * 1024) + 1;     // = 1
-    uint32_t sclk_freq = source_clk / clkm_div;             // = 40 000 000
-    uint32_t half_cycle = sclk_freq / freq / 2;             // = 50
+    unsigned clkm_div = source_clk / (freq * 1024) + 1;     // = 1
+    unsigned sclk_freq = source_clk / clkm_div;             // = 40 000 000
+    unsigned half_cycle = sclk_freq / freq / 2;             // = 50
 
     // default, scl_wait_high < scl_high
     // Make 80KHz as a boundary here, because when working at lower frequency, too much scl_wait_high will faster the frequency
     // according to some hardware behaviors.
 
-    uint32_t scl_wait_high = (freq >= 80 * 1000) ? (half_cycle / 2 - 2) : (half_cycle / 4);
-    uint32_t scl_high = half_cycle - scl_wait_high;
-    uint32_t sda_sample = half_cycle / 2;
+    unsigned scl_wait_high = (freq >= 80 * 1000) ? (half_cycle / 2 - 2) : (half_cycle / 4);
+    unsigned scl_high = half_cycle - scl_wait_high;
+    unsigned sda_sample = half_cycle / 2;
 
     // ASSERT((scl_wait_high < sda_sample) && (sda_sample < scl_high));
 
-    uint32_t sda_hold = half_cycle / 4;
+    unsigned sda_hold = half_cycle / 4;
 
     //SCL
 
@@ -68,7 +71,7 @@ static void calc_bus_clk(i2c_dev_t * dev, unsigned freq)
 
     //default we set the timeout value to about 10 bus cycles
     // log(20*half_cycle)/log(2) = log(half_cycle)/log(2) +  log(20)/log(2)
-    uint32_t tout = (int)(sizeof(half_cycle) * 8 - __builtin_clz(5 * half_cycle)) + 2;
+    unsigned tout = (int)(sizeof(half_cycle) * 8 - __builtin_clz(5 * half_cycle)) + 2;
 
     dev->to.time_out_value = tout;
     dev->to.time_out_en = 1;
@@ -98,18 +101,28 @@ void init_i2c(const i2c_cfg_t * cfg)
     _cfg->dev->ctr.conf_upgate = 1;
 }
 
-void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t * rbuf, unsigned rlen)
+static void tx_data_to_fifo(i2c_dev_t * dev, const void * ptr, unsigned len)
+{
+    uint8_t * p = (uint8_t *)ptr;
+    while (len--) {
+        dev->data.val = *p++;
+    }
+}
+
+static void rx_data_from_fifo(i2c_dev_t * dev, void * ptr, unsigned len)
+{
+    uint8_t * p = (uint8_t *)ptr;
+    while (len--) {
+        *p++ = dev->data.val;
+    }
+}
+
+#include "delay_blocking.h"
+
+void i2c_transaction(uint8_t addr, const void * tbuf, unsigned tlen, void * rbuf, unsigned rlen)
 {
     _cfg->dev->int_clr.trans_complete_int_clr = 1;
     _cfg->dev->int_clr.nack_int_clr = 1;
-
-    unsigned op_idx = 0;
-    _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_RSTART }.val;
-
-    _cfg->dev->comd[1].val = (i2c_cmd_t){ .op_code = I2C_OP_WRITE, .byte_n = 1, .ack_value = 0, .ack_exp = 0, .ack_check_en = 1 }.val;
-    _cfg->dev->comd[2].val = (i2c_cmd_t){ .op_code = I2C_OP_STOP }.val;
-
-    // unsigned tx_byte_n = 1 + tlen;
 
     _cfg->dev->fifo_conf.rx_fifo_rst = 1;
     _cfg->dev->fifo_conf.tx_fifo_rst = 1;
@@ -117,16 +130,70 @@ void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t 
     _cfg->dev->fifo_conf.rx_fifo_rst = 0;
     _cfg->dev->fifo_conf.tx_fifo_rst = 0;
 
+    unsigned op_idx = 0;
+    _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_RSTART }.val;
+    _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_WRITE, .byte_n = 1, .ack_check_en = 1 }.val;
+
     unsigned addr_dir = addr << 1;
 
-    if (tlen == 0) {
-        addr |= 1;
+    if (rlen) {
+        if (tlen == 0) {
+            addr_dir |= 1;
+        }
+    }
+    _cfg->dev->data.val = addr_dir;
+
+    if (tlen) {
+        unsigned tx_byte_once = tlen;
+        // while (tlen < 31)
+        // if (tlen > 31) {
+        //     tx_byte_once = 31;
+        // }
+        _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_WRITE, .byte_n = tx_byte_once }.val;
+        tx_data_to_fifo(_cfg->dev, tbuf, tx_byte_once);
+
+        // if (tx_byte_once == 31) {
+        //     _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_END }.val;
+        // }
+    }
+    if (rlen) {
+        if (tlen) {
+            addr_dir |= 1;
+            _cfg->dev->data.val = addr_dir;
+            _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_RSTART }.val;
+            _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_WRITE, .byte_n = 1, .ack_check_en = 1 }.val;
+        }
+        _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_READ, .byte_n = rlen - 1, .ack_value = 0 }.val;
+        _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_READ, .byte_n = 1, .ack_value = 1 }.val;
     }
 
-    _cfg->dev->data.val = addr_dir;
-    _cfg->dev->ctr.conf_upgate = 1;
+    _cfg->dev->comd[op_idx++].val = (i2c_cmd_t){ .op_code = I2C_OP_STOP }.val;
 
+    // dp("before run sr: "); dpx(_cfg->dev->sr.val, 4); dp(" int: "); dpx(_cfg->dev->int_raw.val, 4); dp(" cmd: ");
+    // for (unsigned i = 0; i < 8; i++) {
+    //     uint32_t cmd = _cfg->dev->comd[i].val;
+    //     dpx(cmd, 4); dp(" ");
+    // }
+    // dn();
+
+    _cfg->dev->ctr.conf_upgate = 1;
     _cfg->dev->ctr.trans_start = 1;
+
+    // delay_us(500);
+
+    // dp("after run  sr: "); dpx(_cfg->dev->sr.val, 4); dp(" int: "); dpx(_cfg->dev->int_raw.val, 4); dp(" cmd: ");
+    // for (unsigned i = 0; i < 8; i++) {
+    //     uint32_t cmd = _cfg->dev->comd[i].val;
+    //     dpx(cmd, 4); dp(" ");
+    // }
+    // dn();
+
+    if (rlen) {
+        while (i2c_status() == I2C_STATUS_BUSY) {};
+        if (i2c_status() == I2C_STATUS_READY) {
+            rx_data_from_fifo(_cfg->dev, rbuf, rlen);
+        }
+    }
 }
 
 unsigned i2c_status(void)
