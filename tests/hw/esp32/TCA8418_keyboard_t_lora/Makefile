@@ -22,7 +22,7 @@ SRC += $(PERIPH)/esp32_gpio.c
 SRC += $(PERIPH)/esp32_pclk.c
 SRC += $(PERIPH)/esp32_i2c.c
 
-
-
+INC += $(LIB)/hw/drivers
+SRC += $(LIB)/hw/drivers/tca8418_kbd.c
 
 include $(LIB)/hw/esp32/build_esp32.mk
