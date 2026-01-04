@@ -7,10 +7,9 @@
 #include "api_lcd_color.h"
 // #include "lcd_text_color.h"
 #include "dbg_usb_cdc_acm.h"
+
 #define DP_NOTABLE
 #include "dp.h"
-
-
 
 void __debug_usart_tx_data(const char * s, unsigned len)
 {
@@ -35,10 +34,7 @@ const lcd_cfg_t lcd_cfg = {
         .cfg = { .mode = GPIO_MODE_OUT },
         .count = 1,
         .pin_list = {
-            // [LCD_RST] = { .pin = 33 },
             [LCD_DC] = { .pin = 37 }
-            // [LCD_RST] = { .pin = 4 },
-            // [LCD_DC] = { .pin = 5 }
         }
     },
     .spi_dev = {
@@ -58,11 +54,13 @@ const lcd_cfg_t lcd_cfg = {
     //     .duty_res = 6
     // },
     .gcfg = {
-        .height = 135,
-        .width = 240,
-        .x_offset = 40,
-        .y_offset = 53,
+        .height = 222,
+        .width = 480,
+        .x_offset = 0,
+        .y_offset = 49,
         .x_flip = 1,
+        .y_flip = 1,
+
     }
 };
 
@@ -106,21 +104,19 @@ int main(void)
     //     delay_ms(2000);
     // }
 
-    bl_set(1);
+    bl_set(5);
 
     init_lcd_hw(&lcd_cfg);
     init_lcd(&lcd_cfg);
 
     // lcd_bl(30);
 
-    lcd_rect(1, 1, 100, 40, 0x8F10);
-
+    lcd_rect(0, 0, 100, 40, 0x81F8);
+    lcd_rect(100, 100, 100, 40, 0x8F10);
 
     lcd_rect(20, 80, 100, 10, COLOR(0xFF0000));
     lcd_rect(30, 100, 100, 10, COLOR(0x00FF00));
     lcd_rect(40, 120, 100, 10, COLOR(0x0000FF));
-
-
 
     // extern font_t font_5x7;
 

@@ -82,7 +82,7 @@ int main(void)
 
     tcfg.gaps.x = 2;
     tcfg.gaps.y = 2;
-    tcfg.scale = 1;
+    tcfg.scale = 2;
 
     tcfg.text_size.w = 16;
     tcfg.text_size.h = 1;
@@ -92,7 +92,7 @@ int main(void)
         "Hey bitch!",
         &(xy_t){.x = 10, .y = 20 },
         &tcfg,
-        &(color_scheme_t){ .bg = COLOR(0xAA0000), .fg = COLOR(0x1122AA)},
+        &(color_scheme_t){ .bg = 0x8F10, .fg = COLOR(0x1122AA)},
         0, 0, 0
     );
 
