@@ -121,6 +121,11 @@ static void rx_data_from_fifo(i2c_dev_t * dev, void * ptr, unsigned len)
 
 void i2c_transaction(uint8_t addr, const void * tbuf, unsigned tlen, void * rbuf, unsigned rlen)
 {
+    if (_cfg->dev->int_raw.trans_start_int_raw) {
+        while(i2c_status() == I2C_STATUS_BUSY) {};
+    }
+
+    _cfg->dev->int_clr.trans_start_int_clr = 1;
     _cfg->dev->int_clr.trans_complete_int_clr = 1;
     _cfg->dev->int_clr.nack_int_clr = 1;
 
