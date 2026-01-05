@@ -11,9 +11,11 @@ build_check: $(TEST_NAME)_app
 	./$<
 	rm $<
 
+clean:
+	rm *_app
+
 src_print:
-	echo $(SRC)
-	$(shell for s in $(SRC) ; do echo $(s) ; done)
+	$(shell for s in $(SRC) ; do ls $$s ; done)
 
 inc_print:
 	echo $(INC)
