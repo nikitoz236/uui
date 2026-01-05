@@ -6,8 +6,8 @@
 // больше вероятность что не будет DC, черм RESET
 
 enum {
-    LCD_RST,
     LCD_DC,
+    LCD_RST,
 };
 
 struct lcd_glass_cfg {
@@ -18,6 +18,7 @@ struct lcd_glass_cfg {
     uint8_t x_flip : 1;
     uint8_t y_flip : 1;
     uint8_t xy_swap : 1;
+    uint8_t bgr : 1;
 };
 
 struct lcd_cfg {
@@ -25,6 +26,8 @@ struct lcd_cfg {
     gpio_list_t * ctrl_lines;
     spi_dev_cfg_t spi_dev;
     struct lcd_glass_cfg gcfg;
+
+    uint16_t no_reset;
 };
 
 typedef const struct lcd_cfg lcd_cfg_t;

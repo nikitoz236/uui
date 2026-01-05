@@ -8,7 +8,9 @@ void init_lcd_hw(const lcd_cfg_t * cfg)
     init_spi_dev(&cfg->spi_dev);
     init_gpio_list(cfg->ctrl_lines);
     init_spi(cfg->spi_dev.spi);
-    init_pwm(cfg->bl);
+    if (cfg->bl) {
+        init_pwm(cfg->bl);
+    }
 }
 
 void lcd_bl(unsigned val)

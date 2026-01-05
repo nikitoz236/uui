@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 #include "lcd_spi.h"
 #include "array_size.h"
 #include "api_lcd_color.h"
@@ -63,7 +53,7 @@ void set_madctl(void)
             .MY = lcd_cfg->gcfg.y_flip,
             .MX = lcd_cfg->gcfg.x_flip,
             .MV = lcd_cfg->gcfg.xy_swap,
-            .BGR = 0,
+            .BGR = lcd_cfg->gcfg.bgr,
         }
     };
 
@@ -71,45 +61,54 @@ void set_madctl(void)
     while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
 }
 
-
 const uint8_t lcd_init_cmd_list[] = {
 //  cmd   len       data
     // COLMOD: Pixel Format (RGB565)
-    0x3A, 1,  0x55,
+    0x3A, 1,        0x55,
 
+    // CSCON (F0h): Command Set Control
     0xF0, 1,        0xC3,
 
+    // CSCON (F0h): Command Set Control
     0xF0, 1,        0x96,
 
+    // DIC (B4): Display Inversion Control
     0xB4, 1,        0x02,
 
+    // EM(B7): Entry Mode Set
     0xB7, 1,        0xC6,
 
+    // PWR1(C0h): Power Control 1
     0xC0, 2,        0xC0, 0x00,
 
+    // PWR1(C0h): Power Control 2
     0xC1, 1,        0x13,
 
+    // PWR1(C0h): Power Control 3
     0xC2, 1,        0xA7,
 
+    // VCMPCTL(C5h): VCOM Control
     0xC5, 1,        0x21,
 
+    // DOCA (E8h): Display Output Ctrl Adjust
     0xE8, 8,        0x40, 0x8A, 0x1B, 0x1B, 0x23, 0x0A, 0xAC, 0x33,
 
+    // PGC (E0h): Positive Gamma Control
     0xE0, 14,       0xD2, 0x05, 0x08, 0x06, 0x05, 0x02, 0x2A, 0x44, 0x46, 0x39, 0x15, 0x15, 0x2D, 0x32,
 
+    // NGC (E1h): Negative Gamma Control
     0xE1, 14,       0x96, 0x08, 0x0C, 0x09, 0x09, 0x25, 0x2E, 0x43, 0x42, 0x35, 0x11, 0x11, 0x28, 0x2E,
 
+    // CSCON (F0h): Command Set Control
     0xF0, 1,        0x3C,
 
+    // CSCON (F0h): Command Set Control
     0xF0, 1,        0x69,
 
+    // INVON (21h): Display Inversion On
     0x21, 1
 
 };
-
-
-
-
 
 void lcd_pwr(unsigned val)
 {
@@ -218,12 +217,11 @@ void init_lcd(const lcd_cfg_t * cfg)
 
     spi_dev_select(&lcd_cfg->spi_dev);
 
-    // if (cfg->no_reset) {
-    //     const lcd_cmd_t cmd_swrst = { .cmd = 1, .len = 0 };
-    //     lcd_send_cmd_with_data(&cmd_swrst);
-    //     delay_ms(10);
-    // }
-
+    if (cfg->no_reset) {
+        const lcd_cmd_t cmd_swrst = { .cmd = 1, .len = 0 };
+        lcd_send_cmd_with_data(&cmd_swrst);
+        delay_ms(10);
+    }
 
     set_madctl();
     unsigned idx = 0;
@@ -233,7 +231,7 @@ void init_lcd(const lcd_cfg_t * cfg)
         idx += sizeof(lcd_cmd_t) + cmd->len;
     }
 
-    delay_ms(120);
+    delay_ms(10);
 
     lcd_pwr(1);
     lcd_clear();
