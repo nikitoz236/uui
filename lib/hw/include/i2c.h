@@ -25,4 +25,5 @@ enum {
 void init_i2c(const i2c_cfg_t * cfg);
 
 unsigned i2c_status(void);
-void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t * rbuf, unsigned rlen);
+// void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t * rbuf, unsigned rlen);
+void i2c_transaction(uint8_t addr, const void * tbuf, unsigned tlen, void * rbuf, unsigned rlen);
