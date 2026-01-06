@@ -33,5 +33,7 @@ typedef struct {
 void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, const xy_t * limit_chars);
 
 unsigned text_ptr_next_char(tptr_t * tptr);
+unsigned text_ptr_prev_char(tptr_t * tptr);
 unsigned text_ptr_next_str(tptr_t * tptr);
 unsigned text_ptr_set_char_pos(tptr_t * tptr, xy_t pos);
+unsigned text_ptr_remain_str(tptr_t * tptr);

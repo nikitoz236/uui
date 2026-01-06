@@ -282,21 +282,23 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
 
 
 
-
-
-
+void lcd_tptr_clear(tptr_t * tptr, color_scheme_t * cs, unsigned len)
+{
+    lcd_rect(tptr->cxy.x, tptr->cxy.y, (len * tptr->cstep.x) - fcfg_gap(tptr->fcfg, DIMENSION_X), tptr->cstep.y - fcfg_gap(tptr->fcfg, DIMENSION_Y), cs->bg);
+}
 
 unsigned text_ptr_process_char(tptr_t * tptr, char c)
 {
     if (c == '\n') {
         text_ptr_next_str(tptr);
         // а что делать если закончилось место?
+        return 1;
     }
-}
-
-void lcd_tptr_clear(tptr_t * tptr, color_scheme_t cs, unsigned len)
-{
-
+    if (c == '\b') {
+        text_ptr_prev_char(tptr);
+        return 1;
+    }
+    return 0;
 }
 
 void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, unsigned len)
@@ -327,13 +329,20 @@ void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, un
             c = ' ';
         }
 
-        // а какже перевод строки ? а нужно ли чистить оставшуюся часть строки
+        if (text_ptr_process_char(tptr, c) == 0) {
 
-        if (c == ' ') {
-            lcd_rect(tptr->cxy.x, tptr->cxy.y, (font->size.w * scale), (font->size.h * scale), cs.bg);
-            // зазор между буквами нужен чтобы не выйти за правый край формы
-        } else {
-            print_char(c, tptr->cxy.x, tptr->cxy.y, font, cs.fg, cs.bg, scale);
+            // а какже перевод строки ? а нужно ли чистить оставшуюся часть строки
+            if (c == ' ') {
+                lcd_tptr_clear(tptr, &cs, 1);
+                // зазор между буквами нужен чтобы не выйти за правый край формы
+            } else {
+                print_char(c, tptr->cxy.x, tptr->cxy.y, font, cs.fg, cs.bg, fcfg_scale(tptr->fcfg));
+            }
+
+            if (text_ptr_next_char(tptr) == 0) {
+                return;
+            }
+
         }
 
         if (len) {
@@ -341,10 +350,6 @@ void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, un
             if (len == 0) {
                 return;
             }
-        }
-
-        if (text_ptr_next_char(tptr) == 0) {
-            return;
         }
     }
 }

@@ -32,6 +32,22 @@ unsigned text_ptr_next_char(tptr_t * tptr)
     return 1;
 }
 
+unsigned text_ptr_prev_char(tptr_t * tptr)
+{
+    if (tptr->cpos.x) {
+        tptr->cpos.x--;
+        tptr->cxy.x -= tptr->cstep.x;
+        return 1;
+    }
+    // а хуй его знает как не предыдущую строку перепрыгнуть, там же не до конца символы, надо знать скок символов в строке. пизда
+    return 0;
+}
+
+unsigned text_ptr_remain_str(tptr_t * tptr)
+{
+    return tptr->tlim.x - tptr->cpos.x;
+}
+
 void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, const xy_t * limit_chars)
 {
     if (!tptr) {
@@ -41,28 +57,19 @@ void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, cons
     tptr->fcfg = fcfg;
 
     if (fcfg) {
-        unsigned scale = fcfg->scale;
-        if (scale == 0) {
-            scale = 1;
-        }
-
+        unsigned scale = fcfg_scale(fcfg);
         for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
-            unsigned gap = fcfg->gaps.ca[d];
-            if (gap == 0) {
-                gap = 1;
-            }
+            unsigned gap = fcfg_gap(fcfg, d);
             tptr->cstep.ca[d] = (fcfg->font->size.ca[d] * scale) + gap;
         }
     } else {
-        tptr->cstep.x = 0;
-        tptr->cstep.y = 0;
+        tptr->cstep = (xy_t){};
     }
 
     if (limit_chars) {
         tptr->tlim = *limit_chars;
     } else {
-        tptr->tlim.x = 0;
-        tptr->tlim.y = 0;
+        tptr->tlim = (xy_t){};
     }
 
     // не понимаю зачем раньше передавал положение черех указатель? чтобы сослаться на поле какойто формы?
