@@ -1,5 +1,4 @@
 #include "lcd_text.h"
-#include "round_up.h"
 
 void lcd_text_calc_size(xy_t * size, const lcd_text_cfg_t * cfg)
 {
@@ -9,60 +8,6 @@ void lcd_text_calc_size(xy_t * size, const lcd_text_cfg_t * cfg)
             ((cfg-> text_size.ca[i] - 1) * cfg->gaps.ca[i])
         ;
     }
-}
-
-xy_t lcd_text_size_px(const lcd_font_cfg_t * cfg, xy_t text_size_chars)
-{
-    xy_t size;
-
-    // printf("text_size_chars %d %d\n", text_size_chars->x, text_size_chars->y);
-
-    unsigned scale = cfg->scale;
-    if (scale == 0) {
-        scale = 1;
-    }
-
-    for (int i = 0; i < DIMENSION_COUNT; i++) {
-        unsigned text_len = text_size_chars.ca[i];
-        if (text_len == 0) {
-            text_len = 1;
-        }
-
-        unsigned gap = cfg->gaps.ca[i];
-        if (gap == 0) {
-            gap = 1;
-        }
-
-        size.ca[i] =
-            (cfg->font->size.ca[i] * text_len * scale) +
-            ((text_len - 1) * gap)
-        ;
-    }
-
-    // printf("size %d %d\n", size.x, size.y);
-
-    return size;
-}
-
-xy_t lcd_text_char_places(const lcd_font_cfg_t * cfg, xy_t size_px)
-{
-    xy_t text_size_chars;
-
-    unsigned scale = cfg->scale;
-    if (scale == 0) {
-        scale = 1;
-    }
-
-    for (int i = 0; i < DIMENSION_COUNT; i++) {
-        unsigned gap = cfg->gaps.ca[i];
-        if (gap == 0) {
-            gap = 1;
-        }
-
-        text_size_chars.ca[i] = (size_px.ca[i] + gap) / ((cfg->font->size.ca[i] * scale) + gap);
-    }
-
-    return text_size_chars;
 }
 
 void lcd_text_extend_text_size(const xy_t * available_size, lcd_text_cfg_t * cfg)

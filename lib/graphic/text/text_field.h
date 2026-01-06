@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lcd_text.h"
+#include "font_config.h"
 #include "val_text.h"
 #include "forms_align.h"
 #include <stddef.h>
@@ -19,20 +19,16 @@ typedef struct {
     xy_t size;      // вместо limit_char
 } tf_ctx_t;
 
-// возвращаемое значение показывает получилось ли втиснуться в координаты
+
+/*
+    это какаято суперфункция на самомо деле которая сводит размеры доступного места с тем что нужно нарисовать
+    limit_char если 0 то доступное место по форме, если нет то форма уменьшается
+
+
+*/
+// возвращаемое значение показывает получилось ли втиснуться в размер
 unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const tf_cfg_t * cfg);
 
-// DEPRICATED
-static inline xy_t text_field_size_px(const tf_cfg_t * cfg)
-{
-    return size_add_padding(lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->padding);
-}
-
-// DEPRICATED
-static inline xy_t text_field_text_pos(const form_t * f, const tf_cfg_t * cfg)
-{
-    return align_form_pos(f, lcd_text_size_px(cfg->fcfg, cfg->limit_char), cfg->a, cfg->padding);
-}
 
 
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lcd_text.h"
+#include "font_config.h"
 
 /*
     Итак я смотрю на функцию :
