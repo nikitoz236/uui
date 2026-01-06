@@ -17,6 +17,10 @@
 #define DP_NOTABLE
 #include "dp.h"
 
+
+#include "timers_32.h"
+
+
 void __debug_usart_tx_data(const char * s, unsigned len)
 {
     dbg_usb_cdc_acm_tx(s, len);
@@ -145,6 +149,10 @@ const char sym[] = {
     '\b', ' '
 };
 
+unsigned cursor_state = 1;
+timer_32_t cursor_tim;
+#define CURSOR_PERIOD_MS    500
+
 void kbd_change_handler(unsigned num, unsigned state)
 {
     dp("key : "); dpd(num, 2); dp(" = "); dpd(state, 1); dn();
@@ -160,7 +168,10 @@ void kbd_change_handler(unsigned num, unsigned state)
             // __debug_usart_tx_data(&c, 1);
             draw_cursor(0);
             lcd_color_tptr_print(&tp, &c, cs, 1);
-            draw_cursor(1);
+            cursor_state = 1;
+            t32_run(&cursor_tim, systimer_ms(0), CURSOR_PERIOD_MS);
+
+            draw_cursor(cursor_state);
             // text_ptr_next_char(&tp);
         }
     }
@@ -181,9 +192,6 @@ void lcd_print_dump_val(unsigned idx, uint32_t val)
     xy_t pos = { .x = (idx & 3) * 10, .y = (idx >> 2) };
     lcd_print_hex(val, pos);
 }
-
-#include "timers_32.h"
-timer_32_t tim;
 
 
 
@@ -276,18 +284,15 @@ int main(void)
     xy_t lim = fcfg_text_char_places(&fcfg, lcdf.s);
 
     text_ptr_init(&tp, &fcfg, lcdf.p, &lim);
-    draw_cursor(1);
-    // text_ptr_set_char_pos((xy_t){0, 2});
-
-    unsigned timcnt = 0;
-    t32_run(&tim, systimer_ms(0), 1000);
+    draw_cursor(cursor_state);
+    t32_run(&cursor_tim, systimer_ms(0), CURSOR_PERIOD_MS);
 
     while (1) {
-        // if (t32_is_over(&tim, systimer_ms(0))) {
-        //     t32_extend(&tim, 1000);
-        //     timcnt++;
-        //     lcd_print_hex(timcnt, (xy_t){ .x = 0, .y = 12});
-        // }
+        if (t32_is_over(&cursor_tim, systimer_ms(0))) {
+            t32_extend(&cursor_tim, CURSOR_PERIOD_MS);
+            cursor_state = !cursor_state;
+            draw_cursor(cursor_state);
+        }
 
         if (gpio_get_state(&kbd_irq_line) == 0) {
             dpn("kbd irq detect");
