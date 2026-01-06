@@ -45,6 +45,7 @@ SRC += $(LIB)/graphic/lcd_color/lcd_text_color.c
 
 INC += $(LIB)/graphic/text
 SRC += $(LIB)/graphic/text/text_pointer.c
+SRC += $(LIB)/graphic/text/font_config.c
 
 
 include $(LIB)/hw/esp32/build_esp32.mk

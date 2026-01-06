@@ -50,15 +50,6 @@ const lcd_cfg_t lcd_cfg = {
         },
         .spi = &lcd_spi,
     },
-    // .bl = & (pwm_cfg_t) {
-    //     .gpio = & (gpio_t) {
-    //         .cfg = { .mode = GPIO_MODE_SIG_OUT },
-    //         .pin = { .pin = 38, .signal = LEDC_LS_SIG_OUT0_IDX }
-    //     },
-    //     .out_ch = 0,
-    //     .tim_ch = 0,
-    //     .duty_res = 6
-    // },
     .gcfg = {
         .height = 222,
         .width = 480,
@@ -70,7 +61,6 @@ const lcd_cfg_t lcd_cfg = {
 
     }
 };
-
 
 i2c_cfg_t i2c_bus_cfg = {
     .dev = &I2C0,
@@ -94,8 +84,6 @@ gpio_t kbd_irq_line = {
     .cfg = { .mode = GPIO_MODE_IN, .pu = 1 },
     .pin = { .pin = 6 }
 };
-
-
 
 gpio_t bl = {
     .cfg = { .mode = GPIO_MODE_OUT },
@@ -140,6 +128,16 @@ form_t display_lcd_cfg_form(lcd_cfg_t * cfg)
 color_scheme_t cs = {.bg = 0, .fg = 0xA234};
 tptr_t tp;
 
+void draw_cursor(unsigned state)
+{
+    color_scheme_t * csp = &(color_scheme_t){.bg = COLOR(0x0ABB0C)};
+    if (state == 0) {
+        csp = &cs;
+    }
+    lcd_color_tptr_print(&tp, " ", *csp, 1);
+    text_ptr_prev_char(&tp);
+}
+
 const char sym[] = {
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '\n',
@@ -160,7 +158,9 @@ void kbd_change_handler(unsigned num, unsigned state)
         if (c) {
             dp("  char : "); dpx(c, 1); dn();
             // __debug_usart_tx_data(&c, 1);
-            // lcd_color_tptr_print(&tp, &c, cs, 1);
+            draw_cursor(0);
+            lcd_color_tptr_print(&tp, &c, cs, 1);
+            draw_cursor(1);
             // text_ptr_next_char(&tp);
         }
     }
@@ -185,9 +185,56 @@ void lcd_print_dump_val(unsigned idx, uint32_t val)
 #include "timers_32.h"
 timer_32_t tim;
 
+
+
+/*
+
+    итак мне нужно рисовать и перерисовывать обьекты
+
+    например таблицу константных данных, либо прям меняющиеся данные,
+    строка состояния - виджет который имеет поля меняющиеся, часы заряд акума, язык, шифты итд
+
+        где
+            координаты пикселей или букв где будет расположена надпись
+            количество знакомест или даже лимиты ?
+
+        что
+            указатель на контекст в памяти - аргумент отрисовки
+            оффсет в контексте констанстный
+            длина поля данных
+
+
+        как
+            статичный текст
+            текст в зависимости от индекса
+            хекс ( сколько байт ? )
+            картинка по индексу
+            картинка включеная или нет
+            составная
+            указатель на текст
+
+
+        LP_S,               // sub label
+        LP_V,               // value to str, format from const vt
+        LP_VC,              // const value
+        LP_V_FIDX,          // value to str, format from function by index
+        LP_T,               // text from const pointer
+        LP_T_FIDX,          // text from to_str function by index
+        LP_T_FV,            // text from to_str function by unsigned val
+        LP_T_LIDX,          // text from pointers array list by index
+        LP_T_LV,            // text from pointers array list by unsigned val
+
+        LV = LP_V,
+        LVFI = LP_V_FIDX,
+        LF = LP_T_FV,
+        LS = LP_S,
+
+*/
+
+
 int main(void)
 {
-    // dpn("TCA8418 t lora keyboard with display text print");
+    dpn("TCA8418 t lora keyboard with display text print");
 
     uint32_t s = USB_SERIAL_JTAG.out_ep1_st.val;
     // dpx(s, 4); dn();
@@ -226,55 +273,21 @@ int main(void)
     };
 
     form_t lcdf = display_lcd_cfg_form(&lcd_cfg);
-    xy_t lim = lcd_text_char_places(&fcfg, lcdf.s);
+    xy_t lim = fcfg_text_char_places(&fcfg, lcdf.s);
 
     text_ptr_init(&tp, &fcfg, lcdf.p, &lim);
-
-    uint32_t sc[sizeof(USB_SERIAL_JTAG) / 4];
-    uint32_t * pp = (uint32_t *)&USB_SERIAL_JTAG;
-
-    for (unsigned i = 0; i < (sizeof(USB_SERIAL_JTAG) / 4); i++) {
-        uint32_t v = pp[i];
-        sc[i] = v;
-        lcd_print_dump_val(i, v);
-    }
-
-    // lcd_color_tptr_print(&tp, str, cs, 0);
-    // text_ptr_next_str(&tp);
-    // lcd_color_tptr_print(&tp, "lol>", cs, 0);
-
-
-
-
-    unsigned prev_cnt = 0;
+    draw_cursor(1);
+    // text_ptr_set_char_pos((xy_t){0, 2});
 
     unsigned timcnt = 0;
     t32_run(&tim, systimer_ms(0), 1000);
 
     while (1) {
-        // extern volatile uint32_t usb_write_cnt;
-        // if (prev_cnt != usb_write_cnt) {
-        //     prev_cnt = usb_write_cnt;
-        //     lcd_print_hex(prev_cnt, (xy_t){ .x = 0, .y = 10});
+        // if (t32_is_over(&tim, systimer_ms(0))) {
+        //     t32_extend(&tim, 1000);
+        //     timcnt++;
+        //     lcd_print_hex(timcnt, (xy_t){ .x = 0, .y = 12});
         // }
-        // for (unsigned i = 0; i < (sizeof(USB_SERIAL_JTAG) / 4); i++) {
-        //     uint32_t v = pp[i];
-        //     if (sc[i] != v) {
-        //         sc[i] = v;
-        //         lcd_print_dump_val(i, v);
-        //     }
-        // }
-        // if (USB_SERIAL_JTAG.int_raw.in_token_rec_in_ep1_int_raw) {
-        //     USB_SERIAL_JTAG.int_clr.in_token_rec_in_ep1_int_clr = 1;
-        //     cnt++;
-        //     lcd_print_hex(cnt, (xy_t){ .x = 0, .y = 10});
-        // }
-
-        if (t32_is_over(&tim, systimer_ms(0))) {
-            t32_extend(&tim, 1000);
-            timcnt++;
-            lcd_print_hex(timcnt, (xy_t){ .x = 0, .y = 12});
-        }
 
         if (gpio_get_state(&kbd_irq_line) == 0) {
             dpn("kbd irq detect");
