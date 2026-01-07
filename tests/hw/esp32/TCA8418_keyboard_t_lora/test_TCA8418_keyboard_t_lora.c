@@ -7,6 +7,8 @@
 #include "esp32_gpio.h"
 #include "esp32_i2c.h"
 
+#include "tca8418_kbd.h"
+
 void __debug_usart_tx_data(const char * s, unsigned len)
 {
     dbg_usb_cdc_acm_tx(s, len);
