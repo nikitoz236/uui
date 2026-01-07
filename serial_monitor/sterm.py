@@ -1,3 +1,16 @@
+'''
+
+
+    раскрашивать красным вывод загрузчика
+    ресет по кнопке r, а еще лучше по ctrl + r
+
+
+
+
+
+'''
+
+
 import argparse
 import serial
 import sys
