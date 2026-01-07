@@ -1,5 +1,7 @@
 #pragma once
 
+#include "time_rel.h"
+
 extern volatile unsigned uptime_ms;
 
 typedef struct {
@@ -31,13 +33,6 @@ static inline void mstimer_start_timeout(mstimer_t * t, unsigned timeout)
 static inline unsigned mstimer_get_time(mstimer_t * t)
 {
     return uptime_ms - t->start;
-}
-
-static inline int __time_rel(unsigned t, unsigned ref)
-{
-    // > 0 when t before ref
-    // < 0 when t after ref
-    return (int)((int)ref - (int)t);
 }
 
 static inline unsigned mstimer_is_over(mstimer_t * t)
