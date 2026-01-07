@@ -13,6 +13,7 @@ INC += $(LIB)/common
 
 INC += $(LIB)/graphic/text
 SRC += $(LIB)/graphic/text/text_pointer.c
+SRC += $(LIB)/graphic/text/font_config.c
 
 TEST_NAME = test_lcd_color_tptr_print
 
