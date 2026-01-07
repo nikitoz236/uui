@@ -142,37 +142,129 @@ void draw_cursor(unsigned state)
     text_ptr_prev_char(&tp);
 }
 
-const char sym[] = {
+enum tlora_kbd {
+    TLORA_KBD_KEY_Q,
+    TLORA_KBD_KEY_W,
+    TLORA_KBD_KEY_E,
+    TLORA_KBD_KEY_R,
+    TLORA_KBD_KEY_T,
+    TLORA_KBD_KEY_Y,
+    TLORA_KBD_KEY_U,
+    TLORA_KBD_KEY_I,
+    TLORA_KBD_KEY_O,
+    TLORA_KBD_KEY_P,
+
+    TLORA_KBD_KEY_A,
+    TLORA_KBD_KEY_S,
+    TLORA_KBD_KEY_D,
+    TLORA_KBD_KEY_F,
+    TLORA_KBD_KEY_G,
+    TLORA_KBD_KEY_H,
+    TLORA_KBD_KEY_J,
+    TLORA_KBD_KEY_K,
+    TLORA_KBD_KEY_L,
+    TLORA_KBD_KEY_ENTER,
+
+    TLORA_KBD_KEY_FN,
+    TLORA_KBD_KEY_Z,
+    TLORA_KBD_KEY_X,
+    TLORA_KBD_KEY_C,
+    TLORA_KBD_KEY_V,
+    TLORA_KBD_KEY_B,
+    TLORA_KBD_KEY_N,
+    TLORA_KBD_KEY_M,
+    TLORA_KBD_KEY_SHIFT,
+
+    TLORA_KBD_KEY_BACKSPACE,
+    TLORA_KBD_KEY_SPACE,
+};
+
+const char sym_d[] = {
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '\n',
     0,   'z', 'x', 'c', 'v', 'b', 'n', 'm', 0,
-    '\b', ' '
+    '\b'
+};
+
+const char sym_u[] = {
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
+    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 0,
+    0,   'Z', 'X', 'C', 'V', 'B', 'N', 'M', 0,
+    '\b'
+};
+
+const char sym_spec[] = {
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    '*', '/', '+', '-', '=', ':', '\'', '"', '@', 0,
+    0,   '_', '$', ';', '?', '!', ',', '.', 0,
+    '\b'
 };
 
 unsigned cursor_state = 1;
 timer_32_t cursor_tim;
 #define CURSOR_PERIOD_MS    500
 
+
+
+unsigned kbd_shifted = 0;
+unsigned space_state = 0;
+unsigned space_mod = 0;
+
+
+void console_draw_char(char c)
+{
+    dp("  char : "); dpx(c, 1); dn();
+    // __debug_usart_tx_data(&c, 1);
+    draw_cursor(0);
+    lcd_color_tptr_print(&tp, &c, cs, 1);
+    cursor_state = 1;
+    t32_run(&cursor_tim, systimer_ms(0), CURSOR_PERIOD_MS);
+
+    draw_cursor(cursor_state);
+    // text_ptr_next_char(&tp);
+}
+
 void kbd_change_handler(unsigned num, unsigned state)
 {
     dp("key : "); dpd(num, 2); dp(" = "); dpd(state, 1); dn();
 
-    if (num == 0x15) {
+    num--;
+    if (num == TLORA_KBD_KEY_FN) {
         bq25896_power_off();
     }
 
-    if (state) {
-        uint8_t c = sym[num - 1];
-        if (c) {
-            dp("  char : "); dpx(c, 1); dn();
-            // __debug_usart_tx_data(&c, 1);
-            draw_cursor(0);
-            lcd_color_tptr_print(&tp, &c, cs, 1);
-            cursor_state = 1;
-            t32_run(&cursor_tim, systimer_ms(0), CURSOR_PERIOD_MS);
+    if (num ==  TLORA_KBD_KEY_SHIFT) {
+        kbd_shifted = state || space_state;
+        if (space_state) {
+            space_mod = 1;
+        }
+        return;
+    }
 
-            draw_cursor(cursor_state);
-            // text_ptr_next_char(&tp);
+    if (num == TLORA_KBD_KEY_SPACE) {
+        space_state = state;
+        if (state == 0) {
+            if (space_mod == 0) {
+                console_draw_char(' ');
+            }
+            space_mod = 0;
+        }
+        return;
+    }
+
+    if (state) {
+        char * table = sym_d;
+        if (space_state) {
+            table = sym_spec;
+            space_mod = 1;
+        } else {
+            if (kbd_shifted) {
+                table = sym_u;
+            }
+        }
+        uint8_t c = table[num];
+        if (c) {
+            console_draw_char(c);
         }
     }
 }
@@ -252,25 +344,10 @@ int main(void)
     init_tca8418();
 
     init_bl();
-    // for (unsigned i = 0; i <= 16; i++) {
-    //     bl_set(i);
-    //     dp("bl lvl "); dpd(i, 2); dn();
-    //     delay_ms(2000);
-    // }
-
     bl_set(9);
 
     init_lcd_hw(&lcd_cfg);
     init_lcd(&lcd_cfg);
-
-    // lcd_bl(30);
-
-    // lcd_rect(0, 0, 100, 40, 0x81F8);
-    // lcd_rect(100, 100, 100, 40, 0x8F10);
-
-    // lcd_rect(20, 80, 100, 10, COLOR(0xFF0000));
-    // lcd_rect(30, 100, 100, 10, COLOR(0x00FF00));
-    // lcd_rect(40, 120, 100, 10, COLOR(0x0000FF));
 
     extern font_t font_5x7;
 
