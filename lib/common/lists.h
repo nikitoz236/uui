@@ -20,6 +20,19 @@ typedef struct {
 
 #define LIST(array) (list_t *)&(const struct { list_t header; typeof(array[0]) items[sizeof(array)/sizeof(array[0])]; } ){ .header = { .count = sizeof(array)/sizeof(array[0]), .step = sizeof(array[0]) }, .items = array }
 
+static inline unsigned list_get_count(list_t * l)
+{
+    return l->count;
+}
+
+static inline void * list_get_item_ptr(list_t * l, unsigned idx)
+{
+    if (idx >= l->count) {
+        return 0;
+    }
+    return &l->data[l->step * idx];
+}
+
 static inline void __list_process_item(list_t * l, unsigned idx, void(*process)(void *))
 {
     if (idx < l->count) {
@@ -36,6 +49,7 @@ static inline void __list_process_all(list_t * l, void(*process)(void *))
 
 #define list_process_item(l, f) __list_process_item(l, (void(*)(void *))f)
 #define list_process_all(l, f) __list_process_all(l, (void(*)(void *))f)
+
 
 // static inline void list_process_item(list_t * l, unsigned offset, unsigned idx, void(*process)(void *))
 // {
