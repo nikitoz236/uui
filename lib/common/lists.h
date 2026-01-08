@@ -14,7 +14,8 @@
 typedef struct {
     uint16_t count;
     uint16_t step;
-    uint8_t data[];
+    // макрос LIST когда будет создавать поле items со сложной структурой бует выравнивать его по размеру машинного слова
+    uint8_t data[] __attribute__ ((aligned (sizeof(int *))));
 } list_t;
 
 #define LIST(array) (list_t *)&(const struct { list_t header; typeof(array[0]) items[sizeof(array)/sizeof(array[0])]; } ){ .header = { .count = sizeof(array)/sizeof(array[0]), .step = sizeof(array[0]) }, .items = array }
