@@ -30,10 +30,20 @@ typedef struct {
     xy_t cstep;     // вектор сдвига курсора на 1 символ / строку
 } tptr_t;
 
-void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, const xy_t * limit_chars);
+void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, xy_t limit_chars);
+
+static inline xy_t text_ptr_current_pos(tptr_t * tptr)
+{
+    return tptr->cpos;
+}
 
 unsigned text_ptr_next_char(tptr_t * tptr);
 unsigned text_ptr_prev_char(tptr_t * tptr);
 unsigned text_ptr_next_str(tptr_t * tptr);
 unsigned text_ptr_set_char_pos(tptr_t * tptr, xy_t pos);
 unsigned text_ptr_remain_str(tptr_t * tptr);
+
+// выделяет отдельное поле field внутри tptr для всяких составных лейблов со своими относительными координатами
+// все свойства копируются. поле начинается с текущих координат tptr, размер урезается либо до оставшегося справа снизу
+// либо если size_chars не нулевой и меньше то до него
+tptr_t text_ptr_export(tptr_t * tptr, xy_t size_chars);

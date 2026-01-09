@@ -48,7 +48,7 @@ unsigned text_ptr_remain_str(tptr_t * tptr)
     return tptr->tlim.x - tptr->cpos.x;
 }
 
-void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, const xy_t * limit_chars)
+void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, xy_t limit_chars)
 {
     if (!tptr) {
         return;
@@ -66,11 +66,12 @@ void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, cons
         tptr->cstep = (xy_t){};
     }
 
-    if (limit_chars) {
-        tptr->tlim = *limit_chars;
-    } else {
-        tptr->tlim = (xy_t){};
-    }
+    tptr->tlim = limit_chars;
+    // if (limit_chars) {
+    //     tptr->tlim = *limit_chars;
+    // } else {
+    //     tptr->tlim = (xy_t){};
+    // }
 
     // не понимаю зачем раньше передавал положение черех указатель? чтобы сослаться на поле какойто формы?
     tptr->fxy = pos_px;
@@ -96,4 +97,21 @@ unsigned text_ptr_set_char_pos(tptr_t * tptr, xy_t pos)
         tptr->cpos.ca[d] = shift;
         tptr->cxy.ca[d] = tptr->fxy.ca[d] + (shift * tptr->cstep.ca[d]);
     }
+    return 1;
+}
+
+tptr_t text_ptr_export(tptr_t * tptr, xy_t size_chars)
+{
+    tptr_t field = *tptr;
+    field.fxy = field.cxy;
+    for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
+        field.tlim.ca[d] -= field.cpos.ca[d];
+        if (size_chars.ca[d]) {
+            if (field.tlim.ca[d] > size_chars.ca[d]) {
+                field.tlim.ca[d] = size_chars.ca[d];
+            }
+        }
+    }
+    field.cpos = (xy_t){};
+    return field;
 }
