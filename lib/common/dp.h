@@ -61,6 +61,7 @@ struct dp_ctx {
 
 #ifndef DP_NAME
     #define DP_NAME 0
+    #define DP_NOTABLE
 #endif
 
 
