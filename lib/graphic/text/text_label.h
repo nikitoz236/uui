@@ -8,16 +8,6 @@
 
 
 /*
-    никак не могу уловить эту тонкую грань. что мне нужно чтобы нарисовать один вложеный виджет?
-        поле для этого виджета
-        способ обновить данные и понять что были изменения
-        способ отрисовать
-
-        кажется нужно начинать снизу.
-            для часиков у меня есть поле часиков
-
-
-
     итак есть маршруты
 
     есть виджет маршрута, он отображает параметры както, среди них числа и например время которое рисуется сублэйблами,
@@ -87,9 +77,6 @@
 */
 
 
-// я бы хотел сделать draw_list
-
-
 typedef union {
     void (*u)(void * ctx, unsigned val);
     void (*s)(void * ctx, int val);
@@ -106,38 +93,38 @@ enum label_type {
 };
 
 typedef struct {
-    list_t * labels;
-    // label_t l;
+    list_t * labels_static;             // labels const or static
+    list_t * labels_dynamic;            // labels volatile
     ctx_update_func_t update_func;
 } label_sublist_t;
 
 
 typedef struct {
-    enum label_type type;
-    uint8_t color_idx : 4;
-    // val_rep_t rep : 3;
-    // enum {
-    //     LABEL_STATIC,
-    //     LABEL_VALUE
-    // } need_val : 1;
-    // uint8_t need_val : 1;
-    uint8_t vt_real : 1;
-    uint8_t val_idx : 1;
+    enum label_type type;               // тип обработки
+    uint8_t color_idx : 4;              // цвет из палитры
 
+    uint8_t vt_ctx : 1;                 // vt из ctx по vt_offset
+    // uint8_t val_idx : 1;                // использовать idx как значение поля
 
-    val_rep_t val_rep;
+    val_rep_t val_rep;                  // представление значения поля по оффсету в контексте, преобразовать в uint8_t : 3
 
-    uint8_t val_offset_in_ctx;
-    uint8_t sub_list_ctx_offset;
+    uint8_t val_offset_in_ctx;          // оффсет значения поля в контексте
 
-    uint8_t vt_offset;
-    val_text_t vt;
-    uint8_t len;
+    union {
+        uint8_t sub_list_ctx_offset;    // для сублиста 
+        uint8_t len;
+    };
+
     xy_t pos;
 
     union {
         const char * text;
+        // const char * text;
         label_sublist_t sublist;
+        union {
+            uint8_t vt_offset;
+            val_text_t vt;
+        };
     };
 } label_t;
 
@@ -159,30 +146,9 @@ typedef struct {
 
 
 typedef struct {
-    list_t * static_labels;
     lcd_color_t * color_palette;
+    // list_t * static_labels;
     label_t label;
 } widget_labels_t;
 
 void widget_labels_proces(const widget_labels_t * l, tptr_t * tp, void * ctx, void * ctx_prev);
-
-// void label_sub_list_update_ctx(void * val_ptr, val_rep_t, void * ctx)
-// {
-
-// }
-
-// unsigned check_vaue(label_t * l, void * ctx_prev, void * ctx, unsigned * val_to_draw)
-// {
-
-// }
-
-// void labels_init(label_t * ls, label_t * ld, void * ctx, tptr * tp, color_scheme_t * cs);
-// void labels_update(label_t * ld, void * ctx_prev, void * ctx, tptr * tp, color_scheme_t * cs);
-
-
-
-
-// void labels_init(label_t * ls, label_t * ld, void * ctx, tptr * tp, color_scheme_t * cs)
-// {
-
-// }

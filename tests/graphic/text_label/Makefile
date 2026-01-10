@@ -18,6 +18,9 @@ SRC += $(LIB)/graphic/text/text_pointer.c
 SRC += $(LIB)/graphic/text/font_config.c
 SRC += $(LIB)/graphic/text/text_label.c
 
+INC += $(LIB)/hw/include
+SRC += $(LIB)/emu/hw/systick.c
+
 TEST_NAME = test_text_label
 
 include $(LIB)/emu/emu_dp_dep.mk
