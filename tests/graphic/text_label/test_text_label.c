@@ -6,7 +6,6 @@
 
 #include "lcd_text_color.h"
 
-#define DP_NOTABLE
 #include "dp.h"
 
 #include "text_label.h"
@@ -66,7 +65,7 @@ static widget_labels_t widget_labels = {
     .color_palette = color_palette,
     .label = {
         .type = LABEL_SUB_LIST,
-        .sublist = {
+        .sublist = &(label_sublist_t){
             .update_func = { .u = (void(*)(void *, unsigned))app_update_ctx },
             .labels_static = LIST(((label_t []){
                 { .type = LABEL_STATIC_TEXT, .text = "fuck", .pos = (xy_t){2, 1}, .color_idx = COLOR_IDX_ALT + 0 },
@@ -75,7 +74,7 @@ static widget_labels_t widget_labels = {
             .labels_dynamic = LIST(((label_t []){
                 { .type = LABEL_VAL, .vt = { .f = X1, .p = 3, .zl = 1, .zr = 1 }, .val_rep.vs = VAL_SIZE_8, .color_idx = COLOR_IDX_ALT + 3, .val_offset_in_ctx = offsetof(uv_t, cntr), .pos = (xy_t){4, 3}, .len = 8 },
                 { .type = LABEL_VAL, .val_rep.vs = VAL_SIZE_32, .color_idx = COLOR_IDX_FG_UNSEL, .val_offset_in_ctx = offsetof(uv_t, time), .pos = (xy_t){4, 6}, .len = 10 },
-                { .type = LABEL_SUB_LIST, .pos = (xy_t){14, 2}, .val_offset_in_ctx = offsetof(uv_t, time), .val_rep.vs = VAL_SIZE_32, .sub_list_ctx_offset = offsetof(uv_t, t), .sublist = {
+                { .type = LABEL_SUB_LIST, .pos = (xy_t){14, 2}, .val_offset_in_ctx = offsetof(uv_t, time), .val_rep.vs = VAL_SIZE_32, .sub_list_ctx_offset = offsetof(uv_t, t), .sublist = &(label_sublist_t){
                     .update_func = (void(*)(void *, unsigned))time_from_s,
                     .labels_static = LIST(((label_t []){
                         { .type = LABEL_STATIC_TEXT, .text = ":", .pos = (xy_t){2, 0}, .color_idx = COLOR_IDX_FG_UNSEL },

@@ -12,8 +12,7 @@ typedef struct {
     void * uv_prev;
 } label_process_ctx_t;
 
-static lcd_color_t * _color_palette;
-static unsigned _idx;
+static lcd_color_t * l_color_palette;
 static label_process_ctx_t l_ctx;
 
 void update_ctx(void * ctx, void * val, val_rep_t rep, const ctx_update_func_t * f)
@@ -60,7 +59,6 @@ static void label_process(const label_t * l);
 
 void label_sublist_proces(const label_t * l)
 {
-    const label_sublist_t * sl = &l->sublist;
     void * val_ptr = l_ctx.uv + l->val_offset_in_ctx;
 
     label_process_ctx_t stored = l_ctx;
@@ -71,16 +69,16 @@ void label_sublist_proces(const label_t * l)
         l_ctx.uv_prev += sub_ctx_offset;
     }
 
-    update_ctx(l_ctx.uv, val_ptr, l->val_rep, &sl->update_func);
+    update_ctx(l_ctx.uv, val_ptr, l->val_rep, &l->sublist->update_func);
 
     tptr_t sub_tp = text_ptr_export(l_ctx.tp, (xy_t){});
     l_ctx.tp = &sub_tp;
 
     if (l_ctx.uv_prev == 0) {
-        list_process_all(sl->labels_static, label_process);
+        list_process_all(l->sublist->labels_static, label_process);
     }
 
-    list_process_all(sl->labels_dynamic, label_process);
+    list_process_all(l->sublist->labels_dynamic, label_process);
 
     l_ctx = stored;
 }
@@ -94,7 +92,7 @@ static void label_process(const label_t * l)
     if (l->type == LABEL_SUB_LIST) {
         label_sublist_proces(l);
     } else {
-        color_scheme_t cs = { .bg = _color_palette[0], .fg = _color_palette[l->color_idx] };
+        color_scheme_t cs = { .bg = l_color_palette[0], .fg = l_color_palette[l->color_idx] };
 
         if (l_ctx.uv_prev) {
             if (!ctx_check_val(l_ctx.uv_prev, l_ctx.uv, l->val_rep, l->val_offset_in_ctx)) {
@@ -125,8 +123,7 @@ static void label_process(const label_t * l)
 
 void widget_labels_proces(const widget_labels_t * wl, tptr_t * tp, void * ctx, void * ctx_prev)
 {
-    _color_palette = wl->color_palette;
-    // _idx = idx;
+    l_color_palette = wl->color_palette;
     l_ctx.tp = tp;
     l_ctx.uv = ctx;
     l_ctx.uv_prev = ctx_prev;
