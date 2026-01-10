@@ -123,7 +123,7 @@ typedef struct {
     // uint8_t need_val : 1;
     uint8_t vt_real : 1;
     uint8_t val_idx : 1;
-    
+
 
     val_rep_t val_rep;
 
