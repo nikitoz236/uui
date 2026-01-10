@@ -1,5 +1,6 @@
 #pragma once
 #include "val_pack.h"
+#include "val_text.h"
 #include "text_pointer.h"
 #include "lists.h"
 #include "color_scheme_type.h"
@@ -119,19 +120,25 @@ typedef struct {
     //     LABEL_STATIC,
     //     LABEL_VALUE
     // } need_val : 1;
-    uint8_t need_val : 1;
-
-    unsigned val_offset_in_ctx;
-    unsigned sub_list_ctx_offset;
+    // uint8_t need_val : 1;
+    uint8_t vt_real : 1;
+    uint8_t val_idx : 1;
+    
 
     val_rep_t val_rep;
 
-    xy_t text_pos;
+    uint8_t val_offset_in_ctx;
+    uint8_t sub_list_ctx_offset;
+
+    uint8_t vt_offset;
+    val_text_t vt;
+    uint8_t len;
+    xy_t pos;
+
     union {
         const char * text;
         label_sublist_t sublist;
     };
-
 } label_t;
 
 
