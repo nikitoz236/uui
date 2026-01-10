@@ -15,8 +15,9 @@ SRC += $(LIB)/emu/graphic/gfx.c
 SRC += $(LIB)/emu/graphic/emu_lcd.c
 
 GFX_FLAGS = -lX11 -lm -I /usr/X11R6/include
+CFLAGS += -Wno-pointer-to-int-cast
 
 include $(LIB)/emu/emu.mk
 
 %_app: %.c $(SRC)
-	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(GFX_FLAGS) -o $@
+	gcc $^ $(addprefix -I, $(INC)) $(addprefix -D, $(DEF)) $(GFX_FLAGS) $(CFLAGS) -o $@
