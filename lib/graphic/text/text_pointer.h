@@ -30,7 +30,7 @@ typedef struct {
     xy_t cstep;     // вектор сдвига курсора на 1 символ / строку
 } tptr_t;
 
-void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, xy_t limit_chars);
+tptr_t text_ptr_create(const lcd_font_cfg_t * fcfg, xy_t pos_px, xy_t limit_chars);
 
 static inline xy_t text_ptr_current_pos(tptr_t * tptr)
 {

@@ -48,34 +48,33 @@ unsigned text_ptr_remain_str(tptr_t * tptr)
     return tptr->tlim.x - tptr->cpos.x;
 }
 
-void text_ptr_init(tptr_t * tptr, const lcd_font_cfg_t * fcfg, xy_t pos_px, xy_t limit_chars)
+tptr_t text_ptr_create(const lcd_font_cfg_t * fcfg, xy_t pos_px, xy_t limit_chars)
 {
-    if (!tptr) {
-        return;
-    }
+    tptr_t t;
 
-    tptr->fcfg = fcfg;
+    t.fcfg = fcfg;
 
     if (fcfg) {
         unsigned scale = fcfg_scale(fcfg);
         for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
             unsigned gap = fcfg_gap(fcfg, d);
-            tptr->cstep.ca[d] = (fcfg->font->size.ca[d] * scale) + gap;
+            t.cstep.ca[d] = (fcfg->font->size.ca[d] * scale) + gap;
         }
     } else {
-        tptr->cstep = (xy_t){};
+        t.cstep = (xy_t){};
     }
 
-    tptr->tlim = limit_chars;
+    t.tlim = limit_chars;
     // if (limit_chars) {
-    //     tptr->tlim = *limit_chars;
+    //     t.tlim = *limit_chars;
     // } else {
-    //     tptr->tlim = (xy_t){};
+    //     t.tlim = (xy_t){};
     // }
 
     // не понимаю зачем раньше передавал положение черех указатель? чтобы сослаться на поле какойто формы?
-    tptr->fxy = pos_px;
-    tptr->cxy = pos_px;
+    t.fxy = pos_px;
+    t.cxy = pos_px;
+    return t;
 }
 
 unsigned text_ptr_set_char_pos(tptr_t * tptr, xy_t pos)
@@ -100,18 +99,18 @@ unsigned text_ptr_set_char_pos(tptr_t * tptr, xy_t pos)
     return 1;
 }
 
-tptr_t text_ptr_export(tptr_t * tptr, xy_t size_chars)
+tptr_t text_ptr_export(tptr_t * tp, xy_t size_chars)
 {
-    tptr_t field = *tptr;
-    field.fxy = field.cxy;
+    tptr_t field = { .cstep = tp->cstep, .cxy = tp->cxy, .fcfg = tp->fcfg, .fxy = tp->cxy };
+
     for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
-        field.tlim.ca[d] -= field.cpos.ca[d];
+        field.tlim.ca[d] = tp->tlim.ca[d] - tp->cpos.ca[d];
         if (size_chars.ca[d]) {
             if (field.tlim.ca[d] > size_chars.ca[d]) {
                 field.tlim.ca[d] = size_chars.ca[d];
             }
         }
     }
-    field.cpos = (xy_t){};
+
     return field;
 }
