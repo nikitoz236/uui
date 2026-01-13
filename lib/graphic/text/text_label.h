@@ -76,6 +76,7 @@
         LP_T_LV,            // text from pointers array list by unsigned val
 */
 
+#define VAL_SIZE_PTR        (VAL_SIZE_32 + 1)
 
 typedef union {
     void (*u)(void * ctx, unsigned val);
