@@ -1,13 +1,14 @@
 #pragma once
-#include "lcd_text.h"
-#include "color_type.h"
 #include "color_scheme_type.h"
-
 #include "font_config.h"
+#include "text_pointer.h"
 
-// gaps не учитывают scale
+// попытка сделать чтото более универсальное, чтобы можно было сохранять положение курсора между вызовами, а также через нее выразить все остальные функции печати.
+// но тут есть пролема с выравниванием по правому краю и известной длиной, надо либо передавать длину при вызове text_ptr_set_char_pos
+
+void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, unsigned len);
+
 // DEPRICATED
-void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg, const color_scheme_t * cs, unsigned tx, unsigned ty, unsigned len);
 
 // основная функция, позволяет расположить строку str в координатах pos
 // cfg - конфигурация шрифта, при этом если cfg.scale = 0, то он считается равным 1, если cfg.gaps = 0, то они считаются равными 1
@@ -20,23 +21,6 @@ void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg
 // len - длина строки, если 0 - то до конца текста или до text_size.x
 void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len);
 
-// появилась идея завернуть все в универсальную функцию, color_scheme_t это тип который передается целиком, на монохромном дисплее будет также, но это не точно
-static inline void lcd_text(xy_t xy_px, const char * str, const lcd_font_cfg_t * cfg, color_scheme_t cs, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len)
-{
-    lcd_color_text_raw_print(str, cfg, &cs, &xy_px, limit_chars, pos_chars, len);
-}
+#include "lcd_text.h"
+void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg, const color_scheme_t * cs, unsigned tx, unsigned ty, unsigned len);
 
-
-
-
-
-
-
-#include "text_pointer.h"
-
-// попытка сделать чтото более универсальное, чтобы можно было сохранять положение курсора между вызовами, а также через нее выразить все остальные функции печати.
-// но тут есть пролема с выравниванием по правому краю и известной длиной, надо либо передавать длину при вызове text_ptr_set_char_pos
-
-// просто ты хочешь наворотить чтобы у тебя перетиралось поле новым значением, чтобы выравнивание было
-
-void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, unsigned len);

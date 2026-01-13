@@ -282,9 +282,10 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
 
 
 
+
 void lcd_tptr_clear(tptr_t * tptr, color_scheme_t * cs, unsigned len)
 {
-    lcd_rect(tptr->cxy.x, tptr->cxy.y, (len * tptr->cstep.x) - fcfg_gap(tptr->fcfg, DIMENSION_X), tptr->cstep.y - fcfg_gap(tptr->fcfg, DIMENSION_Y), cs->bg);
+    lcd_rect(tptr->cxy.x, tptr->cxy.y, (len * tptr->cstep.x) - fcfg_gap(tptr->tf.fcfg, DIMENSION_X), tptr->cstep.y - fcfg_gap(tptr->tf.fcfg, DIMENSION_Y), cs->bg);
 }
 
 unsigned text_ptr_process_char(tptr_t * tptr, char c)
@@ -303,14 +304,7 @@ unsigned text_ptr_process_char(tptr_t * tptr, char c)
 
 void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, unsigned len)
 {
-    font_t * font = tptr->fcfg->font;
-    unsigned scale = tptr->fcfg->scale;
-    if (scale == 0) {
-        scale = 1;
-    }
-
     while (1) {
-
         char c = 0;
 
         if (str) {
@@ -330,19 +324,17 @@ void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, un
         }
 
         if (text_ptr_process_char(tptr, c) == 0) {
-
             // а какже перевод строки ? а нужно ли чистить оставшуюся часть строки
             if (c == ' ') {
                 lcd_tptr_clear(tptr, &cs, 1);
                 // зазор между буквами нужен чтобы не выйти за правый край формы
             } else {
-                print_char(c, tptr->cxy.x, tptr->cxy.y, font, cs.fg, cs.bg, fcfg_scale(tptr->fcfg));
+                print_char(c, tptr->cxy.x, tptr->cxy.y, tptr->tf.fcfg->font, cs.fg, cs.bg, fcfg_scale(tptr->tf.fcfg));
             }
 
             if (text_ptr_next_char(tptr) == 0) {
                 return;
             }
-
         }
 
         if (len) {
