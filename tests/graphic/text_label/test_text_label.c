@@ -140,7 +140,7 @@ int main()
         .scale = 2
     };
 
-    tp = text_ptr_create(&fcfg, (xy_t){8, 9}, fcfg_text_char_places(&fcfg, lcd_cfg.size) );
+    tp = text_ptr_create((tf_t){ .fcfg = &fcfg, .pos = (xy_t){8, 9}, .lim = fcfg_text_char_places(&fcfg, lcd_cfg.size)} );
     t32_run(&t, systick_get_uptime_ms(), 1000);
 
     widget_labels_proces(&widget_labels, &tp, &prev_ctx, 0);
