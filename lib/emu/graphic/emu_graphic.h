@@ -9,6 +9,11 @@ static inline void emu_graphic_init(unsigned w, unsigned h)
     gfx_open(w, h, "uui graphic emulator");
 }
 
+static inline void emu_graphic_init_xy(xy_t size)
+{
+    gfx_open(size.w, size.h, "uui graphic emulator");
+}
+
 static inline void emu_graphic_rect(form_t * r, unsigned color)
 {
     struct color {
