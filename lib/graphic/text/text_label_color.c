@@ -76,7 +76,14 @@ void lp(const tf_ctx_t * tf, const label_t * l, color_scheme_t * cs, unsigned id
     } else if (t == LP_T_FIDX) {
         str = l->to_str(idx);
     } else if (t == LP_T_LIDX) {
-        str = l->text_list[idx];
+        if (l->step) {
+            void * ptr = l->text_list;
+            ptr += l->step * idx;
+            const char ** text_ptr = ptr;
+            str = *text_ptr;
+        } else {
+            str = l->text_list[idx];
+        }
     } else {
         if (prev_ctx) {
             // если указан контекст с которым сравнивать, сравниваем и если значение поменялось то продолжаем
