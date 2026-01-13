@@ -127,6 +127,7 @@ int main()
     dp("sizeof list_t "); dpd(sizeof(list_t), 3); dn();
     dp("sizeof int "); dpd(sizeof(int), 3); dn();
     dp("sizeof int * "); dpd(sizeof(int *), 3); dn();
+    dp("sizeof tptr_t * "); dpd(sizeof(tptr_t), 3); dn();
 
     form_t screen_form = { .s = lcd_cfg.size };
     draw_color_form(&screen_form, color_palette[0]);
@@ -139,7 +140,7 @@ int main()
         .scale = 2
     };
 
-    text_ptr_init(&tp, &fcfg, (xy_t){8, 9}, fcfg_text_char_places(&fcfg, lcd_cfg.size) );
+    tp = text_ptr_create(&fcfg, (xy_t){8, 9}, fcfg_text_char_places(&fcfg, lcd_cfg.size) );
     t32_run(&t, systick_get_uptime_ms(), 1000);
 
     widget_labels_proces(&widget_labels, &tp, &prev_ctx, 0);
