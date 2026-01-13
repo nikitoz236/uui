@@ -31,14 +31,12 @@ int main()
 
     lcd_font_cfg_t fcfg = {
         .font = &font_5x7,
-        .gaps = 0,
         .scale = 2
     };
 
     color_scheme_t cs = {.bg = 0x1234, .fg = 0xA234};
 
-    tptr_t tp;
-    text_ptr_init(&tp, &fcfg, (xy_t){8, 9}, (xy_t){20, 8});
+    tptr_t tp = text_ptr_create((tf_t){ .fcfg = &fcfg, .pos = (xy_t){8, 9}, .lim = (xy_t){20, 8} } );
 
     text_ptr_set_char_pos(&tp, (xy_t){ 3, 4 });
     lcd_color_tptr_print(&tp, "lol", cs, 0);
