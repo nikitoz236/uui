@@ -4,6 +4,8 @@
 
 #include "lcd_text_color.h"
 
+#define DP_OFF
+#define DP_NAME "text label"
 #include "dp.h"
 
 typedef struct {
@@ -87,8 +89,12 @@ void label_sublist_proces(const label_t * l)
 static void label_process(const label_t * l)
 {
     // dp("process label "); dpx((unsigned)l, 4); dp(" : "); dpxd(l, 1, sizeof(label_t)); dn();
-    dp("xy "); dpd(l->pos.x, 3); dp(","); dpd(l->pos.y, 3); dp(" type "); dpd(l->type, 1); dn();
-    text_ptr_set_char_pos(l_ctx.tp, l->pos);
+    dp("xy "); dpd(l->pos.x, 3); dp(","); dpd(l->pos.y, 3); dp(" type "); dpd(l->type, 1); dp(" tp lim: ("); dpd(l_ctx.tp->tf.lim.x, 3); dp(","); dpd(l_ctx.tp->tf.lim.y, 3);  dpn(")");
+
+    if (!text_ptr_set_char_pos(l_ctx.tp, l->pos)) {
+        return;
+    }
+
     if (l->type == LABEL_SUB_LIST) {
         label_sublist_proces(l);
     } else {
@@ -102,7 +108,7 @@ static void label_process(const label_t * l)
         }
 
         if (l->type == LABEL_STATIC_TEXT) {
-            // dp("print static text : "); dp(l->text); dn();
+            dp(" static text >"); dp(l->text); dpn("<");
             lcd_color_tptr_print(l_ctx.tp, l->text, cs, 0);
         } else {
             void * val_ptr = l_ctx.uv + l->val_offset_in_ctx;
@@ -116,6 +122,8 @@ static void label_process(const label_t * l)
             dp("    val rep: "); dpd(l->val_rep.vs, 1); dp("   "); dpxd(val_ptr, 1, 4); dn();
 
             const char * str = str_from_val(val_ptr, l->val_rep, *vt, l->len);
+            dp("        text >"); dpl(str, l->len); dpn("<");
+
             lcd_color_tptr_print(l_ctx.tp, str, cs, l->len);
         }
     }
