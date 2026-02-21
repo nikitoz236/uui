@@ -63,21 +63,24 @@ int main(void)
     dpn("spi inited");
 
     enum sd_type t = init_sd(&sd);
-    dp("sd type: "); dpd(t, 1); dn();
+    dp("SD type: "); dpd(t, 1); dn();
 
     if (t == SD_TYPE_NOT_INITIALISATED) {
-        dpn("sd init failed");
+        dpn("SD init failed");
     } else {
         struct sd_cid cid;
         sd_read_cid(&sd, &cid);
-        dp("CID MID="); dpx(cid.mid, 1);
-        dp(" OEM="); dpxd((uint8_t*)&cid.oid, 1, 2);
-        dp(" Name="); dpxd(cid.prn, 1, 5);
+        dp("CID MID: "); dpx(cid.mid, 1);
+        dp(" OEM: "); dpxd((uint8_t*)&cid.oid, 1, 2);
+        dp(" Name: "); dpxd(cid.prn, 1, 5);
         dn();
 
         struct sd_csd csd;
         sd_read_csd(&sd, &csd);
-        dp("CSD structure="); dpd(csd.csd_structure, 1); dn();
+        dp("CSD ver: "); dpd(sd_csd_version(&csd), 1); dn();
+
+        uint32_t size_mb = sd_csd_size_mb(&csd);
+        dp("SD size: "); dpd(size_mb, 6); dp(" MB"); dn();
     }
 
     while (1) {
