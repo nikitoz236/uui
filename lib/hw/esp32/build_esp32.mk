@@ -39,6 +39,7 @@ CFLAGS += -mlongcalls
 CFLAGS += -mtext-section-literals
 CFLAGS += -nostdlib
 # CFLAGS += -specs=nano.specs
+CFLAGS += -finline-stringops # not need memcpy function
 
 CFLAGS += -Os -ffunction-sections -fdata-sections
 
