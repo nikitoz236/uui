@@ -1,16 +1,12 @@
 #include "esp32_gpio.h"
 #include "esp32_spi.h"
 #include "esp32_pwm.h"
-#include "esp32_systime.h"
 
 #include "lcd_spi.h"
 
-#include "api_lcd_color.h"
-#include "lcd_text_color.h"
 
 #include "esp32_i2c.h"
 #include "tca8418_kbd.h"
-#include "bq25896.h"
 
 #include "dbg_usb_cdc_acm.h"
 
@@ -18,7 +14,8 @@
 #include "dp.h"
 
 
-#include "timers_32.h"
+#include "delay_blocking.h"
+#include "forms.h"
 
 
 void __debug_usart_tx_data(const char * s, unsigned len)
@@ -99,8 +96,6 @@ void init_bl(void)
     init_gpio(&bl);
 }
 
-#include "delay_blocking.h"
-
 void bl_set(unsigned lvl)
 {
     if (lvl >= 16) {
@@ -129,207 +124,27 @@ form_t display_lcd_cfg_form(lcd_cfg_t * cfg)
     return f;
 }
 
-color_scheme_t cs = {.bg = 0, .fg = 0xA234};
-tptr_t tp;
 
-void draw_cursor(unsigned state)
-{
-    color_scheme_t * csp = &(color_scheme_t){.bg = COLOR(0x0ABB0C)};
-    if (state == 0) {
-        csp = &cs;
-    }
-    lcd_color_tptr_print(&tp, " ", *csp, 1);
-    text_ptr_prev_char(&tp);
-}
-
-enum tlora_kbd {
-    TLORA_KBD_KEY_Q,
-    TLORA_KBD_KEY_W,
-    TLORA_KBD_KEY_E,
-    TLORA_KBD_KEY_R,
-    TLORA_KBD_KEY_T,
-    TLORA_KBD_KEY_Y,
-    TLORA_KBD_KEY_U,
-    TLORA_KBD_KEY_I,
-    TLORA_KBD_KEY_O,
-    TLORA_KBD_KEY_P,
-
-    TLORA_KBD_KEY_A,
-    TLORA_KBD_KEY_S,
-    TLORA_KBD_KEY_D,
-    TLORA_KBD_KEY_F,
-    TLORA_KBD_KEY_G,
-    TLORA_KBD_KEY_H,
-    TLORA_KBD_KEY_J,
-    TLORA_KBD_KEY_K,
-    TLORA_KBD_KEY_L,
-    TLORA_KBD_KEY_ENTER,
-
-    TLORA_KBD_KEY_FN,
-    TLORA_KBD_KEY_Z,
-    TLORA_KBD_KEY_X,
-    TLORA_KBD_KEY_C,
-    TLORA_KBD_KEY_V,
-    TLORA_KBD_KEY_B,
-    TLORA_KBD_KEY_N,
-    TLORA_KBD_KEY_M,
-    TLORA_KBD_KEY_SHIFT,
-
-    TLORA_KBD_KEY_BACKSPACE,
-    TLORA_KBD_KEY_SPACE,
-};
-
-const char sym_d[] = {
-    'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
-    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '\n',
-    0,   'z', 'x', 'c', 'v', 'b', 'n', 'm', 0,
-    '\b'
-};
-
-const char sym_u[] = {
-    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',
-    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 0,
-    0,   'Z', 'X', 'C', 'V', 'B', 'N', 'M', 0,
-    '\b'
-};
-
-const char sym_spec[] = {
-    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-    '*', '/', '+', '-', '=', ':', '\'', '"', '@', 0,
-    0,   '_', '$', ';', '?', '!', ',', '.', 0,
-    '\b'
-};
-
-unsigned cursor_state = 1;
-timer_32_t cursor_tim;
-#define CURSOR_PERIOD_MS    500
-
-
-
-unsigned kbd_shifted = 0;
-unsigned space_state = 0;
-unsigned space_mod = 0;
-
-
-void console_draw_char(char c)
-{
-    dp("  char : "); dpx(c, 1); dn();
-    // __debug_usart_tx_data(&c, 1);
-    draw_cursor(0);
-    lcd_color_tptr_print(&tp, &c, cs, 1);
-    cursor_state = 1;
-    t32_run(&cursor_tim, systimer_ms(0), CURSOR_PERIOD_MS);
-
-    draw_cursor(cursor_state);
-    // text_ptr_next_char(&tp);
-}
-
-void kbd_change_handler(unsigned num, unsigned state)
-{
-    dp("key : "); dpd(num, 2); dp(" = "); dpd(state, 1); dn();
-
-    num--;
-    if (num == TLORA_KBD_KEY_FN) {
-        bq25896_power_off();
-    }
-
-    if (num ==  TLORA_KBD_KEY_SHIFT) {
-        kbd_shifted = state || space_state;
-        if (space_state) {
-            space_mod = 1;
-        }
-        return;
-    }
-
-    if (num == TLORA_KBD_KEY_SPACE) {
-        space_state = state;
-        if (state == 0) {
-            if (space_mod == 0) {
-                console_draw_char(' ');
-            }
-            space_mod = 0;
-        }
-        return;
-    }
-
-    if (state) {
-        char * table = sym_d;
-        if (space_state) {
-            table = sym_spec;
-            space_mod = 1;
-        } else {
-            if (kbd_shifted) {
-                table = sym_u;
-            }
-        }
-        uint8_t c = table[num];
-        if (c) {
-            console_draw_char(c);
-        }
-    }
-}
 #include "soc/usb_serial_jtag_struct.h"
 #include "str_val.h"
 
-void lcd_print_hex(uint32_t val, xy_t pos)
-{
-    char str[10];
-    hex_to_str(&val ,str, 4);
-    text_ptr_set_char_pos(&tp, pos);
-    lcd_color_tptr_print(&tp, str, cs, 8);
-}
+// void lcd_print_hex(uint32_t val, xy_t pos)
+// {
+//     char str[10];
+//     hex_to_str(&val ,str, 4);
+//     text_ptr_set_char_pos(&tp, pos);
+//     lcd_color_tptr_print(&tp, str, cs, 8);
+// }
 
-void lcd_print_dump_val(unsigned idx, uint32_t val)
-{
-    xy_t pos = { .x = (idx & 3) * 10, .y = (idx >> 2) };
-    lcd_print_hex(val, pos);
-}
+// void lcd_print_dump_val(unsigned idx, uint32_t val)
+// {
+//     xy_t pos = { .x = (idx & 3) * 10, .y = (idx >> 2) };
+//     lcd_print_hex(val, pos);
+// }
 
-
-
-/*
-
-    итак мне нужно рисовать и перерисовывать обьекты
-
-    например таблицу константных данных, либо прям меняющиеся данные,
-    строка состояния - виджет который имеет поля меняющиеся, часы заряд акума, язык, шифты итд
-
-        где
-            координаты пикселей или букв где будет расположена надпись
-            количество знакомест или даже лимиты ?
-
-        что
-            указатель на контекст в памяти - аргумент отрисовки
-            оффсет в контексте констанстный
-            длина поля данных
-
-
-        как
-            статичный текст
-            текст в зависимости от индекса
-            хекс ( сколько байт ? )
-            картинка по индексу
-            картинка включеная или нет
-            составная
-            указатель на текст
-
-
-        LP_S,               // sub label
-        LP_V,               // value to str, format from const vt
-        LP_VC,              // const value
-        LP_V_FIDX,          // value to str, format from function by index
-        LP_T,               // text from const pointer
-        LP_T_FIDX,          // text from to_str function by index
-        LP_T_FV,            // text from to_str function by unsigned val
-        LP_T_LIDX,          // text from pointers array list by index
-        LP_T_LV,            // text from pointers array list by unsigned val
-
-        LV = LP_V,
-        LVFI = LP_V_FIDX,
-        LF = LP_T_FV,
-        LS = LP_S,
-
-*/
+void init_console(form_t * f);
+void console_process(void);
+void kbd_change_handler(unsigned num, unsigned state);
 
 
 int main(void)
@@ -349,28 +164,11 @@ int main(void)
     init_lcd_hw(&lcd_cfg);
     init_lcd(&lcd_cfg);
 
-    extern font_t font_5x7;
-
-    lcd_font_cfg_t fcfg = {
-        .font = &font_5x7,
-        .gaps = { .x = 4, .y = 4 },
-        .scale = 1
-    };
-
     form_t lcdf = display_lcd_cfg_form(&lcd_cfg);
-    xy_t lim = fcfg_text_char_places(&fcfg, lcdf.s);
-
-    text_ptr_init(&tp, &fcfg, lcdf.p, &lim);
-    draw_cursor(cursor_state);
-    t32_run(&cursor_tim, systimer_ms(0), CURSOR_PERIOD_MS);
+    init_console(&lcdf);
 
     while (1) {
-        if (t32_is_over(&cursor_tim, systimer_ms(0))) {
-            t32_extend(&cursor_tim, CURSOR_PERIOD_MS);
-            cursor_state = !cursor_state;
-            draw_cursor(cursor_state);
-        }
-
+        console_process();
         if (gpio_get_state(&kbd_irq_line) == 0) {
             dpn("kbd irq detect");
             tca8418_poll_kp_fifo(kbd_change_handler);

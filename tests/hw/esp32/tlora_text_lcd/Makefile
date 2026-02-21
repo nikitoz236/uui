@@ -5,6 +5,8 @@ LIB = ../../../../lib
 INC += .
 SRC += tlora_text_lcd.c
 
+SRC += t_lora_kbd.c
+
 PERIPH = $(LIB)/hw/esp32/periph
 
 INC += $(LIB)/common
