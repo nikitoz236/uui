@@ -25,11 +25,12 @@ void init_spi(const spi_cfg_t * cfg)
     cfg->spi->clk_gate.clk_en = 1;
     cfg->spi->clk_gate.mst_clk_active = 1;
 
-    cfg->spi->user.doutdin = 0;
+    cfg->spi->user.doutdin = 1;
 
     cfg->spi->user.usr_command = 0;
     cfg->spi->user.usr_addr = 0;
     cfg->spi->user.usr_mosi = 1;
+    cfg->spi->user.usr_miso = 1;
     cfg->spi->user.cs_setup = 0;
     cfg->spi->user.cs_hold = 0;
     cfg->spi->user.usr_dummy = 0;
@@ -40,11 +41,14 @@ void init_spi(const spi_cfg_t * cfg)
 
     // cfg->spi->misc.clk_data_dtr_en = 1;
 
-    cfg->spi->user1.usr_addr_bitlen = 7;
+    cfg->spi->user1.usr_addr_bitlen = 0;
     cfg->spi->user1.usr_dummy_cyclelen = 0;
 
 
     cfg->spi->dma_int_set.trans_done_int_set = 1;
+
+    cfg->spi->cmd.update = 1;
+    while (cfg->spi->cmd.update);
 }
 
 void spi_tx(const spi_cfg_t * cfg, uint8_t * data, unsigned bit_len)
@@ -73,6 +77,7 @@ void spi_tx(const spi_cfg_t * cfg, uint8_t * data, unsigned bit_len)
 
     // dpx(cfg->spi->data_buf[0], 4);
     cfg->spi->cmd.update = 1;
+    while (cfg->spi->cmd.update);
     cfg->spi->cmd.usr = 1;
 }
 
@@ -81,6 +86,7 @@ void spi_run(const spi_cfg_t * cfg)
 {
     cfg->spi->dma_int_clr.trans_done = 1;
     cfg->spi->cmd.update = 1;
+    while (cfg->spi->cmd.update);
     cfg->spi->cmd.usr = 1;
 }
 
@@ -117,7 +123,11 @@ void spi_tx_oct(const spi_cfg_t * cfg, void * data)
 
 uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c)
 {
+    spi_tx_oct(cfg, &c);
+    while (spi_is_busy(cfg)) {};
+    // dp("   spi exchange 8, data: "); dpxd(cfg->spi->data_buf, 4, 16); dn();
 
+    return (uint8_t)(cfg->spi->data_buf[0] & 0xFF);
 }
 
 void spi_write_8(const spi_cfg_t * cfg, uint8_t c)

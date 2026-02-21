@@ -74,6 +74,7 @@ static void init_gpio_pin(const gpio_pin_t * pin, const gpio_cfg_t * cfg)
 
     if ((mode == GPIO_MODE_SIG_IN) || (mode == GPIO_MODE_SIG_IO)) {
         GPIO.func_in_sel_cfg[pin->signal].func_sel = pin->pin;
+        GPIO.func_in_sel_cfg[pin->signal].sig_in_sel = 1;
     }
 
     if ((mode == GPIO_MODE_SIG_OUT) || (mode == GPIO_MODE_SIG_IO)) {
