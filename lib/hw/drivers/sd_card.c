@@ -1,6 +1,8 @@
 #include "sd_card.h"
-#include "dp.h"
 #include "buf_endian.h"
+
+#define DP_NAME "sd card"
+#include "dp.h"
 
 #define DATA_TOKEN                      0xFE
 
@@ -36,10 +38,13 @@ enum sd_type init_sd(sd_cfg_t * cfg)
 {
     uint8_t resp;
     init_spi_dev(&cfg->spi_dev);
-    init_spi(cfg->spi_dev.spi);
 
-    init_gpio(cfg->lock);
-    init_gpio(cfg->detect);
+    if (cfg->lock) {
+        init_gpio(cfg->lock);
+    }
+    if (cfg->detect) {
+        init_gpio(cfg->detect);
+    }
 
     spi_dev_unselect(&cfg->spi_dev);
     for (int i = 0; i < 10; i++) {
@@ -56,6 +61,13 @@ enum sd_type init_sd(sd_cfg_t * cfg)
     if (resp == 0xFF) {
         return SD_TYPE_NOT_INITIALISATED;
     }
+
+    /* CMD8 returns R7: 4 trailing bytes must be consumed regardless */
+    uint8_t r7[4];
+    for (int i = 0; i < 4; i++) {
+        r7[i] = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    }
+    dp("CMD8 R7: "); dpxd(r7, 1, 4); dn();
 
     if (resp & (1 << 2)) {
         // illegal answer = SD V1.x
