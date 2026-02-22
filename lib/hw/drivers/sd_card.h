@@ -22,34 +22,39 @@ struct __attribute__((packed)) sd_cid {
 };
 
 /*
- * CSD register — 16 байт, big-endian (MSB первым с карты).
- * Байты [6..11] различаются между v1 и v2 — вынесены в union.
- *
- * SD Spec раскладка:
- *  [0]      csd_structure[7:6], reserved[5:0]
- *  [1]      taac
- *  [2]      nsac
- *  [3]      tran_speed
- *  [4]      ccc[11:4]
- *  [5]      ccc[3:0], read_bl_len[3:0]
- *  --- union [6..11] ---
- *  v1: [6]  read_bl_partial[7], write_blk_misalign[6], read_blk_misalign[5], dsr_imp[4], reserved[3:2], c_size[11:10]
- *      [7]  c_size[9:2]
- *      [8]  c_size[1:0], vdd_r_curr_min[5:3], vdd_r_curr_max[2:0]
- *      [9]  vdd_w_curr_min[7:5], vdd_w_curr_max[4:2], c_size_mult[1:0] (hi)
- *      [10] c_size_mult[0] (lo), erase_blk_en[6], sector_size[5:0] (hi)
- *      [11] sector_size[0] (lo), wp_grp_size[6:0]
- *  v2: [6]  read_bl_partial[7], write_blk_misalign[6], read_blk_misalign[5], dsr_imp[4], reserved[3:0]
- *      [7]  reserved[5:0], c_size[21:16]
- *      [8]  c_size[15:8]
- *      [9]  c_size[7:0]
- *      [10] erase_blk_en[7], sector_size[6:0]
- *      [11] wp_grp_size[6:0]
- *  --- end union ---
- *  [12]     wp_grp_enable[7], reserved[6:5], r2w_factor[4:2], write_bl_len[1:0] (hi)
- *  [13]     write_bl_len[3:2] (lo), write_bl_partial[1], reserved[0]
- *  [14]     file_format_grp[7], copy[6], perm_write_protect[5], tmp_write_protect[4], file_format[3:2], reserved[1:0]
- *  [15]     crc[7:1], 1
+    https://www.sdcard.org/downloads/pls/
+    Part 1 Physical Layer Simplified Specification
+    page 251
+    5.3 CSD Register
+
+        CSD register — 16 байт, big-endian (MSB первым с карты).
+        Байты [6..11] различаются между v1 и v2 — вынесены в union.
+
+        SD Spec раскладка:
+            [0]      csd_structure[7:6], reserved[5:0]
+            [1]      taac
+            [2]      nsac
+            [3]      tran_speed
+            [4]      ccc[11:4]
+            [5]      ccc[3:0], read_bl_len[3:0]
+            --- union [6..11] ---
+            v1: [6]  read_bl_partial[7], write_blk_misalign[6], read_blk_misalign[5], dsr_imp[4], reserved[3:2], c_size[11:10]
+                [7]  c_size[9:2]
+                [8]  c_size[1:0], vdd_r_curr_min[5:3], vdd_r_curr_max[2:0]
+                [9]  vdd_w_curr_min[7:5], vdd_w_curr_max[4:2], c_size_mult[1:0] (hi)
+                [10] c_size_mult[0] (lo), erase_blk_en[6], sector_size[5:0] (hi)
+                [11] sector_size[0] (lo), wp_grp_size[6:0]
+            v2: [6]  read_bl_partial[7], write_blk_misalign[6], read_blk_misalign[5], dsr_imp[4], reserved[3:0]
+                [7]  reserved[5:0], c_size[21:16]
+                [8]  c_size[15:8]
+                [9]  c_size[7:0]
+                [10] erase_blk_en[7], sector_size[6:0]
+                [11] wp_grp_size[6:0]
+            --- end union ---
+            [12]     wp_grp_enable[7], reserved[6:5], r2w_factor[4:2], write_bl_len[1:0] (hi)
+            [13]     write_bl_len[3:2] (lo), write_bl_partial[1], reserved[0]
+            [14]     file_format_grp[7], copy[6], perm_write_protect[5], tmp_write_protect[4], file_format[3:2], reserved[1:0]
+            [15]     crc[7:1], 1
  */
 struct __attribute__((packed)) sd_csd {
     /* [0] */
