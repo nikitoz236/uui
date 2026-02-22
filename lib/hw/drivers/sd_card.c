@@ -1,6 +1,7 @@
 #include "sd_card.h"
 #include "buf_endian.h"
 
+#define DP_OFF
 #define DP_NAME "sd card"
 #include "dp.h"
 
