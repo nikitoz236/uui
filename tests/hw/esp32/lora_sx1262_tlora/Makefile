@@ -25,6 +25,7 @@ SRC += $(PERIPH)/esp32_spi.c
 SRC += $(PERIPH)/esp32_i2c.c
 
 SRC += $(DRIVERS)/xl9555.c
+SRC += $(DRIVERS)/sx1262.c
 
 
 include $(LIB)/hw/esp32/build_esp32.mk

@@ -2,6 +2,7 @@
 #include "esp32_spi.h"
 #include "esp32_i2c.h"
 #include "xl9555.h"
+#include "sx1262.h"
 
 #include "dbg_usb_cdc_acm.h"
 
@@ -19,7 +20,7 @@
  * XL9555:   addr=0x20, GPIO3 = LoRa power enable
  */
 
-void __debug_usart_tx_data(const char *s, unsigned len)
+void __debug_usart_tx_data(const char * s, unsigned len)
 {
     dbg_usb_cdc_acm_tx(s, len);
 }
@@ -35,103 +36,57 @@ i2c_cfg_t i2c_bus_cfg = {
         .cfg = { .mode = GPIO_MODE_SIG_IO, .pu = 1, .od = 1 },
         .pin_list = {
             { .pin = 2, .signal = I2CEXT0_SCL_IN_IDX },
-            { .pin = 3, .signal = I2CEXT0_SDA_IN_IDX }
-        }
-    }
+            { .pin = 3, .signal = I2CEXT0_SDA_IN_IDX } } }
 };
 
 /* ── XL9555 GPIO expander ──────────────────────────────────────────────── */
 
 static const xl9555_gpio_t lora_pwr = {
     .addr_offset = 0,
-    .pin         = 3,
-    .dir         = XL9555_DIR_OUT,
-    .polarity    = XL9555_POL_NORMAL,
+    .pin = 3,
+    .dir = XL9555_DIR_OUT,
+    .polarity = XL9555_POL_NORMAL,
 };
 
 /* ── SPI bus ───────────────────────────────────────────────────────────── */
 
 spi_cfg_t spi_bus = {
     .spi = &GPSPI2,
-    .gpio_list = &(gpio_list_t){
-        .count = 2,
-        .cfg = { .mode = GPIO_MODE_SIG_OUT },
-        .pin_list = {
-            [SPI_PIN_MOSI] = { .pin = 34, .signal = FSPID_OUT_IDX },
-            [SPI_PIN_SCK]  = { .pin = 35, .signal = FSPICLK_OUT_IDX }
-        }
-    }
-};
-
-static const gpio_t spi_miso = {
-    .cfg = { .mode = GPIO_MODE_SIG_IN },
-    .pin = { .pin = 33, .signal = FSPIQ_IN_IDX }
+    .pin_list = {
+        [SPI_PIN_SCK] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_OUT },
+            .pin = { .pin = 35, .signal = FSPICLK_OUT_IDX },
+        },
+        [SPI_PIN_MOSI] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_OUT },
+            .pin = { .pin = 34, .signal = FSPID_OUT_IDX },
+        },
+        [SPI_PIN_MISO] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_IN },
+            .pin = { .pin = 33, .signal = FSPIQ_IN_IDX },
+        },
+    },
 };
 
 /* ── SX1262 ────────────────────────────────────────────────────────────── */
 
-typedef struct {
-    spi_dev_cfg_t spi;
-    const gpio_t * reset;
-    const gpio_t * busy;
-} sx1262_cfg_t;
-
 static sx1262_cfg_t sx1262 = {
-    .spi = {
+    .spi_dev = {
         .spi = &spi_bus,
         .cs_pin = &(gpio_t){
             .pin = { .pin = 36 },
-            .cfg = { .mode = GPIO_MODE_OUT }
-        }
+            .cfg = { .mode = GPIO_MODE_OUT },
+        },
     },
     .reset = &(gpio_t){
         .pin = { .pin = 47 },
-        .cfg = { .mode = GPIO_MODE_OUT }
+        .cfg = { .mode = GPIO_MODE_OUT },
     },
     .busy = &(gpio_t){
         .pin = { .pin = 48 },
-        .cfg = { .mode = GPIO_MODE_IN }
+        .cfg = { .mode = GPIO_MODE_IN },
     },
 };
-
-/* ── SX1262 helpers ────────────────────────────────────────────────────── */
-
-static void sx1262_wait_busy(void)
-{
-    while (gpio_get_state(sx1262.busy)) {}
-}
-
-static void sx1262_reset_chip(void)
-{
-    gpio_set_state(sx1262.reset, 0);
-    delay_ms(2);
-    gpio_set_state(sx1262.reset, 1);
-    delay_ms(10);
-    sx1262_wait_busy();
-}
-
-/* GetStatus (0xC0): returns chip mode and command status */
-static uint8_t sx1262_get_status(void)
-{
-    spi_dev_select(&sx1262.spi);
-    spi_write_8(sx1262.spi.spi, 0xC0);
-    uint8_t status = spi_exchange_8(sx1262.spi.spi, 0x00);
-    spi_dev_unselect(&sx1262.spi);
-    return status;
-}
-
-/* ReadRegister (0x1D): read one byte from 16-bit address */
-static uint8_t sx1262_read_reg(uint16_t addr)
-{
-    spi_dev_select(&sx1262.spi);
-    spi_write_8(sx1262.spi.spi, 0x1D);
-    spi_write_8(sx1262.spi.spi, (addr >> 8) & 0xFF);
-    spi_write_8(sx1262.spi.spi, addr & 0xFF);
-    spi_exchange_8(sx1262.spi.spi, 0x00); /* status byte */
-    uint8_t val = spi_exchange_8(sx1262.spi.spi, 0x00);
-    spi_dev_unselect(&sx1262.spi);
-    return val;
-}
 
 /* ── main ──────────────────────────────────────────────────────────────── */
 
@@ -150,44 +105,45 @@ int main(void)
 
     /* SPI init */
     init_spi(&spi_bus);
-    init_gpio(&spi_miso);
-    init_spi_dev(&sx1262.spi);
-
-    /* SX1262 control pins */
-    init_gpio(sx1262.reset);
-    init_gpio(sx1262.busy);
+    sx1262_init_pins(&sx1262);
 
     /* Hardware reset */
     dpn("sx1262 reset");
-    sx1262_reset_chip();
+    sx1262_reset(&sx1262);
 
     /* Read status */
-    uint8_t status = sx1262_get_status();
-    dp("sx1262 status: "); dpx(status, 1); dn();
+    uint8_t status = sx1262_get_status(&sx1262);
+    dp("sx1262 status: ");
+    dpx(status, 1);
+    dn();
 
-    /*
-     * Expected after reset (STBY_RC mode):
-     *   bits [6:4] = 010 (chip mode: STBY_RC)
-     *   bits [3:1] = 001 (cmd status: success)
-     *   => 0x22
-     */
     uint8_t chip_mode = (status >> 4) & 0x7;
-    dp("chip mode: "); dpd(chip_mode, 1);
-    if (chip_mode == 2)
+    dp("chip mode: ");
+    dpd(chip_mode, 1);
+    if (chip_mode == SX1262_MODE_STBY_RC) {
         dpn(" (STBY_RC - ok)");
-    else if (chip_mode == 0)
+    } else if (chip_mode == 0) {
         dpn(" (no response / not connected)");
-    else
+    } else {
         dpn(" (unexpected)");
+    }
 
     /* Read RegRxGain (0x08AC) - default 0x94 */
-    sx1262_wait_busy();
-    uint8_t rx_gain = sx1262_read_reg(0x08AC);
-    dp("RegRxGain (0x08AC): "); dpx(rx_gain, 1);
-    if (rx_gain == 0x94)
+    sx1262_wait_busy(&sx1262);
+    uint8_t rx_gain = sx1262_read_reg(&sx1262, 0x08AC);
+    dp("RegRxGain (0x08AC): ");
+    dpx(rx_gain, 1);
+    if (rx_gain == 0x94) {
         dpn(" (default - ok)");
-    else
+    } else {
         dpn(" (unexpected)");
+    }
+
+    if (sx1262_check_connection(&sx1262)) {
+        dpn("sx1262 connected ok");
+    } else {
+        dpn("sx1262 connection FAILED");
+    }
 
     dpn("done");
     while (1) {}
