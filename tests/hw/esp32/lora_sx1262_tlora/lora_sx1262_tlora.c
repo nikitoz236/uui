@@ -1,6 +1,7 @@
 #include "esp32_gpio.h"
 #include "esp32_spi.h"
 #include "esp32_i2c.h"
+#include "xl9555.h"
 
 #include "dbg_usb_cdc_acm.h"
 
@@ -41,48 +42,12 @@ i2c_cfg_t i2c_bus_cfg = {
 
 /* ── XL9555 GPIO expander ──────────────────────────────────────────────── */
 
-enum xl9555_reg {
-    XL9555_REG_INPUT    = 0,
-    XL9555_REG_OUTPUT   = 1,
-    XL9555_REG_POLARITY = 2,
-    XL9555_REG_CONFIG   = 3,
+static const xl9555_gpio_t lora_pwr = {
+    .addr_offset = 0,
+    .pin         = 3,
+    .dir         = XL9555_DIR_OUT,
+    .polarity    = XL9555_POL_NORMAL,
 };
-
-#define XL9555_ADDR 0x20
-
-static uint16_t xl9555_read(enum xl9555_reg reg)
-{
-    uint16_t val = 0;
-    uint8_t cmd = reg << 1;
-    i2c_transaction(XL9555_ADDR, &cmd, 1, &val, 2);
-    while (i2c_status() == I2C_STATUS_BUSY) {}
-    return val;
-}
-
-static void xl9555_write(enum xl9555_reg reg, uint16_t val)
-{
-    uint8_t data[3] = {
-        [0] = reg << 1,
-        [1] = val & 0xFF,
-        [2] = (val >> 8) & 0xFF
-    };
-    i2c_transaction(XL9555_ADDR, data, 3, 0, 0);
-    while (i2c_status() == I2C_STATUS_BUSY) {}
-}
-
-/* Enable LoRa power via XL9555 GPIO3 (output, active high) */
-static void xl9555_lora_power_on(void)
-{
-    /* set GPIO3 as output (bit 3 = 0 in config reg) */
-    uint16_t cfg = xl9555_read(XL9555_REG_CONFIG);
-    cfg &= ~(1u << 3);
-    xl9555_write(XL9555_REG_CONFIG, cfg);
-
-    /* drive GPIO3 high */
-    uint16_t out = xl9555_read(XL9555_REG_OUTPUT);
-    out |= (1u << 3);
-    xl9555_write(XL9555_REG_OUTPUT, out);
-}
 
 /* ── SPI bus ───────────────────────────────────────────────────────────── */
 
@@ -103,38 +68,44 @@ static const gpio_t spi_miso = {
     .pin = { .pin = 33, .signal = FSPIQ_IN_IDX }
 };
 
-/* ── SX1262 control pins ───────────────────────────────────────────────── */
+/* ── SX1262 ────────────────────────────────────────────────────────────── */
 
-spi_dev_cfg_t sx1262_spi = {
-    .spi = &spi_bus,
-    .cs_pin = &(gpio_t){
-        .pin = { .pin = 36 },
+typedef struct {
+    spi_dev_cfg_t spi;
+    const gpio_t * reset;
+    const gpio_t * busy;
+} sx1262_cfg_t;
+
+static sx1262_cfg_t sx1262 = {
+    .spi = {
+        .spi = &spi_bus,
+        .cs_pin = &(gpio_t){
+            .pin = { .pin = 36 },
+            .cfg = { .mode = GPIO_MODE_OUT }
+        }
+    },
+    .reset = &(gpio_t){
+        .pin = { .pin = 47 },
         .cfg = { .mode = GPIO_MODE_OUT }
-    }
-};
-
-static const gpio_t sx1262_reset = {
-    .pin = { .pin = 47 },
-    .cfg = { .mode = GPIO_MODE_OUT }
-};
-
-static const gpio_t sx1262_busy = {
-    .pin = { .pin = 48 },
-    .cfg = { .mode = GPIO_MODE_IN }
+    },
+    .busy = &(gpio_t){
+        .pin = { .pin = 48 },
+        .cfg = { .mode = GPIO_MODE_IN }
+    },
 };
 
 /* ── SX1262 helpers ────────────────────────────────────────────────────── */
 
 static void sx1262_wait_busy(void)
 {
-    while (gpio_get_state(&sx1262_busy)) {}
+    while (gpio_get_state(sx1262.busy)) {}
 }
 
 static void sx1262_reset_chip(void)
 {
-    gpio_set_state(&sx1262_reset, 0);
+    gpio_set_state(sx1262.reset, 0);
     delay_ms(2);
-    gpio_set_state(&sx1262_reset, 1);
+    gpio_set_state(sx1262.reset, 1);
     delay_ms(10);
     sx1262_wait_busy();
 }
@@ -142,23 +113,23 @@ static void sx1262_reset_chip(void)
 /* GetStatus (0xC0): returns chip mode and command status */
 static uint8_t sx1262_get_status(void)
 {
-    spi_dev_select(&sx1262_spi);
-    spi_write_8(sx1262_spi.spi, 0xC0);
-    uint8_t status = spi_exchange_8(sx1262_spi.spi, 0x00);
-    spi_dev_unselect(&sx1262_spi);
+    spi_dev_select(&sx1262.spi);
+    spi_write_8(sx1262.spi.spi, 0xC0);
+    uint8_t status = spi_exchange_8(sx1262.spi.spi, 0x00);
+    spi_dev_unselect(&sx1262.spi);
     return status;
 }
 
 /* ReadRegister (0x1D): read one byte from 16-bit address */
 static uint8_t sx1262_read_reg(uint16_t addr)
 {
-    spi_dev_select(&sx1262_spi);
-    spi_write_8(sx1262_spi.spi, 0x1D);
-    spi_write_8(sx1262_spi.spi, (addr >> 8) & 0xFF);
-    spi_write_8(sx1262_spi.spi, addr & 0xFF);
-    spi_exchange_8(sx1262_spi.spi, 0x00); /* status byte */
-    uint8_t val = spi_exchange_8(sx1262_spi.spi, 0x00);
-    spi_dev_unselect(&sx1262_spi);
+    spi_dev_select(&sx1262.spi);
+    spi_write_8(sx1262.spi.spi, 0x1D);
+    spi_write_8(sx1262.spi.spi, (addr >> 8) & 0xFF);
+    spi_write_8(sx1262.spi.spi, addr & 0xFF);
+    spi_exchange_8(sx1262.spi.spi, 0x00); /* status byte */
+    uint8_t val = spi_exchange_8(sx1262.spi.spi, 0x00);
+    spi_dev_unselect(&sx1262.spi);
     return val;
 }
 
@@ -173,17 +144,18 @@ int main(void)
 
     /* Enable LoRa power via XL9555 GPIO3 */
     dpn("lora power on");
-    xl9555_lora_power_on();
+    init_xl9555_gpio(&lora_pwr);
+    xl9555_gpio_set(&lora_pwr, 1);
     delay_ms(20);
 
     /* SPI init */
     init_spi(&spi_bus);
     init_gpio(&spi_miso);
-    init_spi_dev(&sx1262_spi);
+    init_spi_dev(&sx1262.spi);
 
     /* SX1262 control pins */
-    init_gpio(&sx1262_reset);
-    init_gpio(&sx1262_busy);
+    init_gpio(sx1262.reset);
+    init_gpio(sx1262.busy);
 
     /* Hardware reset */
     dpn("sx1262 reset");
