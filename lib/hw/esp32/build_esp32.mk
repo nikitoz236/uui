@@ -57,8 +57,10 @@ $(BUILD_DIR)/$(TARGET).elf: $(SRC) $(BUILD_DIR) Makefile
 asm: $(BUILD_DIR)/$(TARGET).elf
 	$(TOOLCHAIN)-objdump -D $(BUILD_DIR)/$(TARGET).elf | less
 
+PORT ?= /dev/ttyACM0
+
 flash: $(BUILD_DIR)/$(TARGET).bin
-	$(ESPTOOL_PATH)/esptool -p /dev/ttyACM0 write-flash 0 $^
+	$(ESPTOOL_PATH)/esptool -p $(PORT) write-flash 0 $^
 
 $(BUILD_DIR):
 	mkdir -p $@
@@ -67,9 +69,9 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 monitor:
-	$(shell gnome-terminal -- python $(LIB)/../serial_monitor/sterm.py /dev/ttyACM0 115200)
+	$(shell gnome-terminal -- python $(LIB)/../serial_monitor/sterm.py $(PORT) 115200)
 
 reset:
-	python $(LIB)/../serial_monitor/esp_reset.py /dev/ttyACM0
+	python $(LIB)/../serial_monitor/esp_reset.py $(PORT)
 
 # include esp32_monitor.mk
