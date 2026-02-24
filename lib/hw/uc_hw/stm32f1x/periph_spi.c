@@ -6,7 +6,9 @@ void init_spi(const spi_cfg_t * cfg)
     pclk_ctrl(&cfg->pclk, 1);
 
     for (unsigned i = 0; i < SPI_PIN_NUM; i++) {
-        init_gpio(cfg->pin_list[i]);
+        if (cfg->pin_list[i]) {
+            init_gpio(cfg->pin_list[i]);
+        }
     }
 
     cfg->spi->CR1 = 0;

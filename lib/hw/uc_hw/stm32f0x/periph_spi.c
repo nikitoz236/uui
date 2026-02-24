@@ -10,7 +10,9 @@ void init_spi(const spi_cfg_t * cfg)
     pclk_ctrl(&cfg->pclk, 1);
 
     for (unsigned i = 0; i < SPI_PIN_NUM; i++) {
-        init_gpio(cfg->pin_list[i]);
+        if (cfg->pin_list[i]) {
+            init_gpio(cfg->pin_list[i]);
+        }
     }
 
     cfg->spi->CR1 = 0;
@@ -79,6 +81,23 @@ void spi_write_8(const spi_cfg_t * cfg, uint8_t c)
 {
     while(!(cfg->spi->SR & SPI_SR_TXE)) {};
     *(uint8_t*)&cfg->spi->DR = c;
+}
+
+uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c)
+{
+    /* flush any old rx data */
+    while (cfg->spi->SR & SPI_SR_RXNE) {
+        (void)*(volatile uint8_t *)&cfg->spi->DR;
+    }
+
+    /* set 8-bit rx fifo threshold so RXNE fires after 1 byte */
+    cfg->spi->CR2 |= SPI_CR2_FRXTH;
+
+    while (!(cfg->spi->SR & SPI_SR_TXE)) {};
+    *(volatile uint8_t *)&cfg->spi->DR = c;
+
+    while (!(cfg->spi->SR & SPI_SR_RXNE)) {};
+    return *(volatile uint8_t *)&cfg->spi->DR;
 }
 
 void spi_write_16(const spi_cfg_t * cfg, uint16_t c)
