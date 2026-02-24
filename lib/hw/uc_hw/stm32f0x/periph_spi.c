@@ -85,6 +85,9 @@ void spi_write_8(const spi_cfg_t * cfg, uint8_t c)
 
 uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c)
 {
+    /* wait for any previous writes to complete */
+    while (spi_is_busy(cfg)) {};
+
     /* flush any old rx data */
     while (cfg->spi->SR & SPI_SR_RXNE) {
         (void)*(volatile uint8_t *)&cfg->spi->DR;
