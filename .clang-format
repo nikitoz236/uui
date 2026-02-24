@@ -14,7 +14,7 @@ InsertBraces: true                        # обязательные {} для i
 # Пробелы
 SpaceBeforeParens: ControlStatements      # пробел перед ( только у if/for/while/switch, не у функций
 SpaceInEmptyBlock: false                  # {} без пробела внутри
-SpaceAfterCStyleCast: true               # пробел после каста: (uint8_t) x
+SpaceAfterCStyleCast: false              # без пробела после каста: (uint8_t)x
 SpacesInParens: Never                     # без пробелов внутри скобок: f(x), не f( x )
 SpaceBeforeSquareBrackets: false          # без пробела перед []: arr[i], не arr [i]
 SpaceAroundPointerQualifiers: Default     # не трогать const/volatile у указателей
