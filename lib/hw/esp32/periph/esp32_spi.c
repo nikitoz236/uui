@@ -10,17 +10,21 @@ static unsigned spi_len = 1;
 
 void init_spi(const spi_cfg_t * cfg)
 {
-    init_gpio_list(cfg->gpio_list);
+    for (unsigned i = 0; i < SPI_PIN_NUM; i++) {
+        if (cfg->pin_list[i]) {
+            init_gpio(cfg->pin_list[i]);
+        }
+    }
 
-    #if defined SPI_1MHZ
+#if defined SPI_1MHZ
     cfg->spi->clock.clk_equ_sysclk = 0;
     cfg->spi->clock.clkdiv_pre = 1 - 1;
     cfg->spi->clock.clkcnt_n = 40 - 1;
     cfg->spi->clock.clkcnt_h = 20 - 1;
     cfg->spi->clock.clkcnt_l = 40 - 1;
-    #else
+#else
     cfg->spi->clock.clk_equ_sysclk = 1;
-    #endif
+#endif
 
     cfg->spi->clk_gate.clk_en = 1;
     cfg->spi->clk_gate.mst_clk_active = 1;

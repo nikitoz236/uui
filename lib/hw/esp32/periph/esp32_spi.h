@@ -6,5 +6,5 @@
 
 struct spi_cfg {
     spi_dev_t * spi;
-    gpio_list_t * gpio_list;
+    gpio_t * pin_list[SPI_PIN_NUM];
 };
