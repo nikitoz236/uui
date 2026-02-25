@@ -7,7 +7,6 @@
 #define DP_NOTABLE
 #include "dp.h"
 
-
 #include "delay_blocking.h"
 #include "sd_card.h"
 
@@ -28,20 +27,20 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 
 spi_cfg_t spi = {
     .spi = &GPSPI2,
-    .gpio_list = &(gpio_list_t){
-        .cfg = { .mode = GPIO_MODE_SIG_OUT },
-        .count = 2,
-        .pin_list = {
-            [SPI_PIN_MOSI] = { .pin = 34, .signal = FSPID_OUT_IDX },
-            [SPI_PIN_SCK]  = { .pin = 35, .signal = FSPICLK_OUT_IDX }
-        }
-    }
-};
-
-// MISO отдельно — только вход
-static const gpio_t spi_miso = {
-    .cfg = { .mode = GPIO_MODE_SIG_IN },
-    .pin = { .pin = 33, .signal = FSPIQ_IN_IDX }
+    .pin_list = {
+        [SPI_PIN_MOSI] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_OUT },
+            .pin = { .pin = 34, .signal = FSPID_OUT_IDX },
+        },
+        [SPI_PIN_SCK] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_OUT },
+            .pin = { .pin = 35, .signal = FSPICLK_OUT_IDX },
+        },
+        [SPI_PIN_MISO] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_IN },
+            .pin = { .pin = 33, .signal = FSPIQ_IN_IDX },
+        },
+    },
 };
 
 sd_cfg_t sd = {
@@ -59,7 +58,6 @@ int main(void)
     dpn("t lora sd card spi test");
 
     init_spi(&spi);
-    init_gpio(&spi_miso);
     dpn("spi inited");
 
     enum sd_type t = init_sd(&sd);
@@ -86,5 +84,3 @@ int main(void)
     while (1) {
     }
 }
-
-
