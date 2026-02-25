@@ -18,13 +18,15 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 
 spi_cfg_t lcd_spi = {
     .spi = &GPSPI2,
-    .gpio_list = &(gpio_list_t){
-        .cfg = { .mode = GPIO_MODE_SIG_IO },
-        .count = 2,
-        .pin_list = {
-            [SPI_PIN_MOSI] = { .pin = 34, .signal = FSPID_OUT_IDX },
-            [SPI_PIN_SCK] = { .pin = 35, .signal = FSPICLK_OUT_IDX }
-        }
+    .pin_list = {
+        [SPI_PIN_MOSI] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_IO },
+            .pin = { .pin = 34, .signal = FSPID_OUT_IDX },
+        },
+        [SPI_PIN_SCK] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_IO },
+            .pin = { .pin = 35, .signal = FSPICLK_OUT_IDX },
+        },
     }
 };
 
