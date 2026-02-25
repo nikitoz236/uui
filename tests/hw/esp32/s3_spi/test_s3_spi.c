@@ -30,13 +30,15 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 
 spi_cfg_t spi = {
     .spi = &GPSPI2,
-    .gpio_list = &(gpio_list_t){
-        .cfg = { .mode = GPIO_MODE_MUX },
-        .count = 2,
-        .pin_list = {
-            [SPI_PIN_MOSI] = { .pin = 35, .signal = 2 },
-            [SPI_PIN_SCK] = { .pin = 36, .signal = 2 }
-        }
+    .pin_list = {
+        [SPI_PIN_MOSI] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_MUX },
+            .pin = { .pin = 35, .signal = 2 },
+        },
+        [SPI_PIN_SCK] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_MUX },
+            .pin = { .pin = 36, .signal = 2 },
+        },
     }
 };
 
