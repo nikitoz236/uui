@@ -14,7 +14,7 @@ SRC += $(LIB)/common/str_utils.c
 SRC += $(LIB)/common/str_val.c
 SRC += $(LIB)/common/str_val_buf.c
 
-SRC += $(LIB)/hw/esp32/systime.c
+SRC += $(PERIPH)/esp32_systime.c
 
 INC += $(PERIPH)
 SRC += $(PERIPH)/esp32_spi.c
@@ -36,5 +36,9 @@ SRC += $(LIB)/graphic/lcd_text.c
 
 INC += $(LIB)/graphic/lcd_color
 SRC += $(LIB)/graphic/lcd_color/lcd_text_color.c
+
+INC += $(LIB)/graphic/text
+SRC += $(LIB)/graphic/text/text_pointer.c
+SRC += $(LIB)/graphic/text/font_config.c
 
 include $(LIB)/hw/esp32/build_esp32.mk
