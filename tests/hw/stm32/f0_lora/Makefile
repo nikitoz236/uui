@@ -37,5 +37,6 @@ INC += $(LIB)/hw/include
 INC += $(LIB)/hw/drivers
 
 SRC += $(LIB)/hw/drivers/sx1262.c
+SRC += $(LIB)/hw/drivers/lora.c
 
 include $(LIB)/hw/system/uc_build.mk

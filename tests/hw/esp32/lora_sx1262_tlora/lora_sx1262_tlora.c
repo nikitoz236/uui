@@ -2,7 +2,7 @@
 #include "esp32_spi.h"
 #include "esp32_i2c.h"
 #include "xl9555.h"
-#include "sx1262.h"
+#include "lora.h"
 
 #include "dbg_usb_cdc_acm.h"
 
@@ -15,12 +15,11 @@
  * T-LoRa Pager pin map:
  *
  * SPI bus:  MOSI=34 (FSPID), MISO=33 (FSPIQ), SCK=35 (FSPICLK)
- * SX1262:   CS=36, RESET=47, BUSY=48, IRQ=14
+ * SX1262:   CS=36, RESET=47, BUSY=48, DIO1=14
  * I2C bus:  SCL=2, SDA=3
  * XL9555:   addr=0x20, GPIO3 = LoRa power enable
  *
  * SX1262 на T-LoRa Pager имеет TCXO 32МГц питаемый от DIO3 (1.8В).
- * Инит: SetTcxoMode → Calibrate → настройка → TX loop.
  */
 
 void __debug_usart_tx_data(const char * s, unsigned len)
@@ -71,83 +70,41 @@ spi_cfg_t spi_bus = {
     },
 };
 
-/* ── SX1262 ────────────────────────────────────────────────────────────── */
-
-static sx1262_cfg_t sx1262 = {
-    .spi_dev = {
-        .spi = &spi_bus,
-        .cs_pin = &(gpio_t){
-            .pin = { .pin = 36 },
-            .cfg = { .mode = GPIO_MODE_OUT },
-        },
-    },
-    .reset = &(gpio_t){
-        .pin = { .pin = 47 },
-        .cfg = { .mode = GPIO_MODE_OUT },
-    },
-    .busy = &(gpio_t){
-        .pin = { .pin = 48 },
-        .cfg = { .mode = GPIO_MODE_IN },
-    },
-};
-
-/* ── LoRa TX init ──────────────────────────────────────────────────────── */
+/* ── LoRa config ──────────────────────────────────────────────────────── */
 
 #define PAYLOAD_LEN 16
 
-static void lora_init(void)
-{
-    /* TCXO: DIO3 питает кристалл 1.8В, timeout ~5мс (320 тиков по 15.625мкс) */
-    sx1262_set_tcxo_mode(&sx1262, SX1262_TCXO_CTRL_1_8V, 320);
-    sx1262_wait_busy(&sx1262);
-
-    /* Калибровка всех блоков после включения TCXO */
-    sx1262_calibrate(&sx1262, SX1262_CALIBRATE_ALL);
-    sx1262_wait_busy(&sx1262);
-
-    /* Калибровка image rejection для 868 МГц (диапазон 863-870) */
-    sx1262_calibrate_image(&sx1262, 0xD7, 0xDB);
-    sx1262_wait_busy(&sx1262);
-
-    /* DIO2 управляет RF switch */
-    sx1262_set_dio2_rf_switch_ctrl(&sx1262, 1);
-    sx1262_wait_busy(&sx1262);
-
-    /* LoRa mode */
-    sx1262_set_packet_type(&sx1262, SX1262_PKT_TYPE_LORA);
-    sx1262_wait_busy(&sx1262);
-
-    /* 868 МГц */
-    sx1262_set_rf_frequency(&sx1262, 868000000);
-    sx1262_wait_busy(&sx1262);
-
-    /* PA config для SX1262 (не SX1261): duty=0x04, hp_max=0x07, device_sel=0x00, pa_lut=0x01 */
-    sx1262_set_pa_config(&sx1262, 0x04, 0x07, 0x00, 0x01);
-    sx1262_wait_busy(&sx1262);
-
-    /* TX power: +14 dBm, ramp 200мкс */
-    sx1262_set_tx_params(&sx1262, 14, SX1262_RAMP_200U);
-    sx1262_wait_busy(&sx1262);
-
-    /* Modulation: SF7, BW125, CR4/5, LDRO off */
-    sx1262_set_mod_params(&sx1262, SX1262_SF7, SX1262_BW_125, SX1262_CR_4_5, 0);
-    sx1262_wait_busy(&sx1262);
-
-    /* Packet: preamble=8, explicit header, payload=PAYLOAD_LEN, CRC on, IQ normal */
-    sx1262_set_packet_params(&sx1262, 8, 0x00, PAYLOAD_LEN, 0x01, 0x00);
-    sx1262_wait_busy(&sx1262);
-
-    /* Buffer base: TX=0, RX=128 */
-    sx1262_set_buffer_base_addr(&sx1262, 0, 128);
-    sx1262_wait_busy(&sx1262);
-
-    /* IRQ: TX_DONE и TIMEOUT → DIO1 */
-    sx1262_set_dio_irq_params(&sx1262,
-        SX1262_IRQ_TX_DONE | SX1262_IRQ_TIMEOUT,
-        SX1262_IRQ_TX_DONE | SX1262_IRQ_TIMEOUT,
-        0, 0);
-    sx1262_wait_busy(&sx1262);
-}
+static lora_cfg_t lora = {
+    .chip = {
+        .spi_dev = {
+            .spi = &spi_bus,
+            .cs_pin = &(gpio_t){
+                .pin = { .pin = 36 },
+                .cfg = { .mode = GPIO_MODE_OUT },
+            },
+        },
+        .pin = {
+            [SX1262_PIN_RESET] = &(gpio_t){
+                .pin = { .pin = 47 },
+                .cfg = { .mode = GPIO_MODE_OUT },
+            },
+            [SX1262_PIN_BUSY] = &(gpio_t){
+                .pin = { .pin = 48 },
+                .cfg = { .mode = GPIO_MODE_IN },
+            },
+            [SX1262_PIN_DIO1] = &(gpio_t){
+                .pin = { .pin = 14 },
+                .cfg = { .mode = GPIO_MODE_IN },
+            },
+        },
+    },
+    .freq_hz = 868000000,
+    .power = 14,
+    .tcxo_voltage = LORA_TCXO_1_8V,
+    .dio2_rf_switch = 1,
+    .mod = { .sf = LORA_SF7, .bw = LORA_BW_125, .cr = LORA_CR_4_5, .ldro = LORA_LDRO_OFF },
+    .pkt = { .preamble_len = 8, .header_type = LORA_HEADER_EXPLICIT, .crc = LORA_CRC_ON, .invert_iq = LORA_IQ_STANDARD },
+};
 
 /* ── main ──────────────────────────────────────────────────────────────── */
 
@@ -163,16 +120,16 @@ int main(void)
     delay_ms(20);
 
     init_spi(&spi_bus);
-    sx1262_init_pins(&sx1262);
-    sx1262_reset(&sx1262);
+    sx1262_init_pins(&lora.chip);
+    sx1262_reset(&lora.chip);
 
-    if (!sx1262_check_connection(&sx1262)) {
+    if (!sx1262_check_connection(&lora.chip)) {
         dpn("sx1262 FAILED");
         while (1) {}
     }
     dpn("sx1262 ok");
 
-    lora_init();
+    lora_init(&lora);
     dpn("lora ready, tx loop");
 
     uint8_t payload[PAYLOAD_LEN] = "hello from esp32";
@@ -182,25 +139,7 @@ int main(void)
         pkt++;
         payload[0] = (uint8_t)pkt;
 
-        sx1262_clear_irq_status(&sx1262, 0xFFFF);
-        sx1262_wait_busy(&sx1262);
-
-        sx1262_write_buffer(&sx1262, 0, payload, PAYLOAD_LEN);
-        sx1262_wait_busy(&sx1262);
-
-        /* TX timeout: 3с = 3000мс * 64тика/мс = 192000 */
-        sx1262_set_tx(&sx1262, 192000);
-
-        uint16_t irq;
-        do {
-            sx1262_wait_busy(&sx1262);
-            irq = sx1262_get_irq_status(&sx1262);
-        } while (!(irq & (SX1262_IRQ_TX_DONE | SX1262_IRQ_TIMEOUT)));
-
-        sx1262_clear_irq_status(&sx1262, irq);
-        sx1262_wait_busy(&sx1262);
-
-        if (irq & SX1262_IRQ_TX_DONE) {
+        if (lora_send(&lora, payload, PAYLOAD_LEN)) {
             dp("tx ok  seq="); dpd(pkt, 5);
             dp("  len="); dpd(PAYLOAD_LEN, 2);
             dp("  data: "); dpxd(payload, 1, PAYLOAD_LEN);
