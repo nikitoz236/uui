@@ -23,6 +23,9 @@ enum spi_gpio_list {
     SPI_PIN_NUM_4_PIN_RX_TX_CS = SPI_PIN_CS + 1,
 };
 
+void init_spi(const spi_cfg_t * cfg);
+unsigned spi_is_busy(const spi_cfg_t * cfg);
+
 static inline void init_spi_dev(const spi_dev_cfg_t * cfg)
 {
     init_gpio(cfg->cs_pin);
@@ -36,11 +39,9 @@ static inline void spi_dev_select(const spi_dev_cfg_t * cfg)
 
 static inline void spi_dev_unselect(const spi_dev_cfg_t * cfg)
 {
+    while (spi_is_busy(cfg->spi)) {}
     gpio_set_state(cfg->cs_pin, 1);
 }
-
-void init_spi(const spi_cfg_t * cfg);
-unsigned spi_is_busy(const spi_cfg_t * cfg);
 void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len);
 
 uint8_t spi_exchange_8(const spi_cfg_t * cfg, uint8_t c);
