@@ -60,6 +60,21 @@
     make monitor  — открыть serial monitor
     make reset    — сбросить устройство
 
+### Для ИИ-агентов: чтение вывода платы
+
+`make monitor` требует TTY. Для чтения из скриптов использовать `serial_monitor/esp32_monitor.py`.
+
+**ESP32-S3** — скрипт сам открывает порт и сбрасывает плату:
+
+    python3 serial_monitor/esp32_monitor.py <port> --timeout 5
+
+**STM32** (ST-Link VCP) — сброс делает OpenOCD, скрипт только читает.
+Порт открыть до сброса, иначе первые строки потеряются:
+
+    python3 serial_monitor/esp32_monitor.py <port> --no-reset --timeout 5 &
+    make reset -C <test_dir>
+    wait
+
 ## Архитектурные принципы
 
 ### Нет динамической памяти
