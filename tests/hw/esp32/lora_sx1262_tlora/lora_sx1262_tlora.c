@@ -72,8 +72,6 @@ spi_cfg_t spi_bus = {
 
 /* ── LoRa config ──────────────────────────────────────────────────────── */
 
-#define PAYLOAD_LEN 16
-
 static lora_cfg_t lora = {
     .chip = {
         .spi_dev = {
@@ -100,10 +98,11 @@ static lora_cfg_t lora = {
     },
     .freq_hz = 868000000,
     .power = 14,
-    .tcxo_voltage = LORA_TCXO_1_8V,
+    .tcxo = 1,
+    .tcxo_voltage = SX1262_TCXO_1_8V,
     .dio2_rf_switch = 1,
-    .mod = { .sf = LORA_SF7, .bw = LORA_BW_125, .cr = LORA_CR_4_5, .ldro = LORA_LDRO_OFF },
-    .pkt = { .preamble_len = 8, .header_type = LORA_HEADER_EXPLICIT, .crc = LORA_CRC_ON, .invert_iq = LORA_IQ_STANDARD },
+    .mod = { .sf = SX1262_SF7, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
+    .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
 };
 
 /* ── main ──────────────────────────────────────────────────────────────── */
@@ -132,17 +131,17 @@ int main(void)
     lora_init(&lora);
     dpn("lora ready, tx loop");
 
-    uint8_t payload[PAYLOAD_LEN] = "hello from esp32";
+    uint8_t payload[] = { 0, 'h', 'e', 'l', 'l', 'o', ' ', 'f', 'r', 'o', 'm', ' ', 'e', 's', 'p', '3' };
     uint32_t pkt = 0;
 
     while (1) {
         pkt++;
         payload[0] = (uint8_t)pkt;
 
-        if (lora_send(&lora, payload, PAYLOAD_LEN)) {
+        if (lora_send(&lora, &payload[0], sizeof(payload))) {
             dp("tx ok  seq="); dpd(pkt, 5);
-            dp("  len="); dpd(PAYLOAD_LEN, 2);
-            dp("  data: "); dpxd(payload, 1, PAYLOAD_LEN);
+            dp("  len="); dpd(sizeof(payload), 2);
+            dp("  data: "); dpxd(&payload[0], 1, sizeof(payload));
             dn();
         } else {
             dp("tx err seq="); dpd(pkt, 5);

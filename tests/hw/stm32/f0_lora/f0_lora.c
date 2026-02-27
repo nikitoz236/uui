@@ -106,10 +106,11 @@ static lora_cfg_t lora = {
     },
     .freq_hz = 868000000,
     .power = 14,
-    .tcxo_voltage = LORA_TCXO_1_8V,
+    .tcxo = 1,
+    .tcxo_voltage = SX1262_TCXO_1_8V,
     .dio2_rf_switch = 1,
-    .mod = { .sf = LORA_SF7, .bw = LORA_BW_125, .cr = LORA_CR_4_5, .ldro = LORA_LDRO_OFF },
-    .pkt = { .preamble_len = 8, .header_type = LORA_HEADER_EXPLICIT, .crc = LORA_CRC_ON, .invert_iq = LORA_IQ_STANDARD },
+    .mod = { .sf = SX1262_SF7, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
+    .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
 };
 
 /* -- main ----------------------------------------------------------------- */
@@ -141,18 +142,18 @@ int main(void)
 
     lora_init(&lora);
 
-    uint16_t errors = sx1262_get_device_errors(&lora.chip);
-    dp("device errors: "); dpx(errors, 2); dn();
+    sx1262_reg_errors_t errors = sx1262_get_device_errors(&lora.chip);
+    dp("device errors: "); dpx(errors.raw, 2); dn();
 
-    uint8_t status = sx1262_get_status(&lora.chip);
-    dp("status after init: "); dpx(status, 1); dn();
+    sx1262_reg_status_t status = sx1262_get_status(&lora.chip);
+    dp("status after init: "); dpx(status.raw, 1); dn();
 
     dpn("lora ready, waiting...");
 
     lora_rx_start(&lora);
 
     status = sx1262_get_status(&lora.chip);
-    dp("status in rx: "); dpx(status, 1); dn();
+    dp("status in rx: "); dpx(status.raw, 1); dn();
 
     uint32_t pkt = 0;
 
@@ -174,7 +175,9 @@ int main(void)
             } else {
                 dpd((unsigned)snr_raw / 4, 3);
             }
+            dp("  len="); dpd((unsigned)n, 2);
             dp("  cnt="); dpd(pkt, 5);
+            dp("  data: "); dpxd(buf, 1, (unsigned)n);
             dn();
         } else if (n < 0) {
             dpn("rx crc error");
