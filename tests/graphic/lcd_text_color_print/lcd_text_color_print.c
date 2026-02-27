@@ -21,7 +21,7 @@ int main()
     form_t lcd_form;
 
     emu_lcd_init(&lcd_cfg, &lcd_form);
-    emu_graphic_init(lcd_form.s.w, lcd_form.s.h);
+    emu_graphic_init_xy(lcd_form.s);
     emu_lcd_clear();
 
     lcd_rect(4, 5, 310, 228, 0x1234);
