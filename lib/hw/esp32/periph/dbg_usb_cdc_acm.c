@@ -1,21 +1,26 @@
-#include "soc/usb_serial_jtag_struct.h"
+/*
+ * Отладочный вывод через встроенный USB Serial/JTAG контроллер ESP32-S3.
+ *
+ * ESP32-S3 имеет аппаратный USB Serial/JTAG (не требует внешнего USB-UART
+ * моста). Endpoint 1 (EP1) — CDC ACM IN: данные пишутся побайтно в FIFO
+ * через rdwr_byte, отправка пакета хосту — wr_done = 1.
+ *
+ * FIFO вмещает 64 байта. Если FIFO заполнен (serial_in_ep_data_free == 0),
+ * отправляем что успели и выходим — данные теряются, но без задержки.
+ * Когда монитор не подключён, вызов стоит ~100 нс (одна проверка регистра).
+ *
+ * Используется как бэкенд dp()/dpx()/dpn() во всех ESP32-S3 тестах.
+ */
 
-// volatile uint32_t usb_write_cnt = 0;
+#include "soc/usb_serial_jtag_struct.h"
 
 void dbg_usb_cdc_acm_tx(const char * s, unsigned len)
 {
-    // проверка что кабель подключен и порт открыт
-    if (USB_SERIAL_JTAG.int_raw.in_token_rec_in_ep1_int_raw) {
-        USB_SERIAL_JTAG.int_clr.in_token_rec_in_ep1_int_clr = 1;
-    } else {
-        // usb_write_cnt = 0;
-        return;
-    }
-
-    // usb_write_cnt += len;
-
     while (len--) {
-        while (USB_SERIAL_JTAG.ep1_conf.serial_in_ep_data_free == 0) {};
+        if (!USB_SERIAL_JTAG.ep1_conf.serial_in_ep_data_free) {
+            USB_SERIAL_JTAG.ep1_conf.wr_done = 1;
+            return;
+        }
         USB_SERIAL_JTAG.ep1.rdwr_byte = *s++;
     }
     USB_SERIAL_JTAG.ep1_conf.wr_done = 1;
