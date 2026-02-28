@@ -1,5 +1,5 @@
 #pragma once
-#include "forms.h"
+#include "xy_type.h"
 #include "api_lcd_color.h"
 
 typedef struct {
@@ -10,5 +10,4 @@ typedef struct {
     unsigned bg_color;          // цвет фона экрана (рамки и зазоров)
 } emu_lcd_cfg_t;
 
-void emu_lcd_init(emu_lcd_cfg_t * cfg, form_t * f);
 void emu_lcd_clear(void);

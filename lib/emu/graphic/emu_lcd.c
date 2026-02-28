@@ -1,4 +1,3 @@
-#include "emu_lcd.h"
 #include "emu_graphic.h"
 #include "gfx.h"
 
@@ -18,7 +17,7 @@ static inline void emu_graphic_rect(form_t * r, unsigned color)
     gfx_rect(r->p.x, r->p.y, r->s.w, r->s.h);
 }
 
-void emu_graphic_init_xy(xy_t size)
+static void emu_graphic_init_xy(xy_t size)
 {
     gfx_open((int)size.w, (int)size.h, "emu");
 }
@@ -48,6 +47,17 @@ void emu_lcd_init(emu_lcd_cfg_t * cfg, form_t * f)
             (2 * emu_lcd_cfg->border)
         );
     }
+}
+
+void emu_graphic_init(emu_lcd_cfg_t * cfg)
+{
+    form_t lcd_form = {};
+
+    emu_lcd_init(cfg, &lcd_form);
+
+    emu_graphic_init_xy(lcd_form.s);
+
+    emu_lcd_clear();
 }
 
 void emu_lcd_clear(void)

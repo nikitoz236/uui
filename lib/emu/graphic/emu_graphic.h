@@ -1,9 +1,10 @@
 #pragma once
 #include <unistd.h>
-#include "xy_type.h"
+#include "emu_lcd.h"
 
-void emu_graphic_init_xy(xy_t size);
 char emu_routine(void);
+
+void emu_graphic_init(emu_lcd_cfg_t * cfg);
 
 static inline void emu_graphic_loop(void (*process)(char key))
 {

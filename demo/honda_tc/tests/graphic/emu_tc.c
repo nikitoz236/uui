@@ -1,7 +1,8 @@
+#include <stdio.h>
+
 #include "emu_tc.h"
 
 #include "emu_graphic.h"
-#include "emu_lcd.h"
 
 #include "event_list.h"
 #include "tc_colors.h"
@@ -13,6 +14,11 @@
 #include "dlc_poll.h"
 
 volatile unsigned uptime_ms = 0;
+
+void tc_engine_set_status(unsigned state)
+{
+    printf("tc_engine_set_status %d\n", state);
+}
 
 void view_process(char key)
 {
@@ -54,6 +60,10 @@ void view_process(char key)
         ui_tree_debug_print_tree();
     }
 
+    if (event) {
+        printf("event %d\n", event);
+    }
+
     ui_tree_process(event);
 }
 
@@ -77,11 +87,7 @@ void emu_ui_node(const ui_node_desc_t * node)
         .bg_color = 0x202020
     };
 
-    form_t lcd_form = {};
-
-    emu_lcd_init(&lcd_cfg, &lcd_form);
-    emu_graphic_init(lcd_form.s.w, lcd_form.s.h);
-    emu_lcd_clear();
+    emu_graphic_init(&lcd_cfg);
 
     uint8_t ui_ctx[1024];
     ui_tree_init(ui_ctx, 1024, node, &lcd_cfg.size);

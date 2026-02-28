@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "ui_tree.h"
 #include "emu_graphic.h"
-#include "emu_lcd.h"
 
 #include "event_list.h"
 #include "widget_screen_switch.h"
@@ -38,10 +37,7 @@ int main()
         .scale = 3
     };
 
-    form_t lcd_form = {};
-    emu_lcd_init(&lcd_cfg, &lcd_form);
-    emu_graphic_init_xy(lcd_form.s);
-    emu_lcd_clear();
+    emu_graphic_init(&lcd_cfg);
 
     uint8_t screen_selector = 0;
 
