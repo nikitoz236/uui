@@ -41,7 +41,9 @@ CFLAGS += -nostdlib
 # CFLAGS += -specs=nano.specs
 CFLAGS += -finline-stringops # not need memcpy function
 
+# удаление неиспользуемого кода из бинарника
 CFLAGS += -Os -ffunction-sections -fdata-sections
+CFLAGS += -Wl,--gc-sections
 
 BUILD_DIR = build
 
