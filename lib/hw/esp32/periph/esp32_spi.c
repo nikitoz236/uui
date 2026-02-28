@@ -6,7 +6,7 @@
 
 static unsigned spi_len = 1;
 
-#define SPI_1MHZ
+// #define SPI_1MHZ
 
 void init_spi(const spi_cfg_t * cfg)
 {
