@@ -1,4 +1,5 @@
 #include "emu_graphic.h"
+#include "forms.h"
 #include "gfx.h"
 
 static form_t * emu_lcd_form;
@@ -27,7 +28,7 @@ char emu_routine(void)
     return gfx_routine();
 }
 
-void emu_lcd_init(emu_lcd_cfg_t * cfg, form_t * f)
+static void emu_lcd_init(emu_lcd_cfg_t * cfg, form_t * f)
 {
     emu_lcd_cfg = cfg;
     emu_lcd_form = f;
