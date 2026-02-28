@@ -52,7 +52,7 @@ static void emu_lcd_init(emu_lcd_cfg_t * cfg, form_t * f)
 
 void emu_graphic_init(emu_lcd_cfg_t * cfg)
 {
-    form_t lcd_form = {};
+    static form_t lcd_form = {};
 
     emu_lcd_init(cfg, &lcd_form);
 
