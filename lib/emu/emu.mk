@@ -12,7 +12,8 @@ build_check: $(TEST_NAME)_app
 	rm $<
 
 clean:
-	rm *_app
+	rm -f *_app
+	rm -rf $(AI_DIR)
 
 src_print:
 	$(shell for s in $(SRC) ; do ls $$s ; done)

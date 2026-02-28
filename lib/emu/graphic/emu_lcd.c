@@ -1,8 +1,32 @@
 #include "emu_lcd.h"
 #include "emu_graphic.h"
+#include "gfx.h"
 
 static form_t * emu_lcd_form;
 static emu_lcd_cfg_t * emu_lcd_cfg;
+
+static inline void emu_graphic_rect(form_t * r, unsigned color)
+{
+    struct color {
+        int b : 8;
+        int g : 8;
+        int r : 8;
+    };
+    struct color * cp = (struct color *)&color;
+    gfx_color(cp->r, cp->g, cp->b);
+
+    gfx_rect(r->p.x, r->p.y, r->s.w, r->s.h);
+}
+
+void emu_graphic_init_xy(xy_t size)
+{
+    gfx_open((int)size.w, (int)size.h, "emu");
+}
+
+char emu_routine(void)
+{
+    return gfx_routine();
+}
 
 void emu_lcd_init(emu_lcd_cfg_t * cfg, form_t * f)
 {
