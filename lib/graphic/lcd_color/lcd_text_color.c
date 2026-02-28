@@ -279,9 +279,9 @@ void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, cons
 }
 
 
-
-
-
+#define DP_OFF
+#define DP_NAME "text print"
+#include "dp.h"
 
 void lcd_tptr_clear(tptr_t * tptr, color_scheme_t * cs, unsigned len)
 {
