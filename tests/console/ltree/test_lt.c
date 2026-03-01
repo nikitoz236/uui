@@ -23,8 +23,6 @@ void print_lt_linear()
         dp("  :  owner "); dpd(item->owner, 4);
         dp("  next "); dpd(item->next, 4);
         dp("  child "); dpd(item->child, 4);
-        dp("  idx "); dpd(item->idx, 2);
-        dp("  flags "); dpd(item->flags, 2);
         dp("  ctx: ");
         dpxd(&item->ctx, 4, item->desc->ctx_size / 4);
         dn();
@@ -45,8 +43,6 @@ void print_tree(lt_item_t * item, unsigned level)
         dp(" owner "); dpd(item->owner, 4);
         dp(" next "); dpd(item->next, 4);
         dp(" child "); dpd(item->child, 4);
-        dp(" idx "); dpd(item->idx, 2);
-        dp(" flags "); dpd(item->flags, 2);
         dp(" ctx: ");
         dpxd(&item->ctx, 4, item->desc->ctx_size / 4);
         dn();
@@ -69,6 +65,12 @@ void print_lt(void)
     print_tree(lt_item_from_offset(0), 1);
 }
 
+/*
+    проверяет компактификацию буфера после мутаций
+    проходит по памяти линейно (lt_next_in_mem), сравнивает ctx каждого элемента с ожидаемым массивом
+    проверяет количество элементов и lt_used()
+    не проверяет ссылочную структуру дерева (owner/child/next)
+*/
 unsigned check_linear_ctx(unsigned exp_ctx[], unsigned ctx_len)
 {
     unsigned res = 0;
@@ -106,6 +108,73 @@ unsigned check_linear_ctx(unsigned exp_ctx[], unsigned ctx_len)
     dp("  check lt used = "); dpd(used, 6); dp(" exp: "); dpd(ctx_len * 16, 6); dp(" - "); dp(test_result_text[res]); dn();
 
     return total_res;
+}
+
+/*
+    рекурсивно обходит поддерево по ссылкам (lt_child / lt_next)
+    для каждого элемента проверяет что owner указывает на родителя
+    считает количество достижимых элементов в *count
+*/
+unsigned check_subtree(lt_item_t * item, unsigned expected_owner, unsigned * count)
+{
+    unsigned res = 0;
+
+    while (item) {
+        (*count)++;
+        unsigned offset = lt_item_offset(item);
+        unsigned r = (item->owner != expected_owner);
+        if (r) res = 1;
+
+        dp("  check owner for "); dpd(offset, 4);
+        dp(" = "); dpd(item->owner, 4);
+        dp(" exp: "); dpd(expected_owner, 4);
+        dp(" - "); dp(test_result_text[r]); dn();
+
+        lt_item_t * child = lt_child(item);
+        if (child) {
+            if (check_subtree(child, offset, count)) {
+                res = 1;
+            }
+        }
+
+        item = lt_next(item);
+    }
+
+    return res;
+}
+
+/*
+    проверяет целостность ссылочной структуры дерева после мутаций
+    обходит дерево рекурсивно по lt_child / lt_next начиная с корня
+    проверяет:
+    - owner каждого элемента указывает на его родителя
+    - количество элементов достижимых по дереву совпадает с количеством в линейном буфере
+      (нет потерянных нод, выпавших из дерева после компактификации)
+*/
+unsigned check_tree_integrity(void)
+{
+    unsigned res = 0;
+    dn(); dpn("check tree integrity");
+
+    unsigned tree_count = 0;
+    if (check_subtree(lt_item_from_offset(0), 0, &tree_count)) {
+        res = 1;
+    }
+
+    unsigned linear_count = 0;
+    lt_item_t * item = lt_item_from_offset(0);
+    while (item) {
+        linear_count++;
+        item = lt_next_in_mem(item);
+    }
+
+    unsigned r = (tree_count != linear_count);
+    if (r) res = 1;
+    dp("  tree count = "); dpd(tree_count, 3);
+    dp(" linear count = "); dpd(linear_count, 3);
+    dp(" - "); dp(test_result_text[r]); dn();
+
+    return res;
 }
 
 lt_item_t * create_lt(void)
@@ -192,6 +261,9 @@ int main()
     if (check_linear_ctx(exp_created, ARRAY_SIZE(exp_created))) {
         total_res = 1;
     }
+    if (check_tree_integrity()) {
+        total_res = 1;
+    }
 
     lt_item_t * n = lt_child_idx(root, 0);
 
@@ -203,6 +275,9 @@ int main()
     print_lt();
 
     if (check_linear_ctx(exp_delete_1, ARRAY_SIZE(exp_delete_1))) {
+        total_res = 1;
+    }
+    if (check_tree_integrity()) {
         total_res = 1;
     }
 
@@ -226,6 +301,9 @@ int main()
     if (check_linear_ctx(exp_add_1, ARRAY_SIZE(exp_add_1))) {
         total_res = 1;
     }
+    if (check_tree_integrity()) {
+        total_res = 1;
+    }
 
     lt_delete_childs(
         lt_child_idx(
@@ -241,10 +319,16 @@ int main()
     if (check_linear_ctx(exp_delete_2, ARRAY_SIZE(exp_delete_2))) {
         total_res = 1;
     }
+    if (check_tree_integrity()) {
+        total_res = 1;
+    }
 
     lt_delete(lt_child_idx(root, 0));
     print_lt();
     if (check_linear_ctx(exp_delete_3, ARRAY_SIZE(exp_delete_3))) {
+        total_res = 1;
+    }
+    if (check_tree_integrity()) {
         total_res = 1;
     }
 
