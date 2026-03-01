@@ -1,16 +1,15 @@
 #include "aw9364.h"
 #include "delay_blocking.h"
 
-static gpio_t * pin;
-
 void init_backlight(backlight_cfg_t * cfg)
 {
-    pin = &cfg->pin;
-    init_gpio(pin);
+    init_gpio(cfg->pin);
 }
 
-void bl_set(unsigned lvl)
+void bl_set(backlight_cfg_t * cfg, unsigned lvl)
 {
+    gpio_t * pin = cfg->pin;
+
     if (lvl == 0 || lvl > 15) {
         gpio_set_state(pin, 0);
         return;

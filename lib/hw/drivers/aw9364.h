@@ -4,5 +4,5 @@
 #include "gpio.h"
 
 struct backlight_cfg {
-    gpio_t pin;
+    gpio_t * pin;
 };

@@ -4,5 +4,5 @@
 #include "pwm.h"
 
 struct backlight_cfg {
-    pwm_cfg_t pwm;
+    pwm_cfg_t * pwm;
 };

@@ -12,3 +12,8 @@ void init_lcd_hw(const lcd_cfg_t * cfg)
         init_backlight(cfg->bl);
     }
 }
+
+void lcd_bl(unsigned val)
+{
+    bl_set(lcd_hw_cfg->bl, val);
+}
