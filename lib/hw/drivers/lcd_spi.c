@@ -9,11 +9,6 @@ void init_lcd_hw(const lcd_cfg_t * cfg)
     init_gpio_list(cfg->ctrl_lines);
     init_spi(cfg->spi_dev.spi);
     if (cfg->bl) {
-        init_pwm(cfg->bl);
+        init_backlight(cfg->bl);
     }
-}
-
-void lcd_bl(unsigned val)
-{
-    pwm_set_ccr(lcd_hw_cfg->bl, val);
 }
