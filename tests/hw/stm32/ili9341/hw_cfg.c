@@ -80,21 +80,23 @@ const lcd_cfg_t lcd_cfg = {
             .clock_div = SPI_DIV_2
         },
     },
-    .bl = &(pwm_cfg_t){
-        .freq = 40000,
-        .max_val = 10,
-        .ch = 2,
-        .tim = TIM3,
-        .pclk = PCLK_TIM3,
-        .gpio = &(gpio_t){
-            .gpio = {
-                .port = GPIO_PORT_B,
-                .pin = 5
-            },
-            .cfg = {
-                .mode = GPIO_MODE_AF,
-                .speed = GPIO_SPEED_HIGH,
-                .type = GPIO_TYPE_PP
+    .bl = &(backlight_cfg_t){
+        .pwm = &(pwm_cfg_t){
+            .freq = 40000,
+            .max_val = 10,
+            .ch = 2,
+            .tim = TIM3,
+            .pclk = PCLK_TIM3,
+            .gpio = &(gpio_t){
+                .gpio = {
+                    .port = GPIO_PORT_B,
+                    .pin = 5
+                },
+                .cfg = {
+                    .mode = GPIO_MODE_AF,
+                    .speed = GPIO_SPEED_HIGH,
+                    .type = GPIO_TYPE_PP
+                }
             }
         }
     },

@@ -5,6 +5,7 @@
 
 #include "systick.h"
 #include "stm_pwm.h"
+#include "bl_pwm.h"
 
 #include "lcd_spi.h"
 #include "periph_spi.h"
@@ -97,25 +98,27 @@ const lcd_cfg_t lcd_cfg = {
             }
         }
     },
-    .bl = &(pwm_cfg_t){
-        .freq = 40000,
-        .max_val = 10,
-        .pclk = PCLK_TIM16,
-        .tim = TIM16,
-        // .pclk = PCLK_TIM3,
-        // .tim = TIM3,
-        .ch = 1,
-        .gpio = &(gpio_t) {
-            .cfg = {
-                .af = 5,
-                // .af = 1,
-                .mode = GPIO_MODE_AF,
-                .speed = GPIO_SPEED_HIGH,
-                .type = GPIO_TYPE_PP,
-            },
-            .gpio = {
-                .port = GPIO_PORT_A,
-                .pin = 6
+    .bl = &(backlight_cfg_t){
+        .pwm = &(pwm_cfg_t){
+            .freq = 40000,
+            .max_val = 10,
+            .pclk = PCLK_TIM16,
+            .tim = TIM16,
+            // .pclk = PCLK_TIM3,
+            // .tim = TIM3,
+            .ch = 1,
+            .gpio = &(gpio_t){
+                .cfg = {
+                    .af = 5,
+                    // .af = 1,
+                    .mode = GPIO_MODE_AF,
+                    .speed = GPIO_SPEED_HIGH,
+                    .type = GPIO_TYPE_PP,
+                },
+                .gpio = {
+                    .port = GPIO_PORT_A,
+                    .pin = 6
+                }
             }
         }
     },

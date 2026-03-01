@@ -6,6 +6,7 @@
 
 #include "stm_usart.h"
 #include "stm_pwm.h"
+#include "bl_pwm.h"
 
 #include "lcd_spi.h"
 #include "rtc.h"

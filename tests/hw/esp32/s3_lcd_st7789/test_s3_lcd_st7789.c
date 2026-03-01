@@ -1,6 +1,7 @@
 #include "esp32_gpio.h"
 #include "esp32_spi.h"
 #include "esp32_pwm.h"
+#include "bl_pwm.h"
 
 #include "lcd_spi.h"
 
@@ -39,14 +40,16 @@ const lcd_cfg_t lcd_cfg = {
         },
         .spi = &lcd_spi,
     },
-    .bl = & (pwm_cfg_t) {
-        .gpio = & (gpio_t) {
-            .cfg = { .mode = GPIO_MODE_SIG_OUT },
-            .pin = { .pin = 38, .signal = LEDC_LS_SIG_OUT0_IDX }
-        },
-        .out_ch = 0,
-        .tim_ch = 0,
-        .duty_res = 6
+    .bl = &(backlight_cfg_t){
+        .pwm = &(pwm_cfg_t){
+            .gpio = &(gpio_t){
+                .cfg = { .mode = GPIO_MODE_SIG_OUT },
+                .pin = { .pin = 38, .signal = LEDC_LS_SIG_OUT0_IDX }
+            },
+            .out_ch = 0,
+            .tim_ch = 0,
+            .duty_res = 6
+        }
     },
     .gcfg = {
         .height = 135,
