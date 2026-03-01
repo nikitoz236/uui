@@ -1,5 +1,5 @@
 
-LIB = ../../../../lib
+LIB = ../../../../../lib
 
 
 INC += .
@@ -19,7 +19,6 @@ SRC += $(LIB)/common/str_val_buf.c
 
 INC += $(PERIPH)
 SRC += $(PERIPH)/esp32_spi.c
-SRC += $(PERIPH)/esp32_pwm.c
 SRC += $(PERIPH)/esp32_pclk.c
 SRC += $(PERIPH)/esp32_gpio.c
 SRC += $(PERIPH)/esp32_i2c.c
@@ -29,6 +28,7 @@ SRC += $(PERIPH)/esp32_systime.c
 INC += $(LIB)/hw/drivers
 SRC += $(LIB)/hw/drivers/tca8418_kbd.c
 SRC += $(LIB)/hw/drivers/bq25896.c
+SRC += $(LIB)/hw/drivers/aw9364.c
 
 INC += $(LIB)/hw/api
 INC += $(LIB)/hw/drivers
