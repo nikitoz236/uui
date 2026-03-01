@@ -1,8 +1,8 @@
 #pragma once
 
 #include "backlight.h"
-#include "gpio.h"
+#include "pwm.h"
 
 struct backlight_cfg {
-    gpio_t pin;
+    pwm_cfg_t pwm;
 };

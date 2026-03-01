@@ -5,7 +5,7 @@ static gpio_t * pin;
 
 void init_backlight(backlight_cfg_t * cfg)
 {
-    pin = cfg->pin;
+    pin = &cfg->pin;
     init_gpio(pin);
 }
 
