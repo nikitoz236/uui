@@ -28,3 +28,10 @@ void form_cut_padding(form_t * f, xy_t padding)
     }
 }
 
+xy_t form_vec_cut(xy_t vec, xy_t offset)
+{
+    for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
+        vec.ca[d] -= offset.ca[d];
+    }
+    return vec;
+}
