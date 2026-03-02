@@ -107,7 +107,7 @@ static lora_cfg_t lora = {
     .freq_hz = 868000000,
     .power = 14,
     .dio2_rf_switch = 0,               /* E220: TXEN/RXEN pins, not DIO2 */
-    .irq_dio = LORA_IRQ_DIO3,          /* E220: DIO3 connected to MCU, not DIO1 */
+    .irq_dio = SX1262_IRQ_DIO3,         /* E220: DIO3 connected to MCU, not DIO1 */
     .mod = { .sf = SX1262_SF7, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
     .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
 };
@@ -130,34 +130,29 @@ int main(void)
     dpn("e220 lora rx start");
 
     init_spi(lora.chip.spi_dev.spi);
-    sx1262_init_pins(&lora.chip);
-    sx1262_reset(&lora.chip);
 
-    if (!sx1262_check_connection(&lora.chip)) {
-        dpn("llcc68 FAILED");
+    if (!lora_init(&lora)) {
+        dpn("lora FAILED");
         while (1) {};
     }
-    dpn("llcc68 ok");
-
-    lora_init(&lora);
 
     sx1262_reg_errors_t errors = sx1262_get_device_errors(&lora.chip);
     dp("device errors: "); dpx(errors.raw, 2); dn();
 
     dpn("lora ready, waiting...");
 
-    lora_rx_start(&lora);
+    lora_rx_start();
 
     uint32_t pkt = 0;
 
     while (1) {
         uint8_t buf[33];
-        int n = lora_rx_read(&lora, &buf[0], sizeof(buf) - 1);
+        unsigned n = lora_rx_read(&buf[0], sizeof(buf) - 1);
 
         if (n > 0) {
             uint8_t rssi_raw;
             int8_t snr_raw;
-            sx1262_get_packet_status(&lora.chip, &rssi_raw, &snr_raw);
+            lora_get_packet_status(&rssi_raw, &snr_raw);
 
             pkt++;
             dp("rx ok  seq="); dpd(buf[0], 5);
@@ -168,12 +163,10 @@ int main(void)
             } else {
                 dpd((unsigned)snr_raw / 4, 3);
             }
-            dp("  len="); dpd((unsigned)n, 2);
+            dp("  len="); dpd(n, 2);
             dp("  cnt="); dpd(pkt, 5);
-            dp("  data: "); dpxd(&buf[0], 1, (unsigned)n);
+            dp("  data: "); dpxd(&buf[0], 1, n);
             dn();
-        } else if (n < 0) {
-            dpn("rx crc error");
         }
     }
 }

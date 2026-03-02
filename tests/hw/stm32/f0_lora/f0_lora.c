@@ -131,16 +131,11 @@ int main(void)
     dpn("lora rx start");
 
     init_spi(lora.chip.spi_dev.spi);
-    sx1262_init_pins(&lora.chip);
-    sx1262_reset(&lora.chip);
 
-    if (!sx1262_check_connection(&lora.chip)) {
-        dpn("sx1262 FAILED");
-        while (1) {}
+    if (!lora_init(&lora)) {
+        dpn("lora FAILED");
+        while (1) {};
     }
-    dpn("sx1262 ok");
-
-    lora_init(&lora);
 
     sx1262_reg_errors_t errors = sx1262_get_device_errors(&lora.chip);
     dp("device errors: "); dpx(errors.raw, 2); dn();
@@ -150,7 +145,7 @@ int main(void)
 
     dpn("lora ready, waiting...");
 
-    lora_rx_start(&lora);
+    lora_rx_start();
 
     status = sx1262_get_status(&lora.chip);
     dp("status in rx: "); dpx(status.raw, 1); dn();
@@ -159,12 +154,12 @@ int main(void)
 
     while (1) {
         uint8_t buf[33];
-        int n = lora_rx_read(&lora, buf, sizeof(buf) - 1);
+        unsigned n = lora_rx_read(&buf[0], sizeof(buf) - 1);
 
         if (n > 0) {
             uint8_t rssi_raw;
             int8_t snr_raw;
-            sx1262_get_packet_status(&lora.chip, &rssi_raw, &snr_raw);
+            lora_get_packet_status(&rssi_raw, &snr_raw);
 
             pkt++;
             dp("rx ok  seq="); dpd(buf[0], 5);
@@ -175,12 +170,10 @@ int main(void)
             } else {
                 dpd((unsigned)snr_raw / 4, 3);
             }
-            dp("  len="); dpd((unsigned)n, 2);
+            dp("  len="); dpd(n, 2);
             dp("  cnt="); dpd(pkt, 5);
-            dp("  data: "); dpxd(buf, 1, (unsigned)n);
+            dp("  data: "); dpxd(&buf[0], 1, n);
             dn();
-        } else if (n < 0) {
-            dpn("rx crc error");
         }
     }
 }

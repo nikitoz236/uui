@@ -119,16 +119,11 @@ int main(void)
     delay_ms(20);
 
     init_spi(&spi_bus);
-    sx1262_init_pins(&lora.chip);
-    sx1262_reset(&lora.chip);
 
-    if (!sx1262_check_connection(&lora.chip)) {
-        dpn("sx1262 FAILED");
-        while (1) {}
+    if (!lora_init(&lora)) {
+        dpn("lora FAILED");
+        while (1) {};
     }
-    dpn("sx1262 ok");
-
-    lora_init(&lora);
     dpn("lora ready, tx loop");
 
     uint8_t payload[] = { 0, 'h', 'e', 'l', 'l', 'o', ' ', 'f', 'r', 'o', 'm', ' ', 'e', 's', 'p', '3' };
@@ -138,7 +133,7 @@ int main(void)
         pkt++;
         payload[0] = (uint8_t)pkt;
 
-        if (lora_send(&lora, &payload[0], sizeof(payload))) {
+        if (lora_send(&payload[0], sizeof(payload))) {
             dp("tx ok  seq="); dpd(pkt, 5);
             dp("  len="); dpd(sizeof(payload), 2);
             dp("  data: "); dpxd(&payload[0], 1, sizeof(payload));
