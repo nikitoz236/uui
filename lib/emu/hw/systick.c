@@ -9,7 +9,7 @@ void init_systick(void)
     clock_gettime(CLOCK_REALTIME, &systick_start);
 }
 
-unsigned systick_get_uptime_ms(void)
+unsigned get_uptime_ms(void)
 {
     unsigned ms;
     struct timespec t;

@@ -46,6 +46,11 @@ uint32_t systimer_ms(unsigned unit)
     return ms;
 }
 
+unsigned get_uptime_ms(void)
+{
+    return systimer_ms(0);
+}
+
 void delay_ms(unsigned time)
 {
     volatile unsigned start = systimer_ms(0);

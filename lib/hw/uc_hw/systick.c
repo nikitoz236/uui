@@ -8,6 +8,11 @@ volatile unsigned uptime_ms = 0;
 static unsigned systicks_in_ms;
 static unsigned systicks_in_us;
 
+unsigned get_uptime_ms(void)
+{
+    return uptime_ms;
+}
+
 static void systick_irq_handler(void)
 {
     uptime_ms++;
