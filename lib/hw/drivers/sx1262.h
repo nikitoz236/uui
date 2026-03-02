@@ -179,6 +179,12 @@ typedef enum {
     SX1262_PA_14DBM             = 0x03,
 } sx1262_pa_t;
 
+typedef enum {
+    SX1262_IRQ_DIO1             = 0,
+    SX1262_IRQ_DIO2             = 1,
+    SX1262_IRQ_DIO3             = 2,
+} sx1262_irq_dio_t;
+
 /* ── параметры калибровки образа ──────────────────────────────────────── */
 
 typedef struct {
@@ -221,7 +227,7 @@ void sx1262_set_tx_params(const sx1262_cfg_t * cfg, int8_t power, sx1262_ramp_t 
 void sx1262_set_mod_params(const sx1262_cfg_t * cfg, sx1262_sf_t sf, sx1262_bw_t bw, sx1262_cr_t cr, sx1262_ldro_t ldro);
 void sx1262_set_packet_params(const sx1262_cfg_t * cfg, uint16_t preamble, sx1262_header_t ht, uint8_t len, sx1262_crc_t crc, sx1262_iq_t iq);
 void sx1262_set_buffer_base_addr(const sx1262_cfg_t * cfg, uint8_t tx_base, uint8_t rx_base);
-void sx1262_set_irq_mask(const sx1262_cfg_t * cfg, sx1262_reg_irq_t mask, unsigned dio);
+void sx1262_set_irq_mask(const sx1262_cfg_t * cfg, sx1262_reg_irq_t mask, sx1262_irq_dio_t dio);
 
 /* ── передача / приём ─────────────────────────────────────────────────── */
 

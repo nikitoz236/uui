@@ -24,8 +24,19 @@ static void calibrate_image(const sx1262_cfg_t * chip, uint32_t freq_hz)
 
 /* ── инициализация ────────────────────────────────────────────────────── */
 
-void lora_init(const lora_cfg_t * cfg)
+static const lora_cfg_t * lora;
+
+unsigned lora_init(const lora_cfg_t * cfg)
 {
+    lora = cfg;
+
+    sx1262_init_pins(&cfg->chip);
+    sx1262_reset(&cfg->chip);
+
+    if (!sx1262_check_connection(&cfg->chip)) {
+        return 0;
+    }
+
     if (cfg->tcxo) {
         sx1262_set_tcxo_mode(&cfg->chip, cfg->tcxo_voltage, 5);
     }
@@ -46,49 +57,46 @@ void lora_init(const lora_cfg_t * cfg)
     sx1262_set_packet_params(&cfg->chip, cfg->pkt.preamble_len, cfg->pkt.header_type, 0, cfg->pkt.crc, cfg->pkt.invert_iq);
     sx1262_set_buffer_base_addr(&cfg->chip, 0, 0);
     sx1262_reg_irq_t mask = { .tx_done = 1, .rx_done = 1, .crc_err = 1, .timeout = 1 };
-    unsigned dio = cfg->irq_dio;
-    if (!dio) {
-        dio = LORA_IRQ_DIO1;
-    }
-    sx1262_set_irq_mask(&cfg->chip, mask, dio);
+    sx1262_set_irq_mask(&cfg->chip, mask, cfg->irq_dio);
+    return 1;
 }
 
 /* ── передача (блокирующая) ───────────────────────────────────────────── */
 
-unsigned lora_send(const lora_cfg_t * cfg, const uint8_t * data, uint8_t len)
+unsigned lora_send(const uint8_t * data, unsigned len)
 {
-    sx1262_set_packet_params(&cfg->chip, cfg->pkt.preamble_len, cfg->pkt.header_type, len, cfg->pkt.crc, cfg->pkt.invert_iq);
-    sx1262_clear_irq_status(&cfg->chip, (sx1262_reg_irq_t){ .raw = 0xFFFF });
-    sx1262_write_buffer(&cfg->chip, 0, data, len);
-    sx1262_set_tx(&cfg->chip, 10000);
+    sx1262_set_packet_params(&lora->chip, lora->pkt.preamble_len, lora->pkt.header_type, len, lora->pkt.crc, lora->pkt.invert_iq);
+    sx1262_clear_irq_status(&lora->chip, (sx1262_reg_irq_t){ .raw = 0xFFFF });
+    sx1262_write_buffer(&lora->chip, 0, data, len);
+    sx1262_set_tx(&lora->chip, 10000);
 
-    while (!gpio_get_state(cfg->chip.pin[SX1262_PIN_DIO1])) {};
+    while (!gpio_get_state(lora->chip.pin[SX1262_PIN_DIO1])) {};
 
-    sx1262_reg_irq_t irq = sx1262_get_irq_status(&cfg->chip);
-    sx1262_clear_irq_status(&cfg->chip, irq);
+    sx1262_reg_irq_t irq = sx1262_get_irq_status(&lora->chip);
+    sx1262_clear_irq_status(&lora->chip, irq);
 
     return irq.tx_done;
 }
 
 /* ── приём ─────────────────────────────────────────────────────────────── */
 
-void lora_rx_start(const lora_cfg_t * cfg)
+void lora_rx_start(void)
 {
-    sx1262_clear_irq_status(&cfg->chip, (sx1262_reg_irq_t){ .raw = 0xFFFF });
-    sx1262_set_rx(&cfg->chip, SX1262_RX_CONTINUOUS);
+    sx1262_clear_irq_status(&lora->chip, (sx1262_reg_irq_t){ .raw = 0xFFFF });
+    sx1262_set_rx(&lora->chip, SX1262_RX_CONTINUOUS);
 }
 
-int lora_rx_read(const lora_cfg_t * cfg, uint8_t * data, uint8_t max_len)
+unsigned lora_rx_read(uint8_t * data, unsigned max_len)
 {
-    if (!gpio_get_state(cfg->chip.pin[SX1262_PIN_DIO1])) {
+    if (!gpio_get_state(lora->chip.pin[SX1262_PIN_DIO1])) {
         return 0;
     }
 
-    sx1262_reg_irq_t irq = sx1262_get_irq_status(&cfg->chip);
-    sx1262_clear_irq_status(&cfg->chip, irq);
+    sx1262_reg_irq_t irq = sx1262_get_irq_status(&lora->chip);
+    sx1262_clear_irq_status(&lora->chip, irq);
 
     if (irq.crc_err) {
-        return -1;
+        return 0;
     }
 
     if (!irq.rx_done) {
@@ -96,12 +104,24 @@ int lora_rx_read(const lora_cfg_t * cfg, uint8_t * data, uint8_t max_len)
     }
 
     uint8_t payload_len, rx_offset;
-    sx1262_get_rx_buffer_status(&cfg->chip, &payload_len, &rx_offset);
+    sx1262_get_rx_buffer_status(&lora->chip, &payload_len, &rx_offset);
 
     if (payload_len > max_len) {
         payload_len = max_len;
     }
 
-    sx1262_read_buffer(&cfg->chip, rx_offset, data, payload_len);
+    sx1262_read_buffer(&lora->chip, rx_offset, data, payload_len);
     return payload_len;
+}
+
+/* ── вспомогательные ──────────────────────────────────────────────────── */
+
+void lora_standby(void)
+{
+    sx1262_set_standby(&lora->chip, SX1262_STANDBY_RC);
+}
+
+void lora_get_packet_status(uint8_t * rssi, int8_t * snr)
+{
+    sx1262_get_packet_status(&lora->chip, rssi, snr);
 }

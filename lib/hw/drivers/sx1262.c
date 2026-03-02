@@ -252,16 +252,14 @@ void sx1262_set_buffer_base_addr(const sx1262_cfg_t * cfg, uint8_t tx_base, uint
     sx1262_cmd(cfg, CMD_SET_BUF_BASE_ADDR, (uint8_t *)&p, sizeof(p), 0, 0);
 }
 
-void sx1262_set_irq_mask(const sx1262_cfg_t * cfg, sx1262_reg_irq_t mask, unsigned dio)
+void sx1262_set_irq_mask(const sx1262_cfg_t * cfg, sx1262_reg_irq_t mask, sx1262_irq_dio_t dio)
 {
     sx1262_reg_irq_t p[4];
     u16_to_be_buf8((uint8_t *)&p[0], mask.raw);
     p[1].raw = 0;
     p[2].raw = 0;
     p[3].raw = 0;
-    if (dio && dio <= 3) {
-        p[dio] = p[0];
-    }
+    p[dio + 1] = p[0];
     sx1262_cmd(cfg, CMD_SET_DIO_IRQ_PARAMS, (const uint8_t *)&p[0], sizeof(p), 0, 0);
 }
 

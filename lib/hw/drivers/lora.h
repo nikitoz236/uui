@@ -29,18 +29,16 @@ typedef struct {
     unsigned tcxo : 1;
     sx1262_tcxo_voltage_t tcxo_voltage;
     unsigned dio2_rf_switch : 1;
-    enum {
-        LORA_IRQ_DIO1 = 1,
-        LORA_IRQ_DIO2 = 2,
-        LORA_IRQ_DIO3 = 3,
-    } irq_dio : 2;
+    sx1262_irq_dio_t irq_dio : 2;
     lora_mod_params_t mod;
     lora_pkt_params_t pkt;
 } lora_cfg_t;
 
 /* ── операции ─────────────────────────────────────────────────────────── */
 
-void lora_init(const lora_cfg_t * cfg);
-unsigned lora_send(const lora_cfg_t * cfg, const uint8_t * data, uint8_t len);
-void lora_rx_start(const lora_cfg_t * cfg);
-int lora_rx_read(const lora_cfg_t * cfg, uint8_t * data, uint8_t max_len);
+unsigned lora_init(const lora_cfg_t * cfg);
+unsigned lora_send(const uint8_t * data, unsigned len);
+void lora_rx_start(void);
+unsigned lora_rx_read(uint8_t * data, unsigned max_len);
+void lora_standby(void);
+void lora_get_packet_status(uint8_t * rssi, int8_t * snr);
