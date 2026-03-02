@@ -12,6 +12,7 @@
 
 #include "timers_32.h"
 #include "systick.h"
+#include "uptime.h"
 
 #include "date_time.h"
 
@@ -95,7 +96,7 @@ tptr_t tp;
 void process(char k)
 {
     (void)k;
-    if (t32_is_over(&t, systick_get_uptime_ms())) {
+    if (t32_is_over(&t, get_uptime_ms())) {
         t32_extend(&t, 1000);
         real_ctx.time++;
         dn();
@@ -136,7 +137,7 @@ int main()
     };
 
     tp = text_ptr_create((tf_t){ .fcfg = &fcfg, .pos = (xy_t){8, 9}, .lim = fcfg_text_char_places(&fcfg, lcd_cfg.size)} );
-    t32_run(&t, systick_get_uptime_ms(), 1000);
+    t32_run(&t, get_uptime_ms(), 1000);
 
     widget_labels_proces(&widget_labels, &tp, &prev_ctx, 0);
 

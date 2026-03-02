@@ -8,6 +8,7 @@
 #include "tc_colors.h"
 
 #include "systick.h"
+#include "uptime.h"
 #include "mstimer.h"
 #include "rtc.h"
 
@@ -47,7 +48,7 @@ void view_process(char key)
         event = EVENT_LONG_BTN_RIGHT;
     }
 
-    uptime_ms = systick_get_uptime_ms();
+    uptime_ms = get_uptime_ms();
     dlc_poll();
 
     // static mstimer_t timer = { .timeout = 1000 };

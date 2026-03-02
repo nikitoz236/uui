@@ -3,6 +3,7 @@
 #include "dlc_poll.h"
 #include "dlc_emu.h"
 #include "systick.h"
+#include "uptime.h"
 
 /*
     тест модуля dlc_poll
@@ -39,7 +40,7 @@ int main() {
 
     char key = 0;
     while (key != 'q') {
-        uptime_ms = systick_get_uptime_ms();
+        uptime_ms = get_uptime_ms();
         key = console_getc();
         if (key) {
             if (key == 'r') {
