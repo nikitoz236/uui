@@ -11,7 +11,6 @@
 #include "draw_color.h"
 
 #include "timers_32.h"
-#include "systick.h"
 #include "uptime.h"
 
 #include "date_time.h"
