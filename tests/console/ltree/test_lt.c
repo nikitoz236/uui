@@ -10,10 +10,8 @@ uint8_t mem[1024];
 
 char * test_result_text[] = { "OK", "FAIL" };
 
-lt_desc_t desc = {
-    .ctx_size = sizeof(unsigned),
-    .desc_size = 0,
-};
+static const uint8_t test_ctx_size = sizeof(unsigned);
+static const uint8_t * test_ctx_size_ptr = &test_ctx_size;
 
 void print_lt_linear()
 {
@@ -24,7 +22,7 @@ void print_lt_linear()
         dp("  next "); dpd(item->next, 4);
         dp("  child "); dpd(item->child, 4);
         dp("  ctx: ");
-        dpxd(&item->ctx, 4, item->desc->ctx_size / 4);
+        dpxd(&item->ctx, 4, **item->ctx_size / 4);
         dn();
 
         item = lt_next_in_mem(item);
@@ -44,7 +42,7 @@ void print_tree(lt_item_t * item, unsigned level)
         dp(" next "); dpd(item->next, 4);
         dp(" child "); dpd(item->child, 4);
         dp(" ctx: ");
-        dpxd(&item->ctx, 4, item->desc->ctx_size / 4);
+        dpxd(&item->ctx, 4, **item->ctx_size / 4);
         dn();
 
         if (item->child) {
@@ -183,43 +181,43 @@ lt_item_t * create_lt(void)
     unsigned n = 0xAA00;
     lt_item_t * ci;
 
-    lt_item_t * root = lt_add(0, &desc);
+    lt_item_t * root = lt_add(0, &test_ctx_size_ptr);
     *(unsigned *)&root->ctx = n++;
 
-    lt_item_t * child_1 = lt_add(root, &desc);
+    lt_item_t * child_1 = lt_add(root, &test_ctx_size_ptr);
     *(unsigned *)&child_1->ctx = n++;
 
-    lt_item_t * child_2 = lt_add(root, &desc);
+    lt_item_t * child_2 = lt_add(root, &test_ctx_size_ptr);
     *(unsigned *)&child_2->ctx = n++;
 
-    ci = lt_add(child_1, &desc);
+    ci = lt_add(child_1, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_1, &desc);
+    ci = lt_add(child_1, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_2, &desc);
+    ci = lt_add(child_2, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    lt_item_t * child_1_3 = lt_add(child_1, &desc);
+    lt_item_t * child_1_3 = lt_add(child_1, &test_ctx_size_ptr);
     *(unsigned *)child_1_3->ctx = n++;
 
-    ci = lt_add(child_1, &desc);
+    ci = lt_add(child_1, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(root, &desc);
+    ci = lt_add(root, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_2, &desc);
+    ci = lt_add(child_2, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_1_3, &desc);
+    ci = lt_add(child_1_3, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_1_3, &desc);
+    ci = lt_add(child_1_3, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_2, &desc);
+    ci = lt_add(child_2, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
     return root;
@@ -229,19 +227,19 @@ void add_lt(lt_item_t * item, unsigned n)
 {
     lt_item_t * ci;
 
-    lt_item_t * child_1 = lt_add(item, &desc);
+    lt_item_t * child_1 = lt_add(item, &test_ctx_size_ptr);
     *(unsigned *)&child_1->ctx = n++;
 
-    lt_item_t * child_2 = lt_add(item, &desc);
+    lt_item_t * child_2 = lt_add(item, &test_ctx_size_ptr);
     *(unsigned *)&child_2->ctx = n++;
 
-    ci = lt_add(child_1, &desc);
+    ci = lt_add(child_1, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_1, &desc);
+    ci = lt_add(child_1, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 
-    ci = lt_add(child_2, &desc);
+    ci = lt_add(child_2, &test_ctx_size_ptr);
     *(unsigned *)&ci->ctx = n++;
 }
 
