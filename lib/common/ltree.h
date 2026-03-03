@@ -31,19 +31,19 @@ struct lt_item {
             };
 
             struct widget_desc {
-                uint8_t ctx_size;
+                uint16_t ctx_size;
                 ...
             };
 
         ltree читает первое поле widget_desc_t через **ctx_size, не зная об остальных полях.
 
         юнион позволяет обращаться к одному указателю двумя способами:
-        - desc   — для передачи наружу (lt_item_desc), снаружи кастуется к нужной структуре
+        - desc     — для передачи наружу (lt_item_desc), снаружи кастуется к нужной структуре
         - ctx_size — для чтения размера контекста внутри ltree через **ctx_size
      */
     union {
-        const void *      desc;
-        const uint8_t **  ctx_size;
+        const void * desc;
+        const uint16_t **  ctx_size;
     };
     uint16_t owner;
     uint16_t next;

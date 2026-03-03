@@ -10,8 +10,8 @@ uint8_t mem[1024];
 
 char * test_result_text[] = { "OK", "FAIL" };
 
-static const uint8_t test_ctx_size = sizeof(unsigned);
-static const uint8_t * test_ctx_size_ptr = &test_ctx_size;
+static const uint16_t test_ctx_size = sizeof(unsigned);
+static const uint16_t * test_ctx_size_ptr = &test_ctx_size;
 
 void print_lt_linear()
 {

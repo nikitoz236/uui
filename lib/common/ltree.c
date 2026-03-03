@@ -22,7 +22,7 @@ unsigned lt_used(void)
 
 unsigned item_size_in_mem(lt_item_t * item)
 {
-    return round_up_deg2(sizeof(lt_item_t) + **item->ctx_size, sizeof(uint32_t));
+    return round_up_deg2(sizeof(lt_item_t) + **item->ctx_size, sizeof(uint32_t));  // **ctx_size — uint16_t, первое поле widget_desc
 }
 
 lt_item_t * lt_next_in_mem(lt_item_t * item)
