@@ -22,7 +22,7 @@ unsigned lt_used(void)
 
 unsigned item_size_in_mem(lt_item_t * item)
 {
-    return round_up_deg2(sizeof(lt_item_t) + item->desc->ctx_size, sizeof(uint32_t));
+    return round_up_deg2(sizeof(lt_item_t) + **item->ctx_size, sizeof(uint32_t));
 }
 
 lt_item_t * lt_next_in_mem(lt_item_t * item)
@@ -75,7 +75,7 @@ lt_item_t * lt_child_idx(lt_item_t * item, unsigned idx)
     return child;
 }
 
-lt_item_t * lt_add(lt_item_t * owner, const lt_desc_t * desc)
+lt_item_t * lt_add(lt_item_t * owner, const void * desc)
 {
     unsigned owner_offset = 0;
     lt_item_t * prev_item = 0;
