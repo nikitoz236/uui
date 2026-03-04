@@ -147,7 +147,6 @@ int main(void)
     dpn("waiting for pings...");
 
     while (1) {
-        lora_rx_start();
         do_responce(&state);
     }
 }
