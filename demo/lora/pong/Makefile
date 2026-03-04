@@ -17,6 +17,7 @@ INC += .
 INC += $(PROTOCOL)
 
 SRC += $(TARGET).c
+SRC += $(PROTOCOL)/lora_ping_pong.c
 
 PERIPH = $(LIB)/hw/uc_hw/stm32f0x
 

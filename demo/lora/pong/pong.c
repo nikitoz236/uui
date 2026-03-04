@@ -112,7 +112,7 @@ static lora_cfg_t lora = {
     .freq_hz = 868000000,
     .power = 14,
     .dio2_rf_switch = 0,               /* E220: TXEN/RXEN pins, not DIO2 */
-    .irq_dio = LORA_IRQ_DIO3,          /* E220: DIO3 connected to MCU, not DIO1 */
+    .irq_dio = SX1262_IRQ_DIO3,         /* E220: DIO3 connected to MCU, not DIO1 */
     .mod = { .sf = SX1262_SF7, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
     .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
 };
@@ -135,96 +135,20 @@ int main(void)
     dpn("pong start (e220)");
 
     init_spi(lora.chip.spi_dev.spi);
-    sx1262_init_pins(&lora.chip);
-    sx1262_reset(&lora.chip);
 
-    if (!sx1262_check_connection(&lora.chip)) {
-        dpn("llcc68 FAILED");
-        while (1) {}
+    if (!lora_init(&lora)) {
+        dpn("lora FAILED");
+        while (1) {};
     }
-    dpn("llcc68 ok");
-
-    lora_init(&lora);
 
     sx1262_reg_errors_t errors = sx1262_get_device_errors(&lora.chip);
     dp("device errors: "); dpx(errors.raw, 2); dn();
 
     dpn("waiting for pings...");
 
-    lora_rx_start(&lora);
-
-    uint32_t rx_cnt = 0;
-    uint32_t tx_cnt = 0;
-    uint32_t prev_seq = 0;
+    lora_rx_start();
 
     while (1) {
-        uint32_t seq = 0;
-        int n = lora_rx_read(&lora, (uint8_t *)&seq, sizeof(seq));
-
-        if (n < 0) {
-            dpn("rx crc err");
-            continue;
-        }
-        if (n == 0) {
-            continue;
-        }
-        if (n != sizeof(seq)) {
-            dp("rx bad len="); dpd((unsigned)n, 2); dn();
-            continue;
-        }
-
-        /* -- ping received -- */
-
-        uint8_t rssi_raw;
-        int8_t snr_raw;
-        sx1262_get_packet_status(&lora.chip, &rssi_raw, &snr_raw);
-
-        rx_cnt++;
-
-        uint32_t lost = 0;
-        if (prev_seq != 0 && seq > prev_seq + 1) {
-            lost = seq - prev_seq - 1;
-        }
-        prev_seq = seq;
-
-        dp("ping #"); dpd(seq, 5); dp("  rx: ");
-        dpxd(&seq, 1, sizeof(seq));
-        dp("  rssi=-"); dpd(rssi_raw / 2, 3);
-        dp(" snr=");
-        if (snr_raw < 0) {
-            dp("-"); dpd((unsigned)(-snr_raw) / 4, 2);
-        } else {
-            dpd((unsigned)snr_raw / 4, 3);
-        }
-        dn();
-
-        /* -- build and send pong -- */
-
-        lora_pong_t pong;
-        pong.rx_seq = seq;
-        pong.rx_lost = lost;
-        pong.rx_cnt = rx_cnt;
-        pong.tx_cnt = tx_cnt + 1;
-        pong.rssi = rssi_raw;
-        pong.snr = snr_raw;
-
-        if (lora_send(&lora, (const uint8_t *)&pong, sizeof(pong))) {
-            tx_cnt++;
-
-            dp("pong #"); dpd(seq, 5); dp("  tx: ");
-            dpxd(&pong, 1, sizeof(pong));
-            dn();
-
-            dp("  lost="); dpd(lost, 3);
-            dp(" rx="); dpd(rx_cnt, 5);
-            dp(" tx="); dpd(tx_cnt, 5);
-            dn();
-        } else {
-            dpn("TX TIMEOUT");
-        }
-
-        /* -- back to RX -- */
-
-        lora_rx_start(&lora);
+        do_pong();
     }
 }
