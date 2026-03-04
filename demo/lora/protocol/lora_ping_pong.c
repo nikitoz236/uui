@@ -16,8 +16,9 @@ unsigned do_ping(ping_stats_t * state, unsigned timeout_ms)
         dpn("not sended");
         return 0;
     }
-
+    dpn("sended");
     lora_rx_start();
+    dpn("start rx");
 
     timer_32_t tim = {};
     t32_run(&tim, get_uptime_ms(), timeout_ms);
