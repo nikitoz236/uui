@@ -16,6 +16,10 @@ spi_cfg_t spi = {
             .cfg = { .mode = GPIO_MODE_SIG_IO },
             .pin = { .pin = 35, .signal = FSPICLK_OUT_IDX },
         },
+        [SPI_PIN_MISO] = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_SIG_IN },
+            .pin = { .pin = 33, .signal = FSPIQ_IN_IDX },
+        },
     }
 };
 

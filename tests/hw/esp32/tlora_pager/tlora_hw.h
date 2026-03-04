@@ -6,6 +6,8 @@
 
 #include "lcd_spi.h"
 #include "aw9364.h"
+#include "xl9555.h"
+#include "bq25896.h"
 #include "tca8418_kbd.h"
 #include "dbg_usb_cdc_acm.h"
 
