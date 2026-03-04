@@ -1,6 +1,6 @@
 #include "lora.h"
 
-#include DP_OFF
+#define DP_OFF
 #include "dp.h"
 
 /* ── калибровка образа по частотному диапазону ─────────────────────────── */
