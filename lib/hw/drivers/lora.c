@@ -1,5 +1,8 @@
 #include "lora.h"
 
+#include DP_OFF
+#include "dp.h"
+
 /* ── калибровка образа по частотному диапазону ─────────────────────────── */
 
 static void calibrate_image(const sx1262_cfg_t * chip, uint32_t freq_hz)
@@ -87,24 +90,31 @@ void lora_rx_start(void)
     sx1262_set_rx(&lora->chip, SX1262_RX_CONTINUOUS);
 }
 
+unsigned lora_rx_check_dio_pin(void)
+{
+    if (gpio_get_state(lora->chip.pin[SX1262_PIN_DIO1])) {
+        return 1;
+    }
+    return 0;
+}
+
 unsigned lora_rx_read(uint8_t * data, unsigned max_len)
 {
-    if (!gpio_get_state(lora->chip.pin[SX1262_PIN_DIO1])) {
-        return 0;
-    }
-
     sx1262_reg_irq_t irq = sx1262_get_irq_status(&lora->chip);
     sx1262_clear_irq_status(&lora->chip, irq);
 
-    if (irq.crc_err) {
-        return 0;
-    }
-
     if (!irq.rx_done) {
+        dpn("crc error");
         return 0;
     }
 
-    uint8_t payload_len, rx_offset;
+    if (irq.crc_err) {
+        dpn("crc error");
+        return 0;
+    }
+
+    uint8_t payload_len;
+    uint8_t rx_offset;
     sx1262_get_rx_buffer_status(&lora->chip, &payload_len, &rx_offset);
 
     if (payload_len > max_len) {
@@ -122,7 +132,11 @@ void lora_standby(void)
     sx1262_set_standby(&lora->chip, SX1262_STANDBY_RC);
 }
 
-void lora_get_packet_status(uint8_t * rssi, int8_t * snr)
+void lora_get_packet_status(int8_t * rssi, int8_t * snr)
 {
-    sx1262_get_packet_status(&lora->chip, rssi, snr);
+    uint8_t rssi_raw;
+    int8_t snr_raw;
+    sx1262_get_packet_status(&lora->chip, &rssi_raw, &snr_raw);
+    *rssi = lora_rssi_dbm(rssi_raw);
+    *snr = lora_snr_db(snr_raw);
 }
