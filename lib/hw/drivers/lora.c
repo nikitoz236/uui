@@ -82,6 +82,7 @@ unsigned lora_send(const uint8_t * data, unsigned len)
 
 void lora_rx_start(void)
 {
+    sx1262_set_packet_params(&lora->chip, lora->pkt.preamble_len, lora->pkt.header_type, 255, lora->pkt.crc, lora->pkt.invert_iq);
     sx1262_clear_irq_status(&lora->chip, (sx1262_reg_irq_t){ .raw = 0xFFFF });
     sx1262_set_rx(&lora->chip, SX1262_RX_CONTINUOUS);
 }
