@@ -1,9 +1,8 @@
 #include "esp32_gpio.h"
 #include "esp32_spi.h"
-#include "esp32_pwm.h"
 
 #include "lcd_spi.h"
-
+#include "aw9364.h"
 
 #include "esp32_i2c.h"
 #include "tca8418_kbd.h"
@@ -13,8 +12,6 @@
 #define DP_NOTABLE
 #include "dp.h"
 
-
-#include "delay_blocking.h"
 #include "forms.h"
 
 
@@ -38,6 +35,12 @@ spi_cfg_t lcd_spi = {
 };
 
 const lcd_cfg_t lcd_cfg = {
+    .bl = &(backlight_cfg_t){
+        .pin = &(gpio_t){
+            .cfg = { .mode = GPIO_MODE_OUT },
+            .pin = { .pin = 42 }
+        }
+    },
     .no_reset = 1,
     .ctrl_lines = &(gpio_list_t){
         .cfg = { .mode = GPIO_MODE_OUT },
@@ -88,35 +91,6 @@ gpio_t kbd_irq_line = {
     .pin = { .pin = 6 }
 };
 
-gpio_t bl = {
-    .cfg = { .mode = GPIO_MODE_OUT },
-    .pin = { .pin = 42 }
-};
-
-void init_bl(void)
-{
-    init_gpio(&bl);
-}
-
-void bl_set(unsigned lvl)
-{
-    if (lvl >= 16) {
-        lvl = 0;
-    }
-
-    if (lvl) {
-        gpio_set_state(&bl, 1);
-        lvl--;
-    }
-
-    while (lvl--) {
-        delay_us(2);
-        gpio_set_state(&bl, 0);
-        delay_us(2);
-        gpio_set_state(&bl, 1);
-    }
-}
-
 form_t display_lcd_cfg_form(lcd_cfg_t * cfg)
 {
     form_t f = {
@@ -160,10 +134,8 @@ int main(void)
     init_i2c(&i2c_bus_cfg);
     init_tca8418();
 
-    init_bl();
-    bl_set(9);
-
     init_lcd_hw(&lcd_cfg);
+    lcd_bl(9);
     init_lcd(&lcd_cfg);
 
     form_t lcdf = display_lcd_cfg_form(&lcd_cfg);
