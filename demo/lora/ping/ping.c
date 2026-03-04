@@ -10,7 +10,7 @@
 #define DP_NOTABLE
 #include "dp.h"
 
-#include "esp32_systime.h"
+#include "uptime.h"
 #include "timers_32.h"
 #include "delay_blocking.h"
 
@@ -113,119 +113,42 @@ static lora_cfg_t lora = {
     .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
 };
 
-/* ── debug print helpers ──────────────────────────────────────────────── */
-
-/* печатает rssi/snr в компактном формате: -20/11 или -20/-3 */
-static void print_rssi_snr(uint8_t rssi, int8_t snr)
-{
-    dp("-"); dpd(rssi / 2, 3);
-    dp("/");
-    if (snr < 0) {
-        dp("-"); dpd((unsigned)(-snr) / 4, 2);
-    } else {
-        dpd((unsigned)snr / 4, 2);
-    }
-}
-
-/* ── main ──────────────────────────────────────────────────────────────── */
+ping_stats_t state = {};
 
 int main(void)
 {
     dpn("ping start");
+    delay_ms(100);
 
     init_i2c(&i2c_bus_cfg);
 
     dpn("lora power on");
     init_xl9555_gpio(&lora_pwr);
     xl9555_gpio_set(&lora_pwr, 1);
-    delay_ms(20);
+    delay_ms(100);
 
     init_spi(&spi_bus);
-    sx1262_init_pins(&lora.chip);
-    sx1262_reset(&lora.chip);
 
-    if (!sx1262_check_connection(&lora.chip)) {
-        dpn("sx1262 FAILED");
-        while (1) {}
+    if (!lora_init(&lora)) {
+        dpn("lora FAILED");
+        while (1) {};
     }
-    dpn("sx1262 ok");
 
-    lora_init(&lora);
     dpn("lora ready");
 
-    uint32_t seq = 0;
-    uint32_t pong_cnt = 0;
-    uint32_t pong_lost = 0;
-
     while (1) {
-        seq++;
+        state.seq++;
+        dp("sent: #"); dpd(state.seq, 6); dn();
 
-        /* ── TX ping ──────────────────────────────────────────────── */
+        if (do_ping(&state, PONG_TIMEOUT_MS)) {
 
-        if (!lora_send(&lora, (const uint8_t *)&seq, sizeof(seq))) {
-            dp("TX ERR seq="); dpd(seq, 5); dpn(" TIMEOUT");
-            delay_ms(PING_INTERVAL_MS);
-            continue;
-        }
-
-        dp("ping #"); dpd(seq, 5); dp("  tx: ");
-        dpxd(&seq, 1, sizeof(seq));
-        dn();
-
-        /* ── RX pong с таймаутом ──────────────────────────────────── */
-
-        lora_rx_start(&lora);
-
-        timer_32_t tim = {};
-        t32_run(&tim, systimer_ms(0), PONG_TIMEOUT_MS);
-
-        lora_pong_t pong;
-        int got_pong = 0;
-
-        while (t32_is_active(&tim, systimer_ms(0))) {
-            int n = lora_rx_read(&lora, (uint8_t *)&pong, sizeof(pong));
-            if (n == sizeof(pong)) {
-                got_pong = 1;
-                break;
-            }
-            if (n < 0) {
-                dpn("pong crc err");
-                break;
-            }
-        }
-
-        /* ── остановить RX ────────────────────────────────────────── */
-
-        sx1262_set_standby(&lora.chip, SX1262_STANDBY_RC);
-
-        /* ── вывод ────────────────────────────────────────────────── */
-
-        if (got_pong) {
-            pong_cnt++;
-
-            uint8_t rssi;
-            int8_t snr;
-            sx1262_get_packet_status(&lora.chip, &rssi, &snr);
-
-            dp("pong #"); dpd(pong.rx_seq, 5); dp("  rx: ");
-            dpxd(&pong, 1, sizeof(pong));
-            dn();
-
-            dp("  seq="); dpd(pong.rx_seq, 5);
-            dp(" lost="); dpd(pong.rx_lost, 3);
-            dp(" rx="); dpd(pong.rx_cnt, 5);
-            dp(" tx="); dpd(pong.tx_cnt, 5);
-            dp("  rem:"); print_rssi_snr(pong.rssi, pong.snr);
-            dp("  loc:"); print_rssi_snr(rssi, snr);
-            dp("  miss="); dpd(pong_lost, 5);
-            dn();
+            dp("remote:   "); dp_lora_signal(&state.pong.q); dp("  seq: "); dpd(state.pong.seq, 6); dp("  cnt: "); dpd(state.pong.cnt, 6); dn();
+            dp("received: "); dp_lora_signal(&state.q); dn();
         } else {
-            pong_lost++;
-            dp("TIMEOUT seq="); dpd(seq, 5);
-            dp("  miss="); dpd(pong_lost, 5);
-            dn();
+            dpn("timeout");
         }
 
+        dn();
         delay_ms(PING_INTERVAL_MS);
     }
 }

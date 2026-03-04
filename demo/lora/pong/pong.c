@@ -117,7 +117,7 @@ static lora_cfg_t lora = {
     .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
 };
 
-/* -- main ----------------------------------------------------------------- */
+pong_state_t state = {};
 
 int main(void)
 {
@@ -146,9 +146,8 @@ int main(void)
 
     dpn("waiting for pings...");
 
-    lora_rx_start();
-
     while (1) {
-        do_pong();
+        lora_rx_start();
+        do_responce(&state);
     }
 }

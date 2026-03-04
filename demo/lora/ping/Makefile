@@ -5,6 +5,7 @@ PROTOCOL = ../protocol
 INC += .
 INC += $(PROTOCOL)
 SRC += ping.c
+SRC += $(PROTOCOL)/lora_ping_pong.c
 
 PERIPH = $(LIB)/hw/esp32/periph
 DRIVERS = $(LIB)/hw/drivers
