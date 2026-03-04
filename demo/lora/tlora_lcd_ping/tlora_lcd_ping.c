@@ -129,22 +129,27 @@ static void print_int(tptr_t * t, int val, color_scheme_t cs)
 
 static void draw_header(void)
 {
+    lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 0 });
     lcd_color_tptr_print(&tp, "[t] send. ping seq:", cs_help, 19);
     print_uint(&tp, ping_status.seq, cs_val);
 
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 1 });
     lcd_color_tptr_print(&tp, "                   ", cs_val, 19);
+    lcd_unselect();
 }
 
 static void draw_timeout(void)
 {
+    lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 12, .y = 1 });
     lcd_color_tptr_print(&tp, "timeout", cs_err, 7);
+    lcd_unselect();
 }
 
 static void draw_remote(pong_state_t * p)
 {
+    lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 3 });
     lcd_color_tptr_print(&tp, "--- remote ---", cs_help, 14);
 
@@ -159,10 +164,12 @@ static void draw_remote(pong_state_t * p)
     print_int(&tp, p->q.rssi, cs_val);
     lcd_color_tptr_print(&tp, "     snr:", cs_val, 9);
     print_int(&tp, p->q.snr, cs_val);
+    lcd_unselect();
 }
 
 static void draw_received(rssi_snr_t * q)
 {
+    lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 7 });
     lcd_color_tptr_print(&tp, "--- received ---", cs_help, 16);
 
@@ -171,6 +178,7 @@ static void draw_received(rssi_snr_t * q)
     print_int(&tp, q->rssi, cs_val);
     lcd_color_tptr_print(&tp, "     snr:", cs_val, 9);
     print_int(&tp, q->snr, cs_val);
+    lcd_unselect();
 }
 
 static void draw_result(ping_stats_t * s)
@@ -198,7 +206,10 @@ static void ui_init(form_t * f)
         .lim  = fcfg_text_char_places(&fcfg, f->s)
     });
 
+    lcd_select();
     lcd_rect(0, 0, f->s.w, f->s.h, 0x0000);
+    lcd_unselect();
+
     draw_header();
     draw_remote(&ping_status.pong);
     draw_received(&ping_status.q);
@@ -257,8 +268,6 @@ int main(void)
 
     form_t lcdf = display_lcd_cfg_form(&lcd_cfg);
     ui_init(&lcdf);
-
-    spi_set_frame_len(&spi, 8);
 
     init_xl9555_gpio(&lora_pwr);
     xl9555_gpio_set(&lora_pwr, 1);
