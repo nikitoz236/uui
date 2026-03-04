@@ -112,6 +112,7 @@ const uint8_t lcd_init_cmd_list[] = {
 
 void lcd_pwr(unsigned val)
 {
+    lcd_select();
     if (val) {
         lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x11}); // Sleep Out
         // данное время всетаки влияет, 10 мс мало. на экране картинка рассыпается. было 120.
@@ -122,6 +123,7 @@ void lcd_pwr(unsigned val)
         delay_ms(5);
         lcd_send_cmd_with_data(&(lcd_cmd_t){ .cmd = 0x28}); // Display off
     }
+    lcd_unselect();
 }
 
 static void lcd_set_area(unsigned x, unsigned y, unsigned w, unsigned h)
@@ -215,7 +217,7 @@ void init_lcd(const lcd_cfg_t * cfg)
         delay_ms(10);
     }
 
-    spi_dev_select(&lcd_cfg->spi_dev);
+    lcd_select();
 
     if (cfg->no_reset) {
         const lcd_cmd_t cmd_swrst = { .cmd = 1, .len = 0 };
@@ -233,6 +235,7 @@ void init_lcd(const lcd_cfg_t * cfg)
 
     delay_ms(10);
 
+    lcd_unselect();
     lcd_pwr(1);
     lcd_clear();
 }

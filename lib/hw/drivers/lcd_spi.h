@@ -36,3 +36,5 @@ void init_lcd_hw(const lcd_cfg_t * cfg);
 void init_lcd(const lcd_cfg_t * cfg);
 void lcd_pwr(unsigned val);
 void lcd_bl(unsigned val);
+void lcd_select(void);
+void lcd_unselect(void);
