@@ -68,15 +68,23 @@ unsigned lora_init(const lora_cfg_t * cfg)
 
 unsigned lora_send(const uint8_t * data, unsigned len)
 {
+    dpn("lora send");
     sx1262_set_packet_params(&lora->chip, lora->pkt.preamble_len, lora->pkt.header_type, len, lora->pkt.crc, lora->pkt.invert_iq);
+    dpn("sx1262_set_packet_params ok");
     sx1262_clear_irq_status(&lora->chip, (sx1262_reg_irq_t){ .raw = 0xFFFF });
+    dpn("sx1262_clear_irq_status ok");
     sx1262_write_buffer(&lora->chip, 0, data, len);
+    dpn("sx1262_write_buffer ok");
     sx1262_set_tx(&lora->chip, 10000);
+    dpn("sx1262_set_tx ok");
 
     while (!gpio_get_state(lora->chip.pin[SX1262_PIN_DIO1])) {};
+    dpn("gpio_get_state ok");
 
     sx1262_reg_irq_t irq = sx1262_get_irq_status(&lora->chip);
+    dpn("sx1262_get_irq_status ok");
     sx1262_clear_irq_status(&lora->chip, irq);
+    dpn("sx1262_clear_irq_status ok");
 
     return irq.tx_done;
 }
