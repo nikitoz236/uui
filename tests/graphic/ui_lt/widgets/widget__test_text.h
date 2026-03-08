@@ -1,5 +1,6 @@
 #pragma once
 #include "ui_lt.h"
+#include "color_type.h"
 
 /*
     simple text widget for tests
@@ -7,8 +8,8 @@
 
 extern const widget_desc_t widget__test_text;
 
-struct widget_ctx_struct__test_text {
+typedef struct  {
     char * text;
-};
+    lcd_color_t frame_color;
+} widget_cfg__test_text_t;
 
-// struct widget_ctx_struct__test_text * widget_ctx__test_text(ui_element_t * el) { return el->}

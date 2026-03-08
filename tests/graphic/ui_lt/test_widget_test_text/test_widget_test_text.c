@@ -9,7 +9,7 @@
 #include "dp.h"
 
 ui_lt_node_desc_t ui_desc = {
-    .widget = &widget__test_text
+    .widget = &widget__test_text, .cfg = &(widget_cfg__test_text_t){.frame_color = COLOR(0xAABBCC)}
 };
 
 int main()
@@ -29,6 +29,17 @@ int main()
     uint8_t ui_memory[1024];
 
     ui_create(ui_memory, 1024, (form_t){ .s = lcd_cfg.size }, &ui_desc);
+
+    dp("widget ctx size: ");
+    dpd(**((ui_element_t *)ui_memory)->lt.ctx_size, 6);
+    dp(" ui_element size: ");
+    dpd(sizeof(ui_element_t), 5);
+    dp(" lt_item_t size: ");
+    dpd(sizeof(lt_item_t), 5);
+    dp(" sizeof(0): ");
+    dpd(sizeof(0), 5);
+
+    dn();
 
     emu_graphic_loop(0);
 
