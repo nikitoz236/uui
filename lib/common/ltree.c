@@ -78,6 +78,7 @@ lt_item_t * lt_child_idx(lt_item_t * item, unsigned idx)
 lt_item_t * lt_add(lt_item_t * owner, const void * desc)
 {
     unsigned owner_offset = 0;
+    unsigned idx = 0;
     lt_item_t * prev_item = 0;
 
     unsigned offset = mem_used;
@@ -99,6 +100,7 @@ lt_item_t * lt_add(lt_item_t * owner, const void * desc)
     }
     if (prev_item) {
         while (prev_item->next) {
+            idx++;
             prev_item = lt_item_from_offset(prev_item->next);
         }
         prev_item->next = offset;
@@ -109,6 +111,7 @@ lt_item_t * lt_add(lt_item_t * owner, const void * desc)
     item->owner = owner_offset;
     item->next = 0;
     item->child = 0;
+    item->idx = idx;
 
     mem_used += item_size_in_mem(item);
 

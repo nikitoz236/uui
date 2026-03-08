@@ -21,6 +21,7 @@ void print_lt_linear()
         dp("  :  owner "); dpd(item->owner, 4);
         dp("  next "); dpd(item->next, 4);
         dp("  child "); dpd(item->child, 4);
+        dp("  idx "); dpd(item->idx, 2);
         dp("  ctx: ");
         dpxd(&item->ctx, 4, **item->ctx_size / 4);
         dn();
@@ -41,6 +42,7 @@ void print_tree(lt_item_t * item, unsigned level)
         dp(" owner "); dpd(item->owner, 4);
         dp(" next "); dpd(item->next, 4);
         dp(" child "); dpd(item->child, 4);
+        dp(" idx "); dpd(item->idx, 2);
         dp(" ctx: ");
         dpxd(&item->ctx, 4, **item->ctx_size / 4);
         dn();

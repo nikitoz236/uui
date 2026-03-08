@@ -48,6 +48,7 @@ struct lt_item {
     uint16_t owner;
     uint16_t next;
     uint16_t child;
+    uint8_t idx;            // всетаки добавил. но не понятно что с удалением. нужно ли переназначить ?
 
     uint8_t ctx[] __attribute__ ((aligned(sizeof(uint32_t))));
 };
