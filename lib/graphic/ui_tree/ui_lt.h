@@ -28,7 +28,6 @@
 typedef struct {
     lt_item_t lt;
     form_t f;                           // форма элемента
-    uint8_t idx;
     struct {
         uint8_t overridable : 1;
         uint8_t skip        : 1;
@@ -60,12 +59,11 @@ void ui_create(void * ptr, unsigned size, form_t f, ui_lt_node_desc_t * desc);
 
 
 // using from widget
-ui_element_t * ui_add(ui_element_t * owner, const ui_lt_node_desc_t * desc);
-static inline const ui_lt_node_desc_t * ui_node_desc(ui_element_t * el) { return lt_item_desc(&el->lt); };
-
-#define WIDGET_CTX_SIZE(type) (sizeof(type) + sizeof(ui_element_t) - sizeof(lt_item_t))
-
-
-
-
+ui_element_t * ui_add(ui_element_t * owner, form_t f, const ui_lt_node_desc_t * desc);
+void ui_element_draw(ui_element_t * el);
 void ui_select(ui_element_t * el, unsigned state);
+
+// helpers
+static inline const ui_lt_node_desc_t * ui_node_desc(ui_element_t * el) { return lt_item_desc(&el->lt); };
+#define WIDGET_CTX_NONE (sizeof(ui_element_t) - sizeof(lt_item_t))
+#define WIDGET_CTX_SIZE(type) (sizeof(type) + WIDGET_CTX_NONE)
