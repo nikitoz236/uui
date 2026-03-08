@@ -33,6 +33,7 @@ typedef struct {
         uint8_t skip        : 1;
         uint8_t focused     : 1;
     } flags;
+    uint8_t ctx[];
 } ui_element_t;
 
 // typedef lt_item_t ui_element_t;
@@ -62,6 +63,9 @@ void ui_create(void * ptr, unsigned size, form_t f, ui_lt_node_desc_t * desc);
 ui_element_t * ui_add(ui_element_t * owner, form_t f, const ui_lt_node_desc_t * desc);
 void ui_element_draw(ui_element_t * el);
 void ui_select(ui_element_t * el, unsigned state);
+
+static inline void ui_delete_childs(ui_element_t * el) { lt_delete_childs(&el->lt); };
+ui_element_t * ui_child(ui_element_t * el);
 
 // helpers
 static inline const ui_lt_node_desc_t * ui_node_desc(ui_element_t * el) { return lt_item_desc(&el->lt); };

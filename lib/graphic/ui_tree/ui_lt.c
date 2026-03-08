@@ -25,8 +25,19 @@ void ui_element_draw(ui_element_t * el)
     }
 }
 
+ui_element_t * ui_child(ui_element_t * el)
+{
+    lt_item_t * child = lt_child(&el->lt);
+    if (child) {
+        return (ui_element_t *)child;
+    }
+    return 0;
+}
+
 void ui_select(ui_element_t * el, unsigned state)
 {
     el->flags.focused = state;
-    ui_node_desc(el)->widget->select(el);
+    if (ui_node_desc(el)->widget->select) {
+        ui_node_desc(el)->widget->select(el);
+    }
 }
