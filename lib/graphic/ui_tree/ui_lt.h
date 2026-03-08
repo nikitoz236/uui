@@ -71,3 +71,5 @@ ui_element_t * ui_child(ui_element_t * el);
 static inline const ui_lt_node_desc_t * ui_node_desc(ui_element_t * el) { return lt_item_desc(&el->lt); };
 #define WIDGET_CTX_NONE (sizeof(ui_element_t) - sizeof(lt_item_t))
 #define WIDGET_CTX_SIZE(type) (sizeof(type) + WIDGET_CTX_NONE)
+
+#define WIDGET_IMPORT_CFG(cfg_type, name) cfg_type * name = (cfg_type *)ui_node_desc(el)->cfg;
