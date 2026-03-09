@@ -25,6 +25,9 @@ int main()
 {
     dpn("lists test");
 
+    dp("sizeof list_t "); dpd(sizeof(list_t), 3); dn();
+    dp("sizeof int "); dpd(sizeof(int), 3); dn();
+
     dpxd(some_type_list_ptr, 2, 2);
     dn();
     for (unsigned i = 0; i < some_type_list_ptr->count; i++) {
