@@ -22,8 +22,7 @@ static void recalc(ui_element_t * el)
     draw_color_form(&el->f, 0);
 
     ctx->count = 0;
-    form_t f = el->f;
-    form_cut_padding(&f, cfg->margin);
+    form_t f = form_cut_padding(el->f, cfg->margin);
     unsigned child_idx = ctx->first;
 
     const ui_node_desc_t * child_ui_node = &cfg->ui_node[0];

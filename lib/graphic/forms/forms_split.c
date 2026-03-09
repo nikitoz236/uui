@@ -20,12 +20,13 @@ void form_reduce(form_t * f, dimension_t d, form_edge_t edge, unsigned new_size)
     }
 }
 
-void form_cut_padding(form_t * f, xy_t padding)
+form_t form_cut_padding(form_t f, xy_t padding)
 {
     for (unsigned d = 0; d < DIMENSION_COUNT; d++) {
-        f->p.ca[d] += padding.ca[d];
-        f->s.ca[d] -= padding.ca[d] * 2;
+        f.p.ca[d] += padding.ca[d];
+        f.s.ca[d] -= padding.ca[d] * 2;
     }
+    return f;
 }
 
 xy_t form_vec_cut(xy_t vec, xy_t offset)
