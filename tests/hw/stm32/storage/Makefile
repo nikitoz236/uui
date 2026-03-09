@@ -17,11 +17,14 @@ SRC += $(TARGET).c
 SRC += hw_cfg.c
 
 # drivers
-INC += $(LIB)/hw/include/
+PERIPH = $(LIB)/hw/uc_hw/stm32f1x
 
-SRC += $(LIB)/hw/uc_hw/stm32f10x_rcc.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_gpio.c
-SRC += $(LIB)/hw/uc_hw/stm32f10x_usart.c
+INC += $(LIB)/hw/uc_hw
+INC += $(PERIPH)
+
+SRC += $(PERIPH)/periph_rcc.c
+SRC += $(PERIPH)/periph_gpio.c
+SRC += $(LIB)/hw/uc_hw/stm_usart.c
 SRC += $(LIB)/hw/uc_hw/stm32f10x_flash.c
 
 # storage

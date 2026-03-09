@@ -30,7 +30,7 @@ int main(void)
     FLASH->ACR |= FLASH_ACR_LATENCY * 2;
     FLASH->ACR |= FLASH_ACR_PRFTBE;
 
-    hw_rcc_apply_cfg(&hw_rcc_cfg);
+    rcc_apply_cfg(&hw_rcc_cfg);
 
     RCC->APB2ENR |= RCC_APB2ENR_AFIOEN;
     AFIO->MAPR |= AFIO_MAPR_SWJ_CFG_JTAGDISABLE;
@@ -41,12 +41,12 @@ int main(void)
     RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
     RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
 
-    const hw_pclk_t dma_pclk = {
+    const pclk_t dma_pclk = {
         .mask = RCC_AHBENR_DMA1EN,
         .bus = PCLK_BUS_AHB
     };
 
-    hw_rcc_pclk_ctrl(&dma_pclk, 1);
+    pclk_ctrl(&dma_pclk, 1);
 
     usart_set_cfg(&debug_usart);
     __enable_irq();
