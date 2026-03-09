@@ -11,6 +11,12 @@ SRC += $(LIB)/graphic/lcd_color/*.c
 # misc.h
 INC += $(LIB)/common
 
+INC += $(LIB)/graphic/text
+SRC += $(LIB)/graphic/text/text_pointer.c
+SRC += $(LIB)/graphic/text/font_config.c
+
+INC += $(LIB)/graphic/forms
+
 TEST_NAME = test_lcd_color_text_raw_print
 
 include $(LIB)/emu/graphic/emu_graphic.mk

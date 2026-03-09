@@ -7,7 +7,7 @@
 
 int main()
 {
-    printf("test lcd_text_color_print\r\n");
+    printf("test lcd_color_text_raw_print\r\n");
 
     emu_lcd_cfg_t lcd_cfg = {
         .size = { .w = 320, .h = 240 },
