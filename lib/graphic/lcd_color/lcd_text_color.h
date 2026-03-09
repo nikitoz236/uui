@@ -21,6 +21,19 @@ void lcd_color_tptr_print(tptr_t * tptr, const char * str, color_scheme_t cs, un
 // len - длина строки, если 0 - то до конца текста или до text_size.x
 void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len);
 
+// static void lcd_color_text_raw_print(const char * str, const lcd_font_cfg_t * cfg, const color_scheme_t * cs, const xy_t * pos_px, const xy_t * limit_chars, const xy_t * pos_chars, unsigned len)
+// {
+//     tf_t tf = {.fcfg = cfg};
+//     if (limit_chars) {
+//         tf.lim = *limit_chars;
+//     }
+//     tptr_t t = text_ptr_create(tf)
+//     if (pos_chars) {
+//         text_ptr_set_char_pos(&t, pos_chars);
+//     }
+//     lcd_color_tptr_print(&t, str, *cs, len);
+// }
+
 #include "lcd_text.h"
 void lcd_text_color_print(const char * c, xy_t * pos, const lcd_text_cfg_t * cfg, const color_scheme_t * cs, unsigned tx, unsigned ty, unsigned len);
 
