@@ -81,9 +81,13 @@ const lcd_font_cfg_t fcfg = {
     .scale = 2
 };
 
-color_scheme_t cs_val  = { .fg = 0xFFFF, .bg = 0x0000 };
-color_scheme_t cs_help = { .fg = 0x8410, .bg = 0x0000 };
-color_scheme_t cs_err  = { .fg = 0xF800, .bg = 0x0000 };
+color_scheme_t cs_bg     = { .fg = COLOR(0x101010), .bg = COLOR(0x101010) };
+color_scheme_t cs_header = { .fg = COLOR(0x607060), .bg = COLOR(0x101010) };
+color_scheme_t cs_label  = { .fg = COLOR(0x3a6e3a), .bg = COLOR(0x101010) };
+color_scheme_t cs_val    = { .fg = COLOR(0x22cc22), .bg = COLOR(0x101010) };
+color_scheme_t cs_rssi   = { .fg = COLOR(0xccaa22), .bg = COLOR(0x101010) };
+color_scheme_t cs_ok     = { .fg = COLOR(0x00ff00), .bg = COLOR(0x101010) };
+color_scheme_t cs_err    = { .fg = 0xF800,          .bg = COLOR(0x101010) };
 
 tptr_t tp;
 ping_stats_t ping_status = {};
@@ -131,11 +135,11 @@ static void draw_header(void)
 {
     lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 0 });
-    lcd_color_tptr_print(&tp, "[t] send. ping seq:", cs_help, 19);
+    lcd_color_tptr_print(&tp, "[t] send. ping seq:", cs_label, 19);
     print_uint(&tp, ping_status.seq, cs_val);
 
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 1 });
-    lcd_color_tptr_print(&tp, "                   ", cs_val, 19);
+    lcd_color_tptr_print(&tp, "                   ", cs_bg, 19);
     lcd_unselect();
 }
 
@@ -147,23 +151,31 @@ static void draw_timeout(void)
     lcd_unselect();
 }
 
+static void draw_ok(void)
+{
+    lcd_select();
+    text_ptr_set_char_pos(&tp, (xy_t){ .x = 12, .y = 1 });
+    lcd_color_tptr_print(&tp, "OK     ", cs_ok, 7);
+    lcd_unselect();
+}
+
 static void draw_remote(pong_state_t * p)
 {
     lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 3 });
-    lcd_color_tptr_print(&tp, "--- remote ---", cs_help, 14);
+    lcd_color_tptr_print(&tp, "--- remote ---", cs_header, 14);
 
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 4 });
-    lcd_color_tptr_print(&tp, "   seq:", cs_val, 7);
+    lcd_color_tptr_print(&tp, "   seq:", cs_label, 7);
     print_uint(&tp, p->seq, cs_val);
-    lcd_color_tptr_print(&tp, "     cnt:", cs_val, 9);
+    lcd_color_tptr_print(&tp, "     cnt:", cs_label, 9);
     print_uint(&tp, p->cnt, cs_val);
 
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 5 });
-    lcd_color_tptr_print(&tp, "  rssi:", cs_val, 7);
-    print_int(&tp, p->q.rssi, cs_val);
-    lcd_color_tptr_print(&tp, "     snr:", cs_val, 9);
-    print_int(&tp, p->q.snr, cs_val);
+    lcd_color_tptr_print(&tp, "  rssi:", cs_label, 7);
+    print_int(&tp, p->q.rssi, cs_rssi);
+    lcd_color_tptr_print(&tp, "     snr:", cs_label, 9);
+    print_int(&tp, p->q.snr, cs_rssi);
     lcd_unselect();
 }
 
@@ -171,20 +183,22 @@ static void draw_received(rssi_snr_t * q)
 {
     lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 7 });
-    lcd_color_tptr_print(&tp, "--- received ---", cs_help, 16);
+    lcd_color_tptr_print(&tp, "--- received ---", cs_header, 16);
 
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 8 });
-    lcd_color_tptr_print(&tp, "  rssi:", cs_val, 7);
-    print_int(&tp, q->rssi, cs_val);
-    lcd_color_tptr_print(&tp, "     snr:", cs_val, 9);
-    print_int(&tp, q->snr, cs_val);
+    lcd_color_tptr_print(&tp, "  rssi:", cs_label, 7);
+    print_int(&tp, q->rssi, cs_rssi);
+    lcd_color_tptr_print(&tp, "     snr:", cs_label, 9);
+    print_int(&tp, q->snr, cs_rssi);
     lcd_unselect();
 }
 
 static void draw_result(ping_stats_t * s)
 {
+    lcd_select();
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 1 });
-    lcd_color_tptr_print(&tp, "                   ", cs_val, 19);
+    lcd_color_tptr_print(&tp, "                   ", cs_bg, 19);
+    lcd_unselect();
 
     draw_remote(&s->pong);
     draw_received(&s->q);
@@ -207,7 +221,7 @@ static void ui_init(form_t * f)
     });
 
     lcd_select();
-    lcd_rect(0, 0, f->s.w, f->s.h, 0x0000);
+    lcd_rect(0, 0, f->s.w, f->s.h, COLOR(0x101010));
     lcd_unselect();
 
     draw_header();
@@ -245,6 +259,7 @@ void kbd_change_handler(unsigned num, unsigned state)
         dp("remote:   "); dp_lora_signal(&ping_status.pong.q); dp("  seq: "); dpd(ping_status.pong.seq, 6); dp("  cnt: "); dpd(ping_status.pong.cnt, 6); dn();
         dp("received: "); dp_lora_signal(&ping_status.q); dn();
         draw_result(&ping_status);
+        draw_ok();
     } else {
         dpn("timeout");
         draw_timeout();
