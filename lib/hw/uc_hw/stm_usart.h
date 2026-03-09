@@ -33,3 +33,5 @@ struct usart_cfg {
 
 void usart_dma_tx_end_irq_handler(const usart_cfg_t * usart);
 void usart_irq_handler(const usart_cfg_t * usart);
+
+// TODO: нормально доставать принятые данные из кольцевого буфера
