@@ -11,6 +11,9 @@ SRC += $(LIB)/graphic/lcd_color/*.c
 # misc.h
 INC += $(LIB)/common
 
+INC += $(LIB)/graphic/forms
+SRC += $(LIB)/graphic/forms/*.c
+
 INC += $(LIB)/graphic/text
 SRC += $(LIB)/graphic/text/text_pointer.c
 SRC += $(LIB)/graphic/text/font_config.c
