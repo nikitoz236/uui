@@ -12,8 +12,19 @@ INC += $(WIDGETS)
 SRC += $(WIDGETS)/widget__screen_switch.c
 SRC += $(WIDGETS)/widget__test_text.c
 
-# draw_color.h
+# draw_color.h, lcd_text_color.h
 INC += $(LIB)/graphic/lcd_color
+SRC += $(LIB)/graphic/lcd_color/lcd_text_color.c
+
+# text_pointer.h, font_config.h
+INC += $(LIB)/graphic/text
+SRC += $(LIB)/graphic/text/text_pointer.c
+SRC += $(LIB)/graphic/text/font_config.c
+
+# fonts
+INC += $(LIB)/graphic/fonts
+SRC += $(LIB)/graphic/fonts/font_5x7.c
+SRC += $(LIB)/graphic/fonts/fonts.c
 
 # forms_split.h (нужен draw_frame)
 INC += $(LIB)/graphic/forms
