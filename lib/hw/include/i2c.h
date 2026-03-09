@@ -25,5 +25,22 @@ enum {
 void init_i2c(const i2c_cfg_t * cfg);
 
 unsigned i2c_status(void);
-// void i2c_transaction(uint8_t addr, const uint8_t * tbuf, unsigned tlen, uint8_t * rbuf, unsigned rlen);
 void i2c_transaction(uint8_t addr, const void * tbuf, unsigned tlen, void * rbuf, unsigned rlen);
+
+/*
+typedef struct {
+    // TODO: bus pointer (multi-bus support not yet implemented)
+    uint8_t addr;
+} i2c_slave_t;
+
+static inline void i2c_slave_transaction(const i2c_slave_t * dev, const void * tbuf, unsigned tlen, void * rbuf, unsigned rlen)
+{
+    i2c_transaction(dev->addr, tbuf, tlen, rbuf, rlen);
+}
+
+static inline unsigned i2c_slave_status(const i2c_slave_t * dev)
+{
+    (void)dev;
+    return i2c_status();
+}
+*/
