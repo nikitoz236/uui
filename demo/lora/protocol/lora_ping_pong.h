@@ -2,6 +2,11 @@
 
 #include <stdint.h>
 
+#define LORA_POWER          20
+#define LORA_SF             SX1262_SF9
+#define LORA_FREQ_HZ        868000000
+
+
 /*
  * Протокол ping-pong для тестирования LoRa канала.
  *

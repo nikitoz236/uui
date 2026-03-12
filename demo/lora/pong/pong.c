@@ -109,12 +109,22 @@ static lora_cfg_t lora = {
             },
         },
     },
-    .freq_hz = 868000000,
-    .power = 14,
-    .dio2_rf_switch = 0,               /* E220: TXEN/RXEN pins, not DIO2 */
-    .irq_dio = SX1262_IRQ_DIO3,         /* E220: DIO3 connected to MCU, not DIO1 */
-    .mod = { .sf = SX1262_SF7, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
-    .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
+    #if defined LORA_E220
+        .freq_hz = LORA_FREQ_HZ,
+        .power = LORA_POWER,
+        .dio2_rf_switch = 0,               /* E220: TXEN/RXEN pins, not DIO2 */
+        .irq_dio = SX1262_IRQ_DIO3,         /* E220: DIO3 connected to MCU, not DIO1 */
+        .mod = { .sf = LORA_SF, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
+        .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
+    #else
+        .freq_hz = LORA_FREQ_HZ,
+        .power = LORA_POWER,
+        .tcxo = 1,
+        .tcxo_voltage = SX1262_TCXO_1_8V,
+        .dio2_rf_switch = 1,
+        .mod = { .sf = LORA_SF, .bw = SX1262_BW_125, .cr = SX1262_CR_4_5, .ldro = SX1262_LDRO_OFF },
+        .pkt = { .preamble_len = 8, .header_type = SX1262_HEADER_EXPLICIT, .crc = SX1262_CRC_ON, .invert_iq = SX1262_IQ_STANDARD },
+    #endif
 };
 
 pong_state_t state = {};

@@ -45,6 +45,9 @@ INC += $(LIB)/graphic/fonts
 SRC += $(LIB)/graphic/fonts/fonts.c
 SRC += $(LIB)/graphic/fonts/font_5x7.c
 
+INC += $(LIB)/graphic/forms
+SRC += $(LIB)/graphic/forms/forms_split.c
+
 INC += $(LIB)/graphic
 SRC += $(LIB)/graphic/lcd_text.c
 
