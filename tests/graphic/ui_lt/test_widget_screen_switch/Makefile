@@ -6,6 +6,7 @@ INC += $(LIB)/graphic/ui_tree
 SRC += $(LIB)/graphic/ui_tree/ui_lt.c
 INC += $(LIB)/common
 SRC += $(LIB)/common/ltree.c
+SRC += $(LIB)/common/val_mod.c
 
 # widgets
 INC += $(WIDGETS)

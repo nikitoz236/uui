@@ -1,65 +1,53 @@
 #include "widget__screen_switch.h"
 #include "event_list.h"
+#include "val_mod.h"
 #include <stdio.h>
+#include "dp.h"
 
 typedef struct {
-    unsigned selector;
+    uint8_t selector;
 } ctx_t;
-
-static ctx_t * ctx(ui_element_t * el)
-{
-    return (ctx_t *)el->ctx;
-}
 
 static void draw(ui_element_t * el)
 {
+    ctx_t * ctx = (ctx_t *)el->ctx;
     const widget__screen_switch_cfg_t * cfg = ui_node_desc(el)->cfg;
 
-    printf("screen_switch draw: p=(%d,%d) s=(%d,%d)\n",
-        el->f.p.x, el->f.p.y, el->f.s.w, el->f.s.h);
-
-    ui_delete_childs(el);
-    ui_element_t * item = ui_add(el, el->f, &cfg->screens_list[ctx(el)->selector]);
+    ui_element_t * item = ui_add(el, el->f, &cfg->screens_list[ctx->selector]);
     ui_element_draw(item);
 }
 
 static unsigned process(ui_element_t * el, ui_event_t event)
 {
+    dpn("process widget__screen_switch");
+    ctx_t * ctx = (ctx_t *)el->ctx;
     const widget__screen_switch_cfg_t * cfg = ui_node_desc(el)->cfg;
 
+    unsigned p = 0;
+    val_mod_op_t op;
+
     if (event == EVENT_BTN_DOWN) {
-        ctx(el)->selector = (ctx(el)->selector + 1) % cfg->screens_num;
-        ui_element_draw(el);
-        return 1;
+        p = 1;
+        op = MOD_OP_SUB;
     }
+
     if (event == EVENT_BTN_UP) {
-        if (ctx(el)->selector == 0) {
-            ctx(el)->selector = cfg->screens_num - 1;
-        } else {
-            ctx(el)->selector = ctx(el)->selector - 1;
-        }
-        ui_element_draw(el);
-        return 1;
+        p = 1;
+        op = MOD_OP_ADD;
     }
-    if (event == EVENT_BTN_OK) {
-        ui_element_t * child = ui_child(el);
-        if (child) {
-            ui_select(child, 1);
-            return 1;
+
+    if (p) {
+        if (val_mod_unsigned(&ctx->selector, VAL_SIZE_8, op, 1, 0, cfg->count - 1, 1)) {
+            ui_delete_childs(el);
+            draw(el);
         }
     }
-    if (event == EVENT_BTN_LEFT) {
-        ui_element_t * child = ui_child(el);
-        if (child) {
-            ui_select(child, 0);
-            return 1;
-        }
-    }
-    return 0;
+
+    return p;
 }
 
 const widget_desc_t widget__screen_switch = {
     .ctx_size = WIDGET_CTX_SIZE(ctx_t),
     .draw = draw,
-    .process = process,
+    .process_event = process,
 };

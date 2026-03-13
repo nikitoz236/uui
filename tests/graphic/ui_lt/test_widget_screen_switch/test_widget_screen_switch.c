@@ -11,7 +11,7 @@
 ui_lt_node_desc_t ui_desc = {
     .widget = &widget__screen_switch,
     .cfg = &(widget__screen_switch_cfg_t){
-        .screens_num = 3,
+        .count = 3,
         .screens_list = (ui_lt_node_desc_t[]){
             {
                 .widget = &widget__test_text,
@@ -54,8 +54,7 @@ void view_process(char key)
     }
 
     if (event) {
-        ui_element_t * root = (ui_element_t *)ui_memory;
-        ui_node_desc(root)->widget->process(root, event);
+        ui_process_event(event);
     }
 }
 
