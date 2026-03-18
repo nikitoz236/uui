@@ -2,6 +2,7 @@
 
 #include "dp.h"
 #include "sd_cache.h"
+#include "fat32.h"
 
 unsigned is_char(char c)
 {
@@ -48,13 +49,20 @@ void sector_dump(uint8_t * ptr, uint32_t address, unsigned len)
 
 int main()
 {
-    char str[] = "test fat32";
-    dpn(str);
+    dpn("test fat32");
+
+    fat32_t fat;
+    if (init_fat32(&fat)) {
+        dpn("read fat .... OK");
+        dp("  fat_offset[0]:       "); dpd(fat.fat_offset[0], 4); dn();
+        dp("  fat_offset[1]:       "); dpd(fat.fat_offset[1], 4); dn();
+        dp("  root_dir:            "); dpd(fat.root_dir, 4); dn();
+        dp("  sectors_per_cluster: "); dpd(fat.sectors_per_cluster, 1); dn();
+    }
 
     for (unsigned i = 0; i < 4; i++) {
-        uint8_t * sector = sector_load(i);
-        sector_dump(sector, i * 512, 512);
-
+        uint8_t * sector = sector_load(i + fat.root_dir);
+        sector_dump(sector, i + (fat.root_dir) * 512, 512);
     }
 
     return 0;
