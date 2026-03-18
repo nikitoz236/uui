@@ -10,6 +10,7 @@ SRC += $(LIB)/common/val_mod.c
 
 # widgets
 INC += $(WIDGETS)
+SRC += $(WIDGETS)/ui_test_env.c
 SRC += $(WIDGETS)/widget__screen_switch.c
 SRC += $(WIDGETS)/widget__test_text.c
 
@@ -30,9 +31,6 @@ SRC += $(LIB)/graphic/fonts/fonts.c
 # forms_split.h (нужен draw_frame)
 INC += $(LIB)/graphic/forms
 SRC += $(LIB)/graphic/forms/forms_split.c
-
-# event_list.h
-INC += ..
 
 TEST_NAME = test_widget_screen_switch
 
