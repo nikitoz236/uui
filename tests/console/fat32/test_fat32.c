@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "dp.h"
+#include "sd_cache.h"
 
 unsigned is_char(char c)
 {
@@ -50,7 +51,11 @@ int main()
     char str[] = "test fat32";
     dpn(str);
 
-    sector_dump((uint8_t *)str, 0xabcd0030, 23);
+    for (unsigned i = 0; i < 4; i++) {
+        uint8_t * sector = sector_load(i);
+        sector_dump(sector, i * 512, 512);
+
+    }
 
     return 0;
 }

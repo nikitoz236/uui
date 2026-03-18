@@ -14,7 +14,10 @@ include $(LIB)/emu/emu_dp_dep.mk
 include $(LIB)/emu/test_console.mk
 
 sd.img:
-	dd if=/dev/zero of=sd.img bs=1M count=$(SD_CARD_SIZE_MB) && mkfs.fat -F32 sd.img
+	dd if=/dev/zero of=$@ bs=1M count=$(SD_CARD_SIZE_MB)
+
+fat: sd.img
+	mkfs.fat -F32 $^
 
 mount_sd:
 	mkdir -p mnt && sudo mount -o loop,uid=$(shell id -u) sd.img mnt
