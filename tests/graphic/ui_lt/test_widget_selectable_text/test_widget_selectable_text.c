@@ -26,11 +26,13 @@ int main()
 
     emu_graphic_init(&lcd_cfg);
 
+    static const lcd_color_t colors[2] = { 0x444444, 0xFF8800 };
+
     ui_lt_node_desc_t ui_desc = {
         .widget = &widget__test_selectable_text,
         .cfg = &(widget_cfg__test_selectable_text_t){
             .text = "selectable item",
-            .colors = { 0x444444, 0xFF8800 },
+            .colors = colors,
         }
     };
 

@@ -10,5 +10,5 @@ extern const widget_desc_t widget__test_selectable_text;
 
 typedef struct {
     char * text;
-    lcd_color_t colors[2];
+    const lcd_color_t * colors;
 } widget_cfg__test_selectable_text_t;
