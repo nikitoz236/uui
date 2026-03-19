@@ -4,6 +4,7 @@ TEST_NAME = test_fat32
 
 SRC += $(LIB)/emu/fat32/sd_cache.c
 SRC += $(LIB)/fat32/fat32.c
+SRC += $(LIB)/common/utf.c
 
 INC += $(LIB)/emu/fat32
 INC += $(LIB)/fat32

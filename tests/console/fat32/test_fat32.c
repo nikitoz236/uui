@@ -70,12 +70,23 @@ int main()
         dp("  sector_of_zero_cl:   "); dpd(fat.sector_of_zero_cl, 4); dn();
     }
 
-    dpn("fat:");
-    sector_dump(fat.fat_offset[0], 2);
+    // dpn("fat:");
+    // sector_dump(fat.fat_offset[0], 2);
 
     dpn("root dir:");
-    sector_dump(sector_of_cluster(&fat, fat.root_dir_cl), 12);
+    // sector_dump(sector_of_cluster(&fat, fat.root_dir_cl), 12);
 
+    unsigned fr = 0;
+    unsigned r;
+    uint8_t buf[1024];
+    while (r = dir_scan(&fat, fat.root_dir_cl, fr, (utf16_t *)buf, 512)) {
+        dp("read dir entry num "); dpd(r, 2);
+        // dp(" name: "); dpxd(buf, 2, 40); dn();
+
+        unsigned l = utf16_to_utf8(buf, 1024, (utf16_t *)buf, 0);
+        dp(" str len: "); dpd(l, 5); dp(" name !!! : "); dp(buf); dn(); dn();
+        fr += r;
+    }
 
     return 0;
 }

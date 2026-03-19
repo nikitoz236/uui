@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "utf.h"
 
 typedef struct {
     uint32_t fat_offset[2];
@@ -17,9 +18,9 @@ typedef struct {
     uint8_t num_records;
 } fat32_file_record_t;
 
-unsigned sector_of_cluster(fat32_t * fat32, uint32_t cluster);
+unsigned sector_of_cluster(fat32_t * fat, uint32_t cluster, unsigned sector_in_cluster);
 
 /*
     итак я хочу фукнцию которая будет брать номер кластера с каталогом, а также номер записи файла. читать имя и количество записей на этот файл в каталоге. 
 */
-unsigned fat32_get_file_record();
+unsigned dir_scan(fat32_t * fat, uint32_t dir_cluster, unsigned frn, utf16_t * name, unsigned max_name_len);
