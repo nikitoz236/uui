@@ -15,7 +15,7 @@ unsigned is_char(char c)
     return 1;
 }
 
-void sector_dump(uint8_t * ptr, uint32_t address, unsigned len)
+void dump(uint8_t * ptr, uint32_t address, unsigned len)
 {
     while (len) {
         dpx(address, 4); dp(": ");
@@ -47,6 +47,15 @@ void sector_dump(uint8_t * ptr, uint32_t address, unsigned len)
     }
 }
 
+void sector_dump(unsigned sector, unsigned len)
+{
+    while (len--) {
+        uint8_t * ptr = sector_load(sector);
+        dump(ptr, sector * 512, 512);
+        sector++;
+    }
+}
+
 int main()
 {
     dpn("test fat32");
@@ -56,14 +65,17 @@ int main()
         dpn("read fat .... OK");
         dp("  fat_offset[0]:       "); dpd(fat.fat_offset[0], 4); dn();
         dp("  fat_offset[1]:       "); dpd(fat.fat_offset[1], 4); dn();
-        dp("  root_dir:            "); dpd(fat.root_dir, 4); dn();
         dp("  sectors_per_cluster: "); dpd(fat.sectors_per_cluster, 1); dn();
+        dp("  root_dir_cl:         "); dpd(fat.root_dir_cl, 1); dn();
+        dp("  sector_of_zero_cl:   "); dpd(fat.sector_of_zero_cl, 4); dn();
     }
 
-    for (unsigned i = 0; i < 4; i++) {
-        uint8_t * sector = sector_load(i + fat.root_dir);
-        sector_dump(sector, i + (fat.root_dir) * 512, 512);
-    }
+    dpn("fat:");
+    sector_dump(fat.fat_offset[0], 2);
+
+    dpn("root dir:");
+    sector_dump(sector_of_cluster(&fat, fat.root_dir_cl), 12);
+
 
     return 0;
 }

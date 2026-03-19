@@ -1,26 +1,7 @@
 #include "fat32.h"
 #include "sd_cache.h"
 
-typedef struct __attribute__((packed)) {
-    uint8_t jmp[3];
-    uint8_t oem[8];
-    uint16_t bytes_per_sector;
-    uint8_t sectors_per_cluster;
-    uint16_t reserved_sectors;
-    uint8_t num_fats;
-    uint16_t root_entry_count;
-    uint16_t total_sectors_16;
-    uint8_t media_type;
-    uint16_t fat_size_16;
-    uint16_t sectors_per_track;
-    uint16_t num_heads;
-    uint32_t hidden_sectors;
-    uint32_t total_sectors_32;
-    uint32_t fat_size_32;
-    uint16_t ext_flags;
-    uint16_t fs_version;
-    uint32_t root_cluster;
-} fat_boot_record_t;
+#include "dp.h"
 
 typedef struct __attribute__((packed)) {
     uint8_t status;
@@ -37,6 +18,94 @@ typedef struct __attribute__((packed)) {
     uint16_t signature;
 } boot_sector_t;
 
+typedef struct __attribute__((packed)) {
+    uint8_t  jmp[3];                    // Первые 3 байта: JMP-инструкция — код для перехода на загрузчик (Boot Jump Instruction)
+    uint8_t  oem[8];                    // ASCII-строка (OEM Name) — производитель или идентификатор FAT (например, "MSDOS5.0")
+    uint16_t bytes_per_sector;          // Размер сектора в байтах (обычно 512, 1024, 2048 или 4096)
+    uint8_t  sectors_per_cluster;       // Количество секторов в одном кластере
+    uint16_t reserved_sectors;          // Количество зарезервированных секторов перед областью FAT (всегда >= 1)
+    uint8_t  num_fats;                  // Количество копий FAT (обычно 2)
+    uint16_t root_entry_count;          // Количество корневых записей (0 для FAT32; >0 только для FAT12/16)
+    uint16_t total_sectors_16;          // Общее число секторов (если >65535, то в total_sectors_32)
+    uint8_t  media_type;                // Тип носителя (Media Descriptor, 0xF8 = HDD)
+    uint16_t fat_size_16;               // Размер одной FAT в секторах (0 для FAT32)
+    uint16_t sectors_per_track;         // Количество секторов на дорожке (для CHS-адресации BIOS, не используется в FAT32)
+    uint16_t num_heads;                 // Количество головок (CHS, не используется в FAT32)
+    uint32_t hidden_sectors;            // Количество "скрытых" секторов до начала раздела (важно для MBR)
+    uint32_t total_sectors_32;          // Общее количество секторов (если total_sectors_16 == 0, то используем это поле)
+    uint32_t fat_size_32;               // Размер одной таблицы FAT в секторах (для FAT32)
+    uint16_t ext_flags;                 // Расширенные флаги FAT32 (например, информация о синхронизации FAT, активной копии и др.)
+    uint16_t fs_version;                // Версия файловой системы (почти всегда 0)
+    uint32_t root_cluster;              // Номер первого кластера корневой директории (обычно 2)
+} fat32_boot_record_t;
+
+enum {
+    FR_ATTR_READ_ONLY = 0x01,           // Файл только для чтения
+    FR_ATTR_HIDDEN    = 0x02,           // Скрытый файл
+    FR_ATTR_SYSTEM    = 0x04,           // Системный файл
+    FR_ATTR_VOLUME_ID = 0x08,           // Элемент - метка тома
+    FR_ATTR_DIRECTORY = 0x10,           // Элемент - папка (директория)
+    FR_ATTR_ARCHIVE   = 0x20,           // Архивный файл (для резервных копий)
+    /**
+     * Атрибут LFN для записи длинного имени файла в каталоге.
+     * Представляет собой битовую маску (ReadOnly | Hidden | System | VolumeID == 0x0F).
+     * Используется только для LFN-записей, не относится к обычным файлам/папкам.
+     */
+    FR_ATTR_LFN       = 0x0F
+};
+
+typedef struct __attribute__((packed)) {
+    uint8_t order;                      // Порядковый номер LFN-записи. Последняя содержит 0x40.
+    uint16_t name1[5];                  // Первые 5 символов имени (UTF-16).
+    uint8_t attr;                       // Должен быть 0x0F для LFN.
+    uint8_t type;                       // Всегда 0x00 для LFN.
+    uint8_t checksum;                   // Контрольная сумма соответствующей MBS-записи (SFN).
+    uint16_t name2[6];                  // Следующие 6 символов имени (UTF-16).
+    uint16_t zero;                      // Должен быть 0x0000.
+    uint16_t name3[2];                  // Последние 2 символа имени (UTF-16).
+} fat32_lfn_entry_t;
+
+typedef struct __attribute__((packed)) {
+    uint16_t day   : 5;                 // [0:4] 1–31
+    uint16_t month : 4;                 // [5:8] 1–12
+    uint16_t year  : 7;                 // [9:15] years since 1980
+} fat32_date_t;
+
+typedef struct __attribute__((packed)) {
+    uint16_t seconds : 5;               // [0:4] 0–29 (умножить на 2; реально 0–58 sec)
+    uint16_t minutes : 6;               // [5:10] 0–59
+    uint16_t hours   : 5;               // [11:15] 0–23
+} fat32_time_t;
+
+typedef struct __attribute__((packed)) {
+    uint8_t name[8];                    // Имя файла в формате 8 символов (ASCII, без точки, дополняется пробелами)
+    uint8_t ext[3];                     // Расширение файла: 3 символа (ASCII, дополняется пробелами)
+    uint8_t attr;                       // Атрибуты файла (биты: ReadOnly, Hidden, System, VolumeID, Directory, Archive)
+    uint8_t nt_reserved;                // Зарезервировано Windows NT (исп. для корректировки регистра символов имени)
+    uint8_t creation_time_tenths;       // Доля секунды создания (0-199, кратно 10 мс; точность FAT - 2 сек)
+    fat32_time_t creation_time;         // Время создания файла (битовое поле: часы, минуты, секунды/2)
+    fat32_date_t creation_date;         // Дата создания файла (битовое поле: день, месяц, год-1980)
+    fat32_date_t last_access_date;      // Дата последнего доступа (без времени; битовое поле)
+    uint16_t first_cluster_high;        // Старшие 16 бит номера первого кластера файла (только для FAT32)
+    fat32_time_t write_time;            // Время последней записи/изменения (битовое поле)
+    fat32_date_t write_date;            // Дата последней записи/изменения (битовое поле)
+    uint16_t first_cluster_low;         // Младшие 16 бит номера первого кластера файла
+    uint32_t file_size;                 // Размер файла в байтах
+} fat32_sfn_entry_t;
+
+typedef union {
+    fat32_lfn_entry_t lfn;
+    fat32_sfn_entry_t sfn;
+} fat32_dir_entry_t;
+
+// Значения кластеров в FAT32
+#define FAT32_CLUSTER_FREE         0x0000000  // Свободный кластер
+#define FAT32_CLUSTER_RESERVED     0x0000001  // Зарезервировано (недопустимо)
+#define FAT32_CLUSTER_FIRST        0x0000002  // Первый валидный кластер
+#define FAT32_CLUSTER_MAX          0xFFFFFEF  // Максимальный валидный кластер
+#define FAT32_CLUSTER_BAD          0xFFFFFF7  // Bad cluster — битый, не использовать
+#define FAT32_CLUSTER_EOC_MIN      0xFFFFFF8  // Минимальное EOC-значение (конец цепи)
+
 unsigned init_fat32(fat32_t * fat32)
 {
     boot_sector_t * mbr = (boot_sector_t *)sector_load(0);
@@ -45,7 +114,7 @@ unsigned init_fat32(fat32_t * fat32)
     }
 
     unsigned part_start = 0;
-    fat_boot_record_t * bpb = (fat_boot_record_t *)mbr;
+    fat32_boot_record_t * bpb = (fat32_boot_record_t *)mbr;
 
     if (bpb->jmp[0] != 0xEB && bpb->jmp[0] != 0xE9) {
         unsigned i;
@@ -58,7 +127,7 @@ unsigned init_fat32(fat32_t * fat32)
         if (i == 4) {
             return 0;
         }
-        bpb = (fat_boot_record_t *)sector_load(part_start);
+        bpb = (fat32_boot_record_t *)sector_load(part_start);
         if (bpb->jmp[0] != 0xEB && bpb->jmp[0] != 0xE9) {
             return 0;
         }
@@ -66,8 +135,21 @@ unsigned init_fat32(fat32_t * fat32)
 
     fat32->fat_offset[0] = part_start + bpb->reserved_sectors;
     fat32->fat_offset[1] = part_start + bpb->reserved_sectors + bpb->fat_size_32;
-    unsigned data_start = bpb->reserved_sectors + bpb->num_fats * bpb->fat_size_32;
-    fat32->root_dir = part_start + data_start + (bpb->root_cluster - 2) * bpb->sectors_per_cluster;
+
+    fat32->root_dir_cl = bpb->root_cluster;
     fat32->sectors_per_cluster = bpb->sectors_per_cluster;
+
+    fat32->sector_of_zero_cl = fat32->fat_offset[1] + bpb->fat_size_32 - (2 * bpb->sectors_per_cluster);
+
     return 1;
+}
+
+unsigned sector_of_cluster(fat32_t * fat32, uint32_t cluster)
+{
+    return fat32->sector_of_zero_cl + (cluster * fat32->sectors_per_cluster);
+}
+
+unsigned dir_scan(uint32_t dir_cluster, unsigned frn, char * name, unsigned max_name_len)
+{
+
 }
