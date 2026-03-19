@@ -21,8 +21,10 @@ unsigned utf16_to_utf8(uint8_t * dst, unsigned dst_max, const uint16_t * src, un
         }
 
         if (ch >= 0xD800 && ch <= 0xDFFF) {
-            dst[di++] = '@';
-            si++;
+            if (di < dst_max) {
+                dst[di++] = '@';
+            }
+            /* Любой суррогат превращается в одну '@', пропускать только один 16-битный символ */
         } else {
             if (ch <= 0x7F) {
                 dst[di++] = (uint8_t)ch;
