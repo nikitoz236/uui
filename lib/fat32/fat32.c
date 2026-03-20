@@ -209,32 +209,29 @@ static unsigned name_form_sfn(const fat32_sfn_entry_t * sfn, char * name)
 
 static unsigned sector_of_file(const fat32_t * fat, uint32_t cluster, unsigned sector)
 {
-    
-}
-
-static fat32_dir_entry_t * get_dir_entry(const fat32_t * fat, uint32_t dir_cluster, unsigned frn)
-{
-    dp("dir "); dpd(dir_cluster, 10); dp(" scan, record "); dpd(frn, 5); dn();
-
-    unsigned entries_per_cluster = fat->sectors_per_cluster * FILE_RECORDS_PER_SECTOR;
-    uint32_t cluster = dir_cluster;
-
-    while (frn >= entries_per_cluster) {
+    while (sector >= fat->sectors_per_cluster) {
         cluster = fat32_next_cluster(fat, cluster);
-        dp("next dir cluster: "); dpd(cluster, 10); dn();
-
         if (cluster >= FAT32_CLUSTER_EOC_MIN) {
             return 0;
         }
         if (cluster == FAT32_CLUSTER_BAD) {
             return 0;
         }
+        sector -= fat->sectors_per_cluster;
+    }
+    return sector_of_cluster(fat, cluster, sector);
+}
 
-        frn -= entries_per_cluster;
+static fat32_dir_entry_t * get_dir_entry(const fat32_t * fat, uint32_t dir_cluster, unsigned frn)
+{
+    dp("dir "); dpd(dir_cluster, 10); dp(" scan, record "); dpd(frn, 5); dn();
+
+    unsigned disk_sector = sector_of_file(fat, dir_cluster, frn / FILE_RECORDS_PER_SECTOR);
+    if (disk_sector == 0) {
+        return 0;
     }
 
-    fat32_dir_entry_t * dir_sector = sector_load(sector_of_cluster(fat, cluster, frn / FILE_RECORDS_PER_SECTOR));
-
+    fat32_dir_entry_t * dir_sector = sector_load(disk_sector);
     fat32_dir_entry_t * entry = &dir_sector[frn % FILE_RECORDS_PER_SECTOR];
 
     dp("entry: "); dpx((unsigned)entry, 4); dp(" : "); dpxd(entry, 1, sizeof(fat32_dir_entry_t)); dn();
