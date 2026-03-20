@@ -70,6 +70,8 @@ typedef struct __attribute__((packed)) {
     uint16_t name3[2];                  // Последние 2 символа имени (UTF-16).
 } fat32_lfn_entry_t;
 
+#define LFN_CHARS                       (5 + 6 + 2)
+
 typedef struct __attribute__((packed)) {
     uint16_t day   : 5;                 // [0:4] 1–31
     uint16_t month : 4;                 // [5:8] 1–12
@@ -153,12 +155,12 @@ unsigned init_fat32(fat32_t * fat32)
     return 1;
 }
 
-unsigned sector_of_cluster(fat32_t * fat, uint32_t cluster, unsigned sector_in_cluster)
+static unsigned sector_of_cluster(const fat32_t * fat, uint32_t cluster, unsigned sector_in_cluster)
 {
     return fat->sector_of_zero_cl + (cluster * fat->sectors_per_cluster) + sector_in_cluster;
 }
 
-uint32_t fat32_next_cluster(fat32_t * fat, uint32_t cluster)
+static uint32_t fat32_next_cluster(const fat32_t * fat, uint32_t cluster)
 {
     uint32_t sector = fat->fat_offset[0] + cluster / FAT_CLUSTERS_PER_SECTOR;
     uint32_t offset = cluster % FAT_CLUSTERS_PER_SECTOR;
@@ -167,7 +169,7 @@ uint32_t fat32_next_cluster(fat32_t * fat, uint32_t cluster)
     return table[offset];
 }
 
-unsigned name_from_lfn(fat32_lfn_entry_t * lfn, utf16_t * name, unsigned max_len)
+static unsigned name_from_lfn(const fat32_lfn_entry_t * lfn, utf16_t * name, unsigned max_len)
 {
     static const struct { uint8_t o; uint8_t l } offsets[] = {
         { .o = offsetof(fat32_lfn_entry_t, name1), .l = 5 },
@@ -196,7 +198,21 @@ unsigned name_from_lfn(fat32_lfn_entry_t * lfn, utf16_t * name, unsigned max_len
     return total_used;
 }
 
-static fat32_dir_entry_t * get_dir_entry(fat32_t * fat, uint32_t dir_cluster, unsigned frn)
+static unsigned name_form_sfn(const fat32_sfn_entry_t * sfn, char * name)
+{
+    str_cp(&name[0], sfn->name, 8);
+    name[8] = '.';
+    str_cp(&name[9], sfn->ext, 3);
+    name[9 + 3] = 0;
+    return 8 + 1 + 3 + 1;
+}
+
+static unsigned sector_of_file(const fat32_t * fat, uint32_t cluster, unsigned sector)
+{
+    
+}
+
+static fat32_dir_entry_t * get_dir_entry(const fat32_t * fat, uint32_t dir_cluster, unsigned frn)
 {
     dp("dir "); dpd(dir_cluster, 10); dp(" scan, record "); dpd(frn, 5); dn();
 
@@ -230,7 +246,7 @@ static fat32_dir_entry_t * get_dir_entry(fat32_t * fat, uint32_t dir_cluster, un
     return entry;
 }
 
-unsigned dir_scan(fat32_t * fat, uint32_t dir_cluster, unsigned frn, utf16_t * name, unsigned max_name_len)
+unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char * name, unsigned max_name_len)
 {
     unsigned records = 0;
     unsigned name_len = 0;
@@ -247,15 +263,19 @@ unsigned dir_scan(fat32_t * fat, uint32_t dir_cluster, unsigned frn, utf16_t * n
                 dp("LFN ");
                 unsigned order = entry->lfn.order & ~0x40;
                 dpd(order, 3);
-                utf16_t * name_part = &name[13 * (order - 1)];
-                unsigned l = name_from_lfn(&entry->lfn, name_part, max_name_len);
+                utf16_t * name_part = (utf16_t *)&name[sizeof(utf16_t) * LFN_CHARS * (order - 1)];
+                unsigned l = name_from_lfn(&entry->lfn, name_part, max_name_len / sizeof(utf16_t));
                 name_len += l;
-                // dp(" lfn len: "); dpd(l, 2); dp(" name: "); dpxd(name_part, 2, 13); dn();
+                dp(" lfn len: "); dpd(l, 2); dp(" name: "); dpxd(name_part, 2, 13); dn();
             } else {
                 dp("SFN ");
+                if (name_len == 0) {
+                    name_len = name_form_sfn(&entry->sfn, name);
+                } else {
+                    name_len = utf16_to_utf8(name, max_name_len, (utf16_t *)name, 0);
+                }
                 break;
             }
-            dn();
         }
     }
 
