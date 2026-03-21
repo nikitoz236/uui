@@ -23,6 +23,7 @@ SRC += $(PERIPH)/esp32_gpio.c
 SRC += $(PERIPH)/esp32_i2c.c
 SRC += $(PERIPH)/dbg_usb_cdc_acm.c
 SRC += $(PERIPH)/esp32_systime.c
+SRC += $(LIB)/hw/drivers/xl9555.c
 
 INC += $(LIB)/hw/drivers
 SRC += $(LIB)/hw/drivers/tca8418_kbd.c

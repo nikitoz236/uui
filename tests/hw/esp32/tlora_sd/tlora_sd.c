@@ -9,6 +9,8 @@
 
 #include "delay_blocking.h"
 #include "sd_card.h"
+#include "xl9555.h"
+#include "esp32_i2c.h"
 
 /*
 
@@ -25,7 +27,7 @@ void __debug_usart_tx_data(const char * s, unsigned len)
     dbg_usb_cdc_acm_tx(s, len);
 }
 
-spi_cfg_t spi = {
+const spi_cfg_t spi = {
     .spi = &GPSPI2,
     .pin_list = {
         [SPI_PIN_MOSI] = &(gpio_t){
@@ -43,7 +45,7 @@ spi_cfg_t spi = {
     },
 };
 
-sd_cfg_t sd = {
+const sd_cfg_t sd = {
     .spi_dev = {
         .spi = &spi,
         .cs_pin = &(gpio_t){
@@ -53,12 +55,41 @@ sd_cfg_t sd = {
     }
 };
 
+const i2c_cfg_t i2c_bus_cfg = {
+    .dev = &I2C0,
+    .i2c_pclk = SYSTEM_I2C_EXT0_CLK_EN_S,
+    .freq = 400000,
+    .pin_list = &(gpio_list_t){
+        .count = 2,
+        .cfg = { .mode = GPIO_MODE_SIG_IO, .pu = 1, .od = 1 },
+        .pin_list = {
+            { .pin = 2, .signal = I2CEXT0_SCL_IN_IDX },
+            { .pin = 3, .signal = I2CEXT0_SDA_IN_IDX }
+        }
+    }
+};
+
+const xl9555_gpio_t sd_pwr = {
+    .dir = XL9555_DIR_OUT,
+    .pin = 14
+};
+
 int main(void)
 {
     dpn("t lora sd card spi test");
 
     init_spi(&spi);
     dpn("spi inited");
+
+    init_i2c(&i2c_bus_cfg);
+    dpn("[init] i2c ok");
+
+    init_xl9555_gpio(&sd_pwr);
+    xl9555_gpio_set(&sd_pwr, 0);
+    delay_ms(50);
+    xl9555_gpio_set(&sd_pwr, 1);
+    delay_ms(100);
+    dpn("[init] sd power on");
 
     enum sd_type t = init_sd(&sd);
     dp("SD type: "); dpd(t, 1); dn();
