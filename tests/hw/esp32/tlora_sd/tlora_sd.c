@@ -74,6 +74,55 @@ const xl9555_gpio_t sd_pwr = {
     .pin = 8 + 4
 };
 
+#include "fat32.h"
+
+uint8_t sd_sector_buf[SD_SECTOR_SIZE];
+unsigned loaded_sector = -1;
+
+uint8_t * sector_load(unsigned sector)
+{
+    if (loaded_sector != sector) {
+        loaded_sector = sector;
+        // dp("read sector "); dpd(sector, 10);
+        sd_read_sector(&sd, sector, sd_sector_buf);
+        // dpn(" done");
+    }
+    return sd_sector_buf;
+}
+
+void read_fs(void)
+{
+    fat32_t fat;
+    if (!init_fat32(&fat)) {
+        dpn("init fat FAIL");
+        return;
+    }
+
+    dpn("read fat .... OK");
+    dp("  fat_offset[0]:       "); dpd(fat.fat_offset[0], 8); dn();
+    dp("  fat_offset[1]:       "); dpd(fat.fat_offset[1], 8); dn();
+    dp("  sectors_per_cluster: "); dpd(fat.sectors_per_cluster, 8); dn();
+    dp("  root_dir_cl:         "); dpd(fat.root_dir_cl, 8); dn();
+    dp("  sector_of_zero_cl:   "); dpd(fat.sector_of_zero_cl, 8); dn();
+
+    // dpn("fat:");
+    // sector_dump(fat.fat_offset[0], 2);
+
+    dpn("root dir:");
+    // sector_dump(sector_of_cluster(&fat, fat.root_dir_cl), 12);
+
+    unsigned fr = 0;
+    unsigned r;
+    char buf[1024];
+    while (r = dir_scan(&fat, fat.root_dir_cl, fr, buf, 512)) {
+        dp("read dir entry num "); dpd(r, 2); dp(" name !!! : "); dp(buf); dn();
+        fr += r;
+    }
+
+    dpn("done");
+}
+
+
 int main(void)
 {
     dpn("t lora sd card spi test");
@@ -110,6 +159,8 @@ int main(void)
 
         uint32_t size_mb = sd_csd_size_mb(&csd);
         dp("SD size: "); dpd(size_mb, 6); dp(" MB"); dn();
+
+        read_fs();
     }
 
     while (1) {

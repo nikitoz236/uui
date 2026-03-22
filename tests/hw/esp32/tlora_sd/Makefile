@@ -31,5 +31,9 @@ SRC += $(LIB)/hw/drivers/bq25896.c
 
 SRC += $(LIB)/hw/drivers/sd_card.c
 
+INC += $(LIB)/fat32
+SRC += $(LIB)/fat32/fat32.c
+SRC += $(LIB)/common/utf.c
+
 
 include $(LIB)/hw/esp32/build_esp32.mk
