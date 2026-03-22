@@ -71,7 +71,7 @@ const i2c_cfg_t i2c_bus_cfg = {
 
 const xl9555_gpio_t sd_pwr = {
     .dir = XL9555_DIR_OUT,
-    .pin = 14
+    .pin = 8 + 4
 };
 
 int main(void)
