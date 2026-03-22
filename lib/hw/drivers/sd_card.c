@@ -5,7 +5,26 @@
 #define DP_NAME "sd card"
 #include "dp.h"
 
-#define DATA_TOKEN                      0xFE
+const uint8_t data_token = 0xFE;
+
+static void send_ff(sd_cfg_t * cfg, unsigned len)
+{
+    while (len--) {
+        spi_write_8(cfg->spi_dev.spi, 0xFF);
+    }
+}
+
+static uint8_t read(sd_cfg_t * cfg)
+{
+    return spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+}
+
+static inline void write(sd_cfg_t * cfg, uint8_t * data, unsigned len)
+{
+    while (len--) {
+        spi_write_8(cfg->spi_dev.spi, *data++);
+    }
+}
 
 static uint8_t send_cmd(sd_cfg_t * cfg, uint8_t cmd, uint32_t data, uint8_t crc)
 {
@@ -16,15 +35,12 @@ static uint8_t send_cmd(sd_cfg_t * cfg, uint8_t cmd, uint32_t data, uint8_t crc)
     cmd_buf[5] = crc;
     u32_to_be_buf8(&cmd_buf[1], data);
 
-    for (unsigned i = 0; i < 6; i++) {
-        spi_write_8(cfg->spi_dev.spi, cmd_buf[i]);
-    }
-
     dp("  send cmd to sd: "); dpxd(cmd_buf, 1, 6); dn();
+    write(cfg, cmd_buf, 6);
 
     unsigned count = 0;
     while (count < 1000) {
-        uint8_t answ = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+        uint8_t answ = read(cfg);
         if ((answ & 0x80) == 0) {
             dp("R1 answer: "); dpx(answ, 1); dp(" num try: "); dpd(count, 3); dn();
             return answ;
@@ -48,9 +64,7 @@ enum sd_type init_sd(sd_cfg_t * cfg)
     }
 
     spi_dev_unselect(&cfg->spi_dev);
-    for (int i = 0; i < 10; i++) {
-        spi_write_8(cfg->spi_dev.spi, 0xFF);
-    }
+    send_ff(cfg, 10);
     spi_dev_select(&cfg->spi_dev);
 
     resp = send_cmd(cfg, 0, 0, 0x95);
@@ -66,7 +80,7 @@ enum sd_type init_sd(sd_cfg_t * cfg)
     /* CMD8 returns R7: 4 trailing bytes must be consumed regardless */
     uint8_t r7[4];
     for (int i = 0; i < 4; i++) {
-        r7[i] = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+        r7[i] = read(cfg);
     }
     dp("CMD8 R7: "); dpxd(r7, 1, 4); dn();
 
@@ -76,28 +90,7 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         return SD_TYPE_MMC;
     }
 
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
-
-
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
+    send_ff(cfg, 4);
 
     //read OCR
     dpn("SD read OCR");
@@ -106,27 +99,32 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         return SD_TYPE_NOT_INITIALISATED;
     }
 
-    uint8_t type = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    uint8_t type = read(cfg);
     dp("  read sd type, send to sd FF, resp: "); dpx(type, 1); dn();
 
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
+    send_ff(cfg, 3);
 
     dpn("SD send init cmd");
     unsigned count = 0;
     while (count < 1000) {
         send_cmd(cfg, 55, 0, 0);
+        send_ff(cfg, 1);
         resp = send_cmd(cfg, 41, 0x40000000, 0xFF);
+        /* drain R1b busy signal and trailing junk until MISO is idle */
+        unsigned idle = 0;
+        while (idle < 2) {
+            if (read(cfg) == 0xFF) {
+                idle++;
+            } else {
+                idle = 0;
+            }
+        }
         if (resp == 0x00) {
             dp("SD card initialized in "); dpd(count, 3); dp(" tries"); dn();
             break;
         }
         count++;
     }
-
-    // resp = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-    // dp("  send to sd FF, just interest, resp: "); dpx(resp, 1); dn();
 
     if (count >= 1000) {
         return SD_TYPE_NOT_INITIALISATED;
@@ -142,8 +140,8 @@ static uint16_t read_data(sd_cfg_t * cfg, uint8_t * buffer, unsigned len)
 {
     unsigned count = 0;
     while (count < 1000) {
-        uint8_t answ = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
-        if (answ == DATA_TOKEN) {
+        uint8_t answ = read(cfg);
+        if (answ == data_token) {
             dpn("read FE recieved");
             break;
         } else if ((answ & 0xE0) == 0) {
@@ -154,11 +152,11 @@ static uint16_t read_data(sd_cfg_t * cfg, uint8_t * buffer, unsigned len)
     }
 
     for (unsigned i = 0; i < len; i++) {
-        buffer[i] = spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+        buffer[i] = read(cfg);
     }
 
-    uint16_t crc = spi_exchange_8(cfg->spi_dev.spi, 0xFF) << 8;
-    crc += spi_exchange_8(cfg->spi_dev.spi, 0xFF);
+    uint16_t crc = read(cfg) << 8;
+    crc += read(cfg);
     return crc;
 }
 
@@ -184,13 +182,10 @@ uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * bu
 {
     send_cmd(cfg, 24, sector_addr, 0);
 
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
-    spi_write_8(cfg->spi_dev.spi, DATA_TOKEN);
-    for (unsigned i = 0; i < SD_SECTOR_SIZE; i++) {
-        spi_write_8(cfg->spi_dev.spi, buf[i]);
-    }
-    spi_write_8(cfg->spi_dev.spi, 0xFF);    // crc - not used
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
+    send_ff(cfg, 1);
+    write(cfg, &data_token, 1);
+    write(cfg, buf, SD_SECTOR_SIZE);
+    send_ff(cfg, 2);    // crc - not used
 
     uint8_t status = 0xFF;
     /*
@@ -224,7 +219,7 @@ uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * bu
     */
 
     // wait card busy
-    while (spi_exchange_8(cfg->spi_dev.spi, 0xFF) == 0x00) {};
+    while (read(cfg) == 0x00) {};
 
     dpn("write data sector finished");
 
