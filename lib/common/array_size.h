@@ -11,3 +11,5 @@
  * and sizeof(typeof(int[-1])) is fail to compile.
  */
 #define ARRAY_SIZE(arr)                 (sizeof(arr) / sizeof((arr)[0]) + sizeof(typeof(int[1 - 2 * !!__builtin_types_compatible_p(typeof(arr), typeof(&arr[0]))])) * 0)
+
+#define ARRAY_INDEX(i, array)           (unsigned i = 0; i < ARRAY_SIZE(array); i++)
