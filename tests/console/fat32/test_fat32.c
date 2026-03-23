@@ -3,6 +3,7 @@
 #include "dp.h"
 #include "sd_cache.h"
 #include "fat32.h"
+#include "str_utils.h"
 
 unsigned is_char(char c)
 {
@@ -56,6 +57,48 @@ void sector_dump(unsigned sector, unsigned len)
     }
 }
 
+unsigned file_by_path(const fat32_t * fat, fat32_file_record_t * f, const char * path)
+{
+    uint32_t current_cl = fat->root_dir_cl;
+    char name_buf[256];
+
+    while (1) {
+        while (*path == '/') {
+            path++;
+        }
+        if (*path == 0) {
+            return 0;
+        }
+
+        unsigned comp_len = str_find(path, str_len(path, 256), '/');
+
+        unsigned frn = 0;
+        unsigned r;
+        while ((r = dir_scan(fat, current_cl, frn, name_buf, sizeof(name_buf), f))) {
+            unsigned nlen = str_len(name_buf, sizeof(name_buf));
+            if (nlen == comp_len && str_cmp(name_buf, path, comp_len)) {
+                path += comp_len;
+                while (*path == '/') {
+                    path++;
+                }
+                if (*path == 0) {
+                    f->name = 0;
+                    return 1;
+                }
+                if (!f->folder) {
+                    return 0;
+                }
+                current_cl = f->cluster;
+                break;
+            }
+            frn += r;
+        }
+        if (!r) {
+            return 0;
+        }
+    }
+}
+
 int main()
 {
     dpn("test fat32");
@@ -88,6 +131,13 @@ int main()
 
         fr += r;
     }
+
+    // char path[] = "gps/200202_pri/02103104.GPX";
+    char path[] = "honda.bmp";
+
+    file_by_path(&fat, &f, path);
+        dp("searched path: "); dp(path); dp(" size: "); dpd(f.size, 10); dp(" cl: "); dpd(f.cluster, 10); dp((char*[]){" F ", " D "}[f.folder]);
+        dp(" fr: "); dpd(f.folder_record, 5); dp(" frn: "); dpd(f.num_records, 3); dp(" name : "); dp(buf); dp(" - "); dpxd(buf, 1, 6); dn();
 
     return 0;
 }
