@@ -78,9 +78,14 @@ int main()
 
     unsigned fr = 0;
     unsigned r;
+    uint32_t folder = fat.root_dir_cl;
+    // uint32_t folder = 3;
+    fat32_file_record_t f;
     uint8_t buf[1024];
-    while (r = dir_scan(&fat, fat.root_dir_cl, fr, (utf16_t *)buf, 512)) {
-        dp("read dir entry num "); dpd(r, 2); dp(" name !!! : "); dp(buf); dn(); dn();
+    while (r = dir_scan(&fat, folder, fr, buf, 512, &f)) {
+        dp("read dir entry num: "); dpd(r, 2); dp(" size: "); dpd(f.size, 10); dp(" cl: "); dpd(f.cluster, 10); dp((char*[]){" F ", " D "}[f.folder]);
+        dp(" fr: "); dpd(f.folder_record, 5); dp(" frn: "); dpd(f.num_records, 3); dp(" name : "); dp(buf); dp(" - "); dpxd(buf, 1, 6); dn();
+
         fr += r;
     }
 

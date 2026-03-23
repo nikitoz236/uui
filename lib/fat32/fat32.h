@@ -12,13 +12,17 @@ typedef struct {
 unsigned init_fat32(fat32_t * fat32);
 
 typedef struct {
-    uint32_t cluster;
-    uint32_t size;
-    uint16_t folder_record;
-    uint8_t num_records;
+    uint32_t cluster;                   // кластер файла
+    uint32_t folder_cluster;            // кластер в котором находится директория содержащая файл
+    uint32_t size;                      // размер файла
+    utf8_t * name;                      // имя файла в utf8
+    uint16_t folder_record;             // номер записи в каталоге с которого начинается LFN
+    uint8_t name_len;                   // длина имени файла в байтах utf8
+    uint8_t num_records : 4;            // количество записей в каталоге на файл
+    uint8_t folder : 1;
 } fat32_file_record_t;
 
 /*
     итак я хочу фукнцию которая будет брать номер кластера с каталогом, а также номер записи файла. читать имя и количество записей на этот файл в каталоге. 
 */
-unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char * name, unsigned max_name_len);
+unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char * name, unsigned max_name_len, fat32_file_record_t * f);

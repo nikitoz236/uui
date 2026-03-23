@@ -87,7 +87,16 @@ typedef struct __attribute__((packed)) {
 typedef struct __attribute__((packed)) {
     uint8_t name[8];                    // Имя файла в формате 8 символов (ASCII, без точки, дополняется пробелами)
     uint8_t ext[3];                     // Расширение файла: 3 символа (ASCII, дополняется пробелами)
-    uint8_t attr;                       // Атрибуты файла (биты: ReadOnly, Hidden, System, VolumeID, Directory, Archive)
+    union {
+        uint8_t attr;                       // Атрибуты файла (биты: ReadOnly, Hidden, System, VolumeID, Directory, Archive)
+        struct {
+            uint8_t attr_read_only : 1;
+            uint8_t attr_hidden : 1;
+            uint8_t attr_system : 1;
+            uint8_t attr_volume : 1;
+            uint8_t attr_directroy : 1;
+        };
+    };
     uint8_t nt_reserved;                // Зарезервировано Windows NT (исп. для корректировки регистра символов имени)
     uint8_t creation_time_tenths;       // Доля секунды создания (0-199, кратно 10 мс; точность FAT - 2 сек)
     fat32_time_t creation_time;         // Время создания файла (битовое поле: часы, минуты, секунды/2)
@@ -171,7 +180,7 @@ static uint32_t fat32_next_cluster(const fat32_t * fat, uint32_t cluster)
 
 static unsigned name_from_lfn(const fat32_lfn_entry_t * lfn, utf16_t * name, unsigned max_len)
 {
-    static const struct { uint8_t o; uint8_t l } offsets[] = {
+    static const struct { uint8_t o; uint8_t l; } offsets[] = {
         { .o = offsetof(fat32_lfn_entry_t, name1), .l = 5 },
         { .o = offsetof(fat32_lfn_entry_t, name2), .l = 6 },
         { .o = offsetof(fat32_lfn_entry_t, name3), .l = 2 }
@@ -231,7 +240,7 @@ static fat32_dir_entry_t * get_dir_entry(const fat32_t * fat, uint32_t dir_clust
         return 0;
     }
 
-    fat32_dir_entry_t * dir_sector = sector_load(disk_sector);
+    fat32_dir_entry_t * dir_sector = (fat32_dir_entry_t *)sector_load(disk_sector);
     fat32_dir_entry_t * entry = &dir_sector[frn % FILE_RECORDS_PER_SECTOR];
 
     dp("entry: "); dpx((unsigned)entry, 4); dp(" : "); dpxd(entry, 1, sizeof(fat32_dir_entry_t)); dn();
@@ -243,9 +252,10 @@ static fat32_dir_entry_t * get_dir_entry(const fat32_t * fat, uint32_t dir_clust
     return entry;
 }
 
-unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char * name, unsigned max_name_len)
+unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char * name, unsigned max_name_len, fat32_file_record_t * f)
 {
     unsigned records = 0;
+    f->num_records = 0;
     unsigned name_len = 0;
     while (1) {
         records++;
@@ -256,9 +266,14 @@ unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char 
         }
 
         if (entry->sfn.name[0] != 0xE5) {
+            f->num_records++;
             if (entry->lfn.attr == FR_ATTR_LFN) {
                 dp("LFN ");
-                unsigned order = entry->lfn.order & ~0x40;
+                unsigned order = entry->lfn.order;
+                if (order & 0x40) {
+                    f->folder_record = frn;
+                    order &= ~0x40;
+                }
                 dpd(order, 3);
                 utf16_t * name_part = (utf16_t *)&name[sizeof(utf16_t) * LFN_CHARS * (order - 1)];
                 unsigned l = name_from_lfn(&entry->lfn, name_part, max_name_len / sizeof(utf16_t));
@@ -267,10 +282,22 @@ unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char 
             } else {
                 dp("SFN ");
                 if (name_len == 0) {
-                    name_len = name_form_sfn(&entry->sfn, name);
+                    f->name_len = name_form_sfn(&entry->sfn, name);
                 } else {
-                    name_len = utf16_to_utf8(name, max_name_len, (utf16_t *)name, 0);
+                    utf16_t * n16 = (utf16_t *)name;
+                    if (n16[name_len - 1] != 0) {
+                        n16[name_len] = 0;
+                        name_len++;
+                    }
+                    f->name_len = utf16_to_utf8(name, max_name_len, n16, 0);
                 }
+                f->cluster = entry->sfn.first_cluster_high << 16;
+                f->cluster += entry->sfn.first_cluster_low;
+
+                f->size = entry->sfn.file_size;
+                f->name = name;
+                f->folder_cluster = dir_cluster;
+                f->folder = entry->sfn.attr_directroy;
                 break;
             }
         }
