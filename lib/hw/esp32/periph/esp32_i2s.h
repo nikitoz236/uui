@@ -17,6 +17,7 @@ typedef struct {
     uint8_t mclk_div;   /* MCLK = clk_src / mclk_div */
     uint8_t bck_div;    /* BCLK = MCLK / bck_div */
     uint8_t bits;       /* бит на семпл: 16, 24, 32 */
+    uint8_t channels;   /* 1 = моно (DMA шлёт L, R=0), 2 = стерео */
     uint8_t dma_ch;     /* номер GDMA канала (0-4) */
     uint8_t dma_peri;   /* GDMA peri_sel для этого I2S (3=I2S0) */
 } i2s_cfg_t;

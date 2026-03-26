@@ -42,6 +42,7 @@ const i2s_cfg_t i2s = {
     .mclk_div = 10,  /* MCLK = 40MHz / 10 = 4MHz */
     .bck_div = 8,    /* BCLK = 4MHz / 8 = 500kHz */
     .bits = 16,
+    .channels = 1,
     .dma_ch = 0,
     .dma_peri = 3,   /* GDMA peri_sel: 3 = I2S0 */
 };
@@ -51,7 +52,8 @@ const i2s_cfg_t i2s = {
 #define I2C_SDA_PIN     3
 
 /* ── аудио данные ─────────────────────────────────────── */
-#include "reaper.h"
+#define AUDIO_BUF_LEN   192000
+extern const int16_t audio_buf[AUDIO_BUF_LEN];
 
 #define CHUNK_BYTES     4000    /* байт на один DMA дескриптор (< 4096) */
 #define NUM_DESC        ((AUDIO_BUF_LEN * 2 + CHUNK_BYTES - 1) / CHUNK_BYTES)

@@ -43,11 +43,13 @@ void init_i2s(const i2s_cfg_t * cfg)
         cfg->dev->tx_conf.val = v.val;
     }
 
-    /* chan0_en + chan1_en + tot_chan_num=1 */
+    /* TDM каналы: моно = только chan0, стерео = chan0 + chan1 */
     {
         typeof(cfg->dev->tx_tdm_ctrl) v = { .val = 0 };
         v.tx_tdm_chan0_en = 1;
-        v.tx_tdm_chan1_en = 1;
+        if (cfg->channels >= 2) {
+            v.tx_tdm_chan1_en = 1;
+        }
         v.tx_tdm_tot_chan_num = 1;
         cfg->dev->tx_tdm_ctrl.val = v.val;
     }

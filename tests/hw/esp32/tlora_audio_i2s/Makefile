@@ -3,6 +3,7 @@ LIB = ../../../../lib
 
 INC += .
 SRC += tlora_audio_i2s.c
+SRC += reaper.c
 
 PERIPH = $(LIB)/hw/esp32/periph
 
