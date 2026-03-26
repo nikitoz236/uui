@@ -17,6 +17,7 @@ INC += $(PERIPH)
 SRC += $(PERIPH)/esp32_pclk.c
 SRC += $(PERIPH)/esp32_gpio.c
 SRC += $(PERIPH)/esp32_i2c.c
+SRC += $(PERIPH)/esp32_i2s.c
 SRC += $(PERIPH)/dbg_usb_cdc_acm.c
 SRC += $(PERIPH)/esp32_systime.c
 

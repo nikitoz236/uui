@@ -1,6 +1,6 @@
 #include "esp32_gpio.h"
 #include "esp32_i2c.h"
-#include "esp32_pclk.h"
+#include "esp32_i2s.h"
 #include "dbg_usb_cdc_acm.h"
 #include "delay_blocking.h"
 #include "xl9555.h"
@@ -19,13 +19,35 @@ void __debug_usart_tx_data(const char * s, unsigned len)
     dbg_usb_cdc_acm_tx(s, len);
 }
 
-/* ── пины ─────────────────────────────────────────────── */
+/* ── I2S ──────────────────────────────────────────────── */
+const i2s_cfg_t i2s = {
+    .dev = &I2S0,
+    .pclk = 4,   /* SYSTEM_I2S0_CLK_EN_S */
+    .mclk = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0_MCLK_OUT_IDX, .pin = 10 },
+    },
+    .bclk = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0O_BCK_OUT_IDX, .pin = 11 },
+    },
+    .ws = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0O_WS_OUT_IDX, .pin = 18 },
+    },
+    .dout = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0O_SD_OUT_IDX, .pin = 45 },
+    },
+    .clk_sel = 0,    /* XTAL 40MHz */
+    .mclk_div = 10,  /* MCLK = 40MHz / 10 = 4MHz */
+    .bck_div = 8,    /* BCLK = 4MHz / 8 = 500kHz */
+    .bits = 16,
+};
+
+/* ── I2C ──────────────────────────────────────────────── */
 #define I2C_SCL_PIN     2
 #define I2C_SDA_PIN     3
-#define I2S_MCLK_PIN    10
-#define I2S_BCLK_PIN    11
-#define I2S_WS_PIN      18
-#define I2S_DOUT_PIN    45
 
 /* ── аудио данные ─────────────────────────────────────── */
 #include "reaper.h"
@@ -205,64 +227,6 @@ static void es8311_init(void)
     dpn("ES8311 init OK");
 }
 
-/* ── I2S: инициализация ───────────────────────────────── */
-/*
- * STD (Philips), master, 16-bit stereo, 16 kHz
- * MCLK = PLL160M / 39.0625 = 4.096 MHz  (256 × 16 kHz)
- * BCLK = MCLK / 8 = 512 kHz             (32 × 16 kHz)
- * WS   = BCLK / 32 = 16 kHz
- *
- * PLL160M fractional div: N=39, b/a=1/16 (b<=a/2):
- *   z=1, y=0, x=15, yn1=0
- */
-static void i2s_init(void)
-{
-    /* тактирование */
-    pclk_ctrl(4, 1);   /* SYSTEM_I2S0_CLK_EN_S = 4 */
-    pclk_reset(4);
-
-    /* GPIO: MCLK, BCLK, WS, DOUT */
-    init_gpio(&(gpio_t){
-        .cfg = { .mode = GPIO_MODE_SIG_OUT },
-        .pin = { .signal = I2S0_MCLK_OUT_IDX, .pin = I2S_MCLK_PIN }
-    });
-    init_gpio(&(gpio_t){
-        .cfg = { .mode = GPIO_MODE_SIG_OUT },
-        .pin = { .signal = I2S0O_BCK_OUT_IDX, .pin = I2S_BCLK_PIN }
-    });
-    init_gpio(&(gpio_t){
-        .cfg = { .mode = GPIO_MODE_SIG_OUT },
-        .pin = { .signal = I2S0O_WS_OUT_IDX, .pin = I2S_WS_PIN }
-    });
-    init_gpio(&(gpio_t){
-        .cfg = { .mode = GPIO_MODE_SIG_OUT },
-        .pin = { .signal = I2S0O_SD_OUT_IDX, .pin = I2S_DOUT_PIN }
-    });
-
-    /* clock: XTAL(40MHz)/10 = 4MHz (тест: без PLL)
-     * tx_clkm_conf: div_num=10[7:0], clk_active=1[26], clk_sel=0/XTAL[28:27], clk_en=1[29] */
-    I2S0.tx_clkm_conf.val = 10 | (1u << 26) | (0u << 27) | (1u << 29);
-    I2S0.tx_clkm_div_conf.val = 0;
-    /* rx_clkm_conf.mclk_sel=0 (reset default): MCLK_OUT = TX clock */
-
-    /* TX формат */
-    I2S0.tx_conf1.tx_bck_div_num = 7;           /* BCLK = MCLK/8: 8-1=7 */
-    I2S0.tx_conf1.tx_bits_mod = 15;             /* 16-bit data: 16-1=15 */
-    I2S0.tx_conf1.tx_tdm_chan_bits = 15;        /* channel slot = 16 бит */
-    I2S0.tx_conf1.tx_half_sample_bits = 15;    /* STD: slot_bit_width-1 */
-    I2S0.tx_conf1.tx_tdm_ws_width = 15;        /* WS = 16 BCLK: 16-1=15 */
-    I2S0.tx_conf1.tx_msb_shift = 1;            /* Philips: сдвиг MSB */
-    I2S0.tx_conf1.tx_bck_no_dly = 0;
-
-    /* TX режим: master, TDM (=STD), pcm_bypass, WS=0→L, MSB first
-     * tx_conf: pcm_bypass=1[12], tdm_en=1[19] */
-    I2S0.tx_conf.val = (1u << 12) | (1u << 19);
-
-    /* TDM: 2 канала (L+R)
-     * tx_tdm_ctrl: chan0_en=1[0], chan1_en=1[1], tot_chan_num=1[19:16] */
-    I2S0.tx_tdm_ctrl.val = (1u << 0) | (1u << 1) | (1u << 16);
-
-}
 
 /* ── DMA дескриптор ───────────────────────────────────── */
 typedef struct dma_desc {
@@ -329,8 +293,8 @@ int main(void)
     init_i2c(&i2c);
     dpn("[init] i2c ok");
 
-    i2s_init();
-    dpn("[init] i2s ok (MCLK running)");
+    init_i2s(&i2s);
+    dpn("[init] i2s ok");
 
     es8311_init();
 
