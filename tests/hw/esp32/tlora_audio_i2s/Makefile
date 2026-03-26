@@ -23,5 +23,6 @@ SRC += $(PERIPH)/esp32_systime.c
 
 INC += $(LIB)/hw/drivers
 SRC += $(LIB)/hw/drivers/xl9555.c
+SRC += $(LIB)/hw/drivers/es8311.c
 
 include $(LIB)/hw/esp32/build_esp32.mk

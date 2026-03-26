@@ -1,15 +1,16 @@
+#include "esp32_gdma.h"
 #include "esp32_gpio.h"
 #include "esp32_i2c.h"
 #include "esp32_i2s.h"
 #include "dbg_usb_cdc_acm.h"
 #include "delay_blocking.h"
 #include "xl9555.h"
+#include "es8311.h"
 
 #define DP_NOTABLE
 #include "dp.h"
 
 #include "soc/i2s_struct.h"
-#include "soc/gdma_struct.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -55,8 +56,15 @@ const i2s_cfg_t i2s = {
 #define CHUNK_BYTES     4000    /* байт на один DMA дескриптор (< 4096) */
 #define NUM_DESC        ((AUDIO_BUF_LEN * 2 + CHUNK_BYTES - 1) / CHUNK_BYTES)
 
-/* ── ES8311 I2C адрес ─────────────────────────────────── */
-#define ES8311_ADDR     0x18
+/* ── ES8311 ───────────────────────────────────────────── */
+const es8311_cfg_t es8311 = {
+    .addr = 0x18,
+    .bits = 16,
+    .bclk_div = 4,
+    .dac_osr = 0x20,
+    .adc_osr = 0x10,
+    .lrck_div = 0x00FF,
+};
 
 /* ── I2C ──────────────────────────────────────────────── */
 const i2c_cfg_t i2c = {
@@ -79,163 +87,8 @@ const xl9555_gpio_t amp_en = {
     .pin = 1
 };
 
-/* ── ES8311: запись/чтение регистра ───────────────────── */
-static void es_wr(uint8_t reg, uint8_t val)
-{
-    uint8_t buf[2] = { reg, val };
-    i2c_transaction(ES8311_ADDR, buf, 2, 0, 0);
-    while (i2c_status() == I2C_STATUS_BUSY) {};
-}
 
-static uint8_t es_rd(uint8_t reg)
-{
-    uint8_t val = 0;
-    i2c_transaction(ES8311_ADDR, &reg, 1, &val, 1);
-    while (i2c_status() == I2C_STATUS_BUSY) {};
-    return val;
-}
-
-/* ── ES8311: инициализация ────────────────────────────── */
-/*
- * Последовательность из референсного драйвера LilyGo:
- * es8311_open → set_bits_per_sample(16) → config_sample(16kHz)
- * → es8311_start(DAC) → set_mute(false) → set_vol(0dB)
- */
-static void es8311_init(void)
-{
-    uint8_t regv;
-    uint8_t chip_id = 0;
-
-    i2c_transaction(ES8311_ADDR, &(uint8_t){0xFD}, 1, &chip_id, 1);
-    while (i2c_status() == I2C_STATUS_BUSY) {};
-    dp("ES8311 chip_id = 0x"); dpx(chip_id, 1); dn();
-
-    /* workaround: первый write может игнорироваться */
-    es_wr(0x44, 0x08);
-    es_wr(0x44, 0x08);
-
-    /* clock manager defaults */
-    es_wr(0x01, 0x30);
-    es_wr(0x02, 0x00);
-    es_wr(0x03, 0x10);
-    es_wr(0x16, 0x24);
-    es_wr(0x04, 0x10);
-    es_wr(0x05, 0x00);
-    es_wr(0x0B, 0x00);
-    es_wr(0x0C, 0x00);
-    es_wr(0x10, 0x1F);
-    es_wr(0x11, 0x7F);
-
-    /* CSM reset pulse */
-    es_wr(0x00, 0x80);
-
-    /* slave mode (bit6=0) */
-    regv = es_rd(0x00);
-    regv &= 0xBF;
-    es_wr(0x00, regv);
-
-    /* MCLK from external pin, not inverted */
-    es_wr(0x01, 0x3F);
-
-    /* BCLK not inverted */
-    regv = es_rd(0x06);
-    regv &= ~0x20;
-    es_wr(0x06, regv);
-
-    /* reference bias, ADC HPF */
-    es_wr(0x13, 0x10);
-    es_wr(0x1B, 0x0A);
-    es_wr(0x1C, 0x6A);
-
-    /* internal DAC reference */
-    es_wr(0x44, 0x58);
-
-    /* set_bits_per_sample(16): DAC SDP = Philips I2S, 16-bit */
-    regv = es_rd(0x09);
-    regv &= 0xFC;
-    regv |= 0x0C;
-    es_wr(0x09, regv);
-
-    regv = es_rd(0x0A);
-    regv &= 0xFC;
-    regv |= 0x0C;
-    es_wr(0x0A, regv);
-
-    /* config_sample(16kHz): MCLK=4.096MHz, Fs=16kHz
-     * coeff: pre_div=1, pre_mult=1, adc_div=1, dac_div=1
-     *        lrck=0x00FF, bclk_div=4, adc_osr=0x10, dac_osr=0x20 */
-    regv = es_rd(0x02);
-    regv &= 0x07;
-    es_wr(0x02, regv);
-
-    es_wr(0x05, 0x00);
-
-    regv = es_rd(0x03);
-    regv &= 0x80;
-    regv |= 0x10;
-    es_wr(0x03, regv);
-
-    regv = es_rd(0x04);
-    regv &= 0x80;
-    regv |= 0x20;
-    es_wr(0x04, regv);
-
-    regv = es_rd(0x07);
-    regv &= 0xC0;
-    es_wr(0x07, regv);
-
-    es_wr(0x08, 0xFF);
-
-    regv = es_rd(0x06);
-    regv &= 0xE0;
-    regv |= (4 - 1);
-    es_wr(0x06, regv);
-
-    /* es8311_start(DAC): CSM reset + slave */
-    es_wr(0x00, 0x80 & 0xBF);
-
-    /* MCLK from pin */
-    es_wr(0x01, 0x3F);
-
-    /* DAC SDP active, ADC tri-state */
-    regv = es_rd(0x09);
-    regv &= 0xBF;
-    es_wr(0x09, regv);
-
-    regv = es_rd(0x0A);
-    regv &= 0xBF;
-    regv |= 0x40;
-    es_wr(0x0A, regv);
-
-    es_wr(0x17, 0xBF);   /* ADC volume 0 dB */
-    es_wr(0x0E, 0x02);   /* HP bias on */
-    es_wr(0x12, 0x00);   /* DAC enable */
-    es_wr(0x14, 0x1A);   /* analog PGA */
-    es_wr(0x0D, 0x01);   /* VDDA reference on */
-    es_wr(0x15, 0x40);   /* ADC ramp rate */
-    es_wr(0x37, 0x08);   /* DAC ramp rate */
-    es_wr(0x45, 0x00);   /* GP normal */
-
-    /* set_mute(false) */
-    regv = es_rd(0x31);
-    regv &= 0x9F;
-    es_wr(0x31, regv);
-
-    /* set_vol(0 dB) */
-    es_wr(0x32, 0xBF);
-
-    dpn("ES8311 init OK");
-}
-
-
-/* ── DMA дескриптор ───────────────────────────────────── */
-typedef struct dma_desc {
-    volatile uint32_t size : 12, length : 12, offset : 5, sosf : 1, eof : 1, owner : 1;
-    void * buf;
-    struct dma_desc * next;
-} dma_desc_t;
-
-static dma_desc_t dma_desc[NUM_DESC];
+static gdma_desc_t dma_desc[NUM_DESC];
 
 /* ── GDMA: инициализация и запуск ─────────────────────── */
 /*
@@ -244,16 +97,7 @@ static dma_desc_t dma_desc[NUM_DESC];
  */
 static void gdma_start(void)
 {
-    pclk_ctrl(32 + SYSTEM_DMA_CLK_EN_S, 1);
-    pclk_reset(32 + SYSTEM_DMA_CLK_EN_S);   /* default RST=1, снимаем reset */
-    GDMA.misc_conf.clk_en = 1;   /* force enable reg clock */
-
-    /* сброс TX-канала 0 */
-    GDMA.channel[0].out.conf0.out_rst = 1;
-    GDMA.channel[0].out.conf0.out_rst = 0;
-
-    /* подключить к I2S0 */
-    GDMA.channel[0].out.peri_sel.sel = 3;
+    gdma_init();
 
     /* цепочка дескрипторов по CHUNK_BYTES, последний с eof=1 */
     uint8_t * base = (uint8_t *)audio_buf;
@@ -261,7 +105,9 @@ static void gdma_start(void)
     for (int i = 0; i < NUM_DESC; i++) {
         unsigned off = i * CHUNK_BYTES;
         unsigned sz = total - off;
-        if (sz > CHUNK_BYTES) sz = CHUNK_BYTES;
+        if (sz > CHUNK_BYTES) {
+            sz = CHUNK_BYTES;
+        }
         dma_desc[i].size = sz;
         dma_desc[i].length = sz;
         dma_desc[i].eof = (i == NUM_DESC - 1) ? 1 : 0;
@@ -276,8 +122,7 @@ static void gdma_start(void)
     I2S0.tx_conf.tx_fifo_reset = 1;
     I2S0.tx_conf.tx_fifo_reset = 0;
 
-    /* старт DMA: addr[19:0] + start[21] одним write */
-    GDMA.channel[0].out.link.val = ((uint32_t)&dma_desc[0] & 0xFFFFF) | (1u << 21);
+    gdma_tx_start(0, 3, &dma_desc[0]);
 
     /* старт I2S TX */
     I2S0.tx_conf.tx_update = 1;
@@ -293,15 +138,25 @@ int main(void)
     init_i2c(&i2c);
     dpn("[init] i2c ok");
 
+    /* усилитель: включить первым, пока DAC молчит — щелчок уйдёт в тишину */
+    xl9555_gpio_set(&amp_en, 0);
+    init_xl9555_gpio(&amp_en);
+
     init_i2s(&i2s);
     dpn("[init] i2s ok");
 
-    es8311_init();
+    dp("ES8311 chip_id = 0x"); dpx(es8311_read_chipid(&es8311), 1); dn();
 
-    init_xl9555_gpio(&amp_en);
+    init_es8311(&es8311);
+    dpn("[init] es8311 ok");
+
     xl9555_gpio_set(&amp_en, 1);
     dpn("[init] amp on");
 
+    delay_ms(1000);
+
+    /* громкость до запуска DMA — ни один семпл не пропадёт */
+    es8311_set_volume(&es8311, 0xBF);
     gdma_start();
     dpn("[init] dma+i2s started");
 
