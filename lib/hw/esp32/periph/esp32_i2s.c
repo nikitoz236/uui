@@ -51,4 +51,19 @@ void init_i2s(const i2s_cfg_t * cfg)
         v.tx_tdm_tot_chan_num = 1;
         cfg->dev->tx_tdm_ctrl.val = v.val;
     }
+
+}
+
+void i2s_tx_start(const i2s_cfg_t * cfg, const gdma_desc_t * desc)
+{
+    cfg->dev->tx_conf.tx_reset = 1;
+    cfg->dev->tx_conf.tx_reset = 0;
+    cfg->dev->tx_conf.tx_fifo_reset = 1;
+    cfg->dev->tx_conf.tx_fifo_reset = 0;
+
+    gdma_tx_start(cfg->dma_ch, cfg->dma_peri, desc);
+
+    cfg->dev->tx_conf.tx_update = 1;
+    while (cfg->dev->tx_conf.tx_update) {};
+    cfg->dev->tx_conf.tx_start = 1;
 }

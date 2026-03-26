@@ -10,8 +10,6 @@
 #define DP_NOTABLE
 #include "dp.h"
 
-#include "soc/i2s_struct.h"
-
 #include <stdint.h>
 #include <stddef.h>
 
@@ -44,6 +42,8 @@ const i2s_cfg_t i2s = {
     .mclk_div = 10,  /* MCLK = 40MHz / 10 = 4MHz */
     .bck_div = 8,    /* BCLK = 4MHz / 8 = 500kHz */
     .bits = 16,
+    .dma_ch = 0,
+    .dma_peri = 3,   /* GDMA peri_sel: 3 = I2S0 */
 };
 
 /* ── I2C ──────────────────────────────────────────────── */
@@ -90,19 +90,11 @@ const xl9555_gpio_t amp_en = {
 
 static gdma_desc_t dma_desc[NUM_DESC];
 
-/* ── GDMA: инициализация и запуск ─────────────────────── */
-/*
- * GDMA channel 0 TX → I2S0 (peri_sel=3)
- * Один дескриптор замкнут на себя: DMA крутит синус вечно.
- */
-static void gdma_start(void)
+static void build_desc_chain(void)
 {
-    gdma_init();
-
-    /* цепочка дескрипторов по CHUNK_BYTES, последний с eof=1 */
     uint8_t * base = (uint8_t *)audio_buf;
-    unsigned total = AUDIO_BUF_LEN * 2;   /* байт */
-    for (int i = 0; i < NUM_DESC; i++) {
+    unsigned total = AUDIO_BUF_LEN * 2;
+    for (unsigned i = 0; i < NUM_DESC; i++) {
         unsigned off = i * CHUNK_BYTES;
         unsigned sz = total - off;
         if (sz > CHUNK_BYTES) {
@@ -115,19 +107,6 @@ static void gdma_start(void)
         dma_desc[i].buf = base + off;
         dma_desc[i].next = (i == NUM_DESC - 1) ? NULL : &dma_desc[i + 1];
     }
-
-    /* сброс TX FIFO I2S */
-    I2S0.tx_conf.tx_reset = 1;
-    I2S0.tx_conf.tx_reset = 0;
-    I2S0.tx_conf.tx_fifo_reset = 1;
-    I2S0.tx_conf.tx_fifo_reset = 0;
-
-    gdma_tx_start(0, 3, &dma_desc[0]);
-
-    /* старт I2S TX */
-    I2S0.tx_conf.tx_update = 1;
-    while (I2S0.tx_conf.tx_update) {}
-    I2S0.tx_conf.tx_start = 1;
 }
 
 /* ── main ─────────────────────────────────────────────── */
@@ -135,10 +114,10 @@ int main(void)
 {
     dpn("tlora audio i2s");
 
+    gdma_init();
     init_i2c(&i2c);
     dpn("[init] i2c ok");
 
-    /* усилитель: включить первым, пока DAC молчит — щелчок уйдёт в тишину */
     xl9555_gpio_set(&amp_en, 0);
     init_xl9555_gpio(&amp_en);
 
@@ -157,7 +136,8 @@ int main(void)
 
     /* громкость до запуска DMA — ни один семпл не пропадёт */
     es8311_set_volume(&es8311, 0xBF);
-    gdma_start();
+    build_desc_chain();
+    i2s_tx_start(&i2s, &dma_desc[0]);
     dpn("[init] dma+i2s started");
 
     while (1) {}
