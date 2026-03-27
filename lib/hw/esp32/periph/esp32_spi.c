@@ -1,7 +1,7 @@
 #include "esp32_spi.h"
 #include "round_up.h"
 
-// #define DP_OFF
+#define DP_OFF
 #include "dp.h"
 
 static unsigned spi_len = 1;
@@ -111,7 +111,7 @@ void spi_set_frame_len(const spi_cfg_t * cfg, unsigned len)
     cfg->spi->ms_dlen.ms_data_bitlen = len - 1;
 }
 
-void spi_tx_oct(const spi_cfg_t * cfg, void * data)
+void spi_tx_oct(const spi_cfg_t * cfg, const void * data)
 {
     while (spi_is_busy(cfg)) {};
 
@@ -146,6 +146,7 @@ void spi_write_16(const spi_cfg_t * cfg, uint16_t c)
 
 void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 {
+    // заглушка без DMA
     while (len) {
         spi_tx_oct(cfg, txdata);
         txdata += spi_len;
@@ -155,6 +156,7 @@ void spi_dma_tx_buf(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 
 void spi_dma_tx_repeat(const spi_cfg_t * cfg, const void * txdata, unsigned len)
 {
+    // заглушка без DMA
     while (len) {
         spi_tx_oct(cfg, txdata);
         len--;

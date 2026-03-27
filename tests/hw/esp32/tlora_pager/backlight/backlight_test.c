@@ -38,6 +38,7 @@ void draw_value(void)
     dec_to_str_right_aligned(brightness, buf, 2, 0);
 
     text_ptr_set_char_pos(&tp_val, (xy_t){ .x = 0, .y = 0 });
+
     lcd_color_tptr_print(&tp_val, "BL: ", cs_val, 4);
     lcd_color_tptr_print(&tp_val, buf, cs_val, 2);
     lcd_color_tptr_print(&tp_val, "  ", cs_val, 2);
@@ -121,6 +122,7 @@ int main(void)
     init_lcd_hw(&lcd_cfg);
     lcd_bl(16 - brightness);
     init_lcd(&lcd_cfg);
+    lcd_select();
 
     form_t lcdf = display_lcd_cfg_form(&lcd_cfg);
     ui_init(&lcdf);
