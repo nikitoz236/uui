@@ -4,8 +4,9 @@
 #include "stddef.h"
 #include "array_size.h"
 #include "buf_endian.h"
+#include "str_utils.h"
 
-// #define DP_OFF
+#define DP_OFF
 #include "dp.h"
 
 typedef struct __attribute__((packed)) {
@@ -257,6 +258,9 @@ unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char 
     unsigned records = 0;
     f->num_records = 0;
     unsigned name_len = 0;
+
+    dn();
+
     while (1) {
         records++;
         fat32_dir_entry_t * entry = get_dir_entry(fat, dir_cluster, frn++);
@@ -265,43 +269,92 @@ unsigned dir_scan(const fat32_t * fat, uint32_t dir_cluster, unsigned frn, char 
             return 0;
         }
 
-        if (entry->sfn.name[0] != 0xE5) {
-            f->num_records++;
-            if (entry->lfn.attr == FR_ATTR_LFN) {
-                dp("LFN ");
-                unsigned order = entry->lfn.order;
-                if (order & 0x40) {
-                    f->folder_record = frn;
-                    order &= ~0x40;
-                }
-                dpd(order, 3);
-                utf16_t * name_part = (utf16_t *)&name[sizeof(utf16_t) * LFN_CHARS * (order - 1)];
-                unsigned l = name_from_lfn(&entry->lfn, name_part, max_name_len / sizeof(utf16_t));
-                name_len += l;
-                dp(" lfn len: "); dpd(l, 2); dp(" name: "); dpxd(name_part, 2, 13); dn();
-            } else {
-                dp("SFN ");
-                if (name_len == 0) {
-                    f->name_len = name_form_sfn(&entry->sfn, name);
-                } else {
-                    utf16_t * n16 = (utf16_t *)name;
-                    if (n16[name_len - 1] != 0) {
-                        n16[name_len] = 0;
-                        name_len++;
-                    }
-                    f->name_len = utf16_to_utf8(name, max_name_len, n16, 0);
-                }
-                f->cluster = entry->sfn.first_cluster_high << 16;
-                f->cluster += entry->sfn.first_cluster_low;
+        if (entry->sfn.name[0] == 0xE5) {
+            dpn("-- skip E5");
+            continue;
+        }
+        if (entry->sfn.name[0] == 0xFF) {
+            dpn("-- skip FF");
+            continue;
+        }
 
-                f->size = entry->sfn.file_size;
-                f->name = name;
-                f->folder_cluster = dir_cluster;
-                f->folder = entry->sfn.attr_directroy;
-                break;
+        f->num_records++;
+        if (entry->lfn.attr == FR_ATTR_LFN) {
+            dp("LFN ");
+            unsigned order = entry->lfn.order;
+            if (order & 0x40) {
+                f->folder_record = frn;
+                order &= ~0x40;
             }
+            dpd(order, 3);
+            utf16_t * name_part = (utf16_t *)&name[sizeof(utf16_t) * LFN_CHARS * (order - 1)];
+            unsigned l = name_from_lfn(&entry->lfn, name_part, max_name_len / sizeof(utf16_t));
+            name_len += l;
+            dp(" lfn len: "); dpd(l, 2); dp(" name: "); dpxd(name_part, 2, 13); dn();
+        } else {
+            dp("SFN ");
+            if (name_len == 0) {
+                f->name_len = name_form_sfn(&entry->sfn, name);
+            } else {
+                utf16_t * n16 = (utf16_t *)name;
+                if (n16[name_len - 1] != 0) {
+                    n16[name_len] = 0;
+                    name_len++;
+                }
+                f->name_len = utf16_to_utf8(name, max_name_len, n16, 0);
+            }
+            f->cluster = entry->sfn.first_cluster_high << 16;
+            f->cluster += entry->sfn.first_cluster_low;
+
+            f->size = entry->sfn.file_size;
+            f->name = name;
+            f->folder_cluster = dir_cluster;
+            f->folder = entry->sfn.attr_directroy;
+            break;
         }
     }
 
     return records;
+}
+
+unsigned file_by_path(const fat32_t * fat, fat32_file_record_t * f, const char * path)
+{
+    uint32_t current_cl = fat->root_dir_cl;
+    char name_buf[256];
+
+    while (1) {
+        while (*path == '/') {
+            path++;
+        }
+        if (*path == 0) {
+            return 0;
+        }
+
+        unsigned comp_len = str_find(path, str_len(path, 256), '/');
+
+        unsigned frn = 0;
+        unsigned r;
+        while ((r = dir_scan(fat, current_cl, frn, name_buf, sizeof(name_buf), f))) {
+            unsigned nlen = str_len(name_buf, sizeof(name_buf));
+            if (nlen == comp_len && str_cmp(name_buf, path, comp_len)) {
+                path += comp_len;
+                while (*path == '/') {
+                    path++;
+                }
+                if (*path == 0) {
+                    f->name = 0;
+                    return 1;
+                }
+                if (!f->folder) {
+                    return 0;
+                }
+                current_cl = f->cluster;
+                break;
+            }
+            frn += r;
+        }
+        if (!r) {
+            return 0;
+        }
+    }
 }
