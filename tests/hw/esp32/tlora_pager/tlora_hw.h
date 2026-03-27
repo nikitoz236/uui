@@ -3,12 +3,16 @@
 #include "esp32_gpio.h"
 #include "esp32_spi.h"
 #include "esp32_i2c.h"
+#include "esp32_i2s.h"
+#include "esp32_gdma.h"
 
 #include "lcd_spi.h"
 #include "aw9364.h"
 #include "xl9555.h"
 #include "bq25896.h"
 #include "tca8418_kbd.h"
+#include "es8311.h"
+#include "sd_card.h"
 #include "dbg_usb_cdc_acm.h"
 
 #define DP_NOTABLE
@@ -18,6 +22,12 @@ extern spi_cfg_t spi;
 extern const lcd_cfg_t lcd_cfg;
 extern i2c_cfg_t i2c_bus_cfg;
 extern gpio_t kbd_irq_line;
+
+extern i2s_cfg_t i2s;
+extern es8311_cfg_t es8311;
+extern const sd_cfg_t sd;
+extern const xl9555_gpio_t amp_en;
+extern const xl9555_gpio_t sd_pwr;
 
 enum tlora_kbd {
     TLORA_KBD_KEY_Q,

@@ -78,3 +78,64 @@ gpio_t kbd_irq_line = {
     .cfg = { .mode = GPIO_MODE_IN, .pu = 1 },
     .pin = { .pin = 6 }
 };
+
+/* ── I2S ──────────────────────────────────────────────── */
+i2s_cfg_t i2s = {
+    .dev = &I2S0,
+    .pclk = 4,   /* SYSTEM_I2S0_CLK_EN_S */
+    .mclk = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0_MCLK_OUT_IDX, .pin = 10 },
+    },
+    .bclk = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0O_BCK_OUT_IDX, .pin = 11 },
+    },
+    .ws = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0O_WS_OUT_IDX, .pin = 18 },
+    },
+    .dout = &(gpio_t){
+        .cfg = { .mode = GPIO_MODE_SIG_OUT },
+        .pin = { .signal = I2S0O_SD_OUT_IDX, .pin = 45 },
+    },
+    .clk_sel = 0,    /* XTAL 40MHz */
+    .mclk_div = 10,  /* MCLK = 40MHz / 10 = 4MHz */
+    .bck_div = 8,    /* BCLK = 4MHz / 8 = 500kHz */
+    .bits = 16,
+    .channels = 1,
+    .dma_ch = 0,
+    .dma_peri = 3,   /* GDMA peri_sel: 3 = I2S0 */
+};
+
+/* ── ES8311 ───────────────────────────────────────────── */
+es8311_cfg_t es8311 = {
+    .addr = 0x18,
+    .bits = 16,
+    .bclk_div = 4,
+    .dac_osr = 0x20,
+    .adc_osr = 0x10,
+    .lrck_div = 0x00FF,
+};
+
+/* ── SD card ──────────────────────────────────────────── */
+const sd_cfg_t sd = {
+    .spi_dev = {
+        .spi = &spi,
+        .cs_pin = &(gpio_t){
+            .pin = { .pin = 21 },
+            .cfg = { .mode = GPIO_MODE_OUT }
+        }
+    }
+};
+
+/* ── XL9555 GPIO ──────────────────────────────────────── */
+const xl9555_gpio_t amp_en = {
+    .dir = XL9555_DIR_OUT,
+    .pin = 1
+};
+
+const xl9555_gpio_t sd_pwr = {
+    .dir = XL9555_DIR_OUT,
+    .pin = 8 + 4
+};
