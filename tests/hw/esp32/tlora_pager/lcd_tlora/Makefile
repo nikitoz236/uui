@@ -1,9 +1,12 @@
 
-LIB = ../../../../lib
+LIB = ../../../../../lib
 
 
 INC += .
-SRC += test_s3_lcd_tlora.c
+SRC += test_lcd_tlora.c
+
+INC += ..
+SRC += ../tlora_hw.c
 
 PERIPH = $(LIB)/hw/esp32/periph
 
@@ -27,6 +30,7 @@ INC += $(LIB)/hw/api
 INC += $(LIB)/hw/drivers
 SRC += $(LIB)/hw/drivers/lcd_spi.c
 SRC += $(LIB)/hw/drivers/lcd_st7796.c
+SRC += $(LIB)/hw/drivers/aw9364.c
 
 # INC += $(LIB)/graphic/fonts
 # SRC += $(LIB)/graphic/fonts/fonts.c

@@ -202,8 +202,10 @@ void lcd_image(unsigned x, unsigned y, unsigned w, unsigned h, unsigned scale, l
 
 static inline void lcd_clear(void)
 {
+    lcd_select();
     const lcd_color_t clear_color = 0;
     lcd_rect(0, 0, lcd_cfg->gcfg.width, lcd_cfg->gcfg.height, clear_color);
+    lcd_unselect();
 }
 
 void init_lcd(const lcd_cfg_t * cfg)
