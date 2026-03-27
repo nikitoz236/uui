@@ -9,14 +9,7 @@ const uint8_t data_token = 0xFE;
 
 static inline void select(sd_cfg_t * cfg)
 {
-    while (spi_is_busy(cfg->spi_dev.spi)) {};
     spi_dev_select(&cfg->spi_dev);
-}
-
-static inline void unselect(sd_cfg_t * cfg)
-{
-    spi_dev_unselect(&cfg->spi_dev);
-    spi_write_8(cfg->spi_dev.spi, 0xFF);
 }
 
 static void send_ff(sd_cfg_t * cfg, unsigned len)
@@ -24,6 +17,12 @@ static void send_ff(sd_cfg_t * cfg, unsigned len)
     while (len--) {
         spi_write_8(cfg->spi_dev.spi, 0xFF);
     }
+}
+
+static inline void unselect(sd_cfg_t * cfg)
+{
+    spi_dev_unselect(&cfg->spi_dev);
+    send_ff(cfg, 1);
 }
 
 static uint8_t read(sd_cfg_t * cfg)

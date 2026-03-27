@@ -34,6 +34,7 @@ static inline void init_spi_dev(const spi_dev_cfg_t * cfg)
 
 static inline void spi_dev_select(const spi_dev_cfg_t * cfg)
 {
+    while (spi_is_busy(cfg->spi)) {};
     gpio_set_state(cfg->cs_pin, 0);
 }
 
