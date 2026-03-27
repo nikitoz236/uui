@@ -7,6 +7,9 @@ SRC += tlora_text_lcd.c
 
 SRC += t_lora_kbd.c
 
+INC += ..
+SRC += ../tlora_hw.c
+
 PERIPH = $(LIB)/hw/esp32/periph
 
 INC += $(LIB)/common
@@ -49,5 +52,6 @@ INC += $(LIB)/graphic/text
 SRC += $(LIB)/graphic/text/text_pointer.c
 SRC += $(LIB)/graphic/text/font_config.c
 
+INC += $(LIB)/graphic/forms
 
 include $(LIB)/hw/esp32/build_esp32.mk
