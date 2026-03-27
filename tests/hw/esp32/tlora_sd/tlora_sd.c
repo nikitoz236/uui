@@ -83,7 +83,7 @@ uint8_t * sector_load(unsigned sector)
 {
     if (loaded_sector != sector) {
         loaded_sector = sector;
-        // dp("read sector "); dpd(sector, 10);
+        // dp("    read sector "); dpd(sector, 10);
         sd_read_sector(&sd, sector, sd_sector_buf);
         // dpn(" done");
     }
@@ -113,11 +113,27 @@ void read_fs(void)
 
     unsigned fr = 0;
     unsigned r;
+
+    uint32_t folder = fat.root_dir_cl;
+    // uint32_t folder = 3;
+    fat32_file_record_t f;
+
     char buf[1024];
-    while (r = dir_scan(&fat, fat.root_dir_cl, fr, buf, 512)) {
-        dp("read dir entry num "); dpd(r, 2); dp(" name !!! : "); dp(buf); dn();
+    while (r = dir_scan(&fat, folder, fr, buf, 512, &f)) {
+        dp("read dir entry num: "); dpd(r, 2); dp(" size: "); dpd(f.size, 10); dp(" cl: "); dpd(f.cluster, 10);
+        dp(" fr: "); dpd(f.folder_record, 5); dp(" frn: "); dpd(f.num_records, 3); dp(" name : "); dp(buf);
+        //  dp(" - "); dpxd(buf, 1, 6);
+        dn();
         fr += r;
     }
+
+    dn();
+
+    char path[] = "died_in_your_arms.wav";
+
+    file_by_path(&fat, &f, path);
+        dp("searched path: "); dp(path); dp(" size: "); dpd(f.size, 10); dp(" cl: "); dpd(f.cluster, 10); dp((char*[]){" F ", " D "}[f.folder]);
+        dp(" fr: "); dpd(f.folder_record, 5); dp(" frn: "); dpd(f.num_records, 3); dp(" name : "); dp(buf); dp(" - "); dpxd(buf, 1, 6); dn();
 
     dpn("done");
 }
@@ -135,9 +151,9 @@ int main(void)
 
     init_xl9555_gpio(&sd_pwr);
     xl9555_gpio_set(&sd_pwr, 0);
-    delay_ms(50);
-    xl9555_gpio_set(&sd_pwr, 1);
     delay_ms(100);
+    xl9555_gpio_set(&sd_pwr, 1);
+    delay_ms(50);
     dpn("[init] sd power on");
 
     enum sd_type t = init_sd(&sd);

@@ -7,6 +7,18 @@
 
 const uint8_t data_token = 0xFE;
 
+static inline void select(sd_cfg_t * cfg)
+{
+    while (spi_is_busy(cfg->spi_dev.spi)) {};
+    spi_dev_select(&cfg->spi_dev);
+}
+
+static inline void unselect(sd_cfg_t * cfg)
+{
+    spi_dev_unselect(&cfg->spi_dev);
+    spi_write_8(cfg->spi_dev.spi, 0xFF);
+}
+
 static void send_ff(sd_cfg_t * cfg, unsigned len)
 {
     while (len--) {
@@ -51,6 +63,7 @@ static uint8_t send_cmd(sd_cfg_t * cfg, uint8_t cmd, uint32_t data, uint8_t crc)
     return 0xFF;
 }
 
+
 enum sd_type init_sd(sd_cfg_t * cfg)
 {
     uint8_t resp;
@@ -63,54 +76,88 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         init_gpio(cfg->detect);
     }
 
-    spi_dev_unselect(&cfg->spi_dev);
-    send_ff(cfg, 10);
-    spi_dev_select(&cfg->spi_dev);
+    // 80 тактов с CS HIGH — переводит карту в SPI mode
+    unselect(cfg);
+    for (unsigned i = 0; i < 10; i++) {
+        spi_write_8(cfg->spi_dev.spi, 0xFF);
+    }
 
+    // CMD0 — software reset
+    select(cfg);
     resp = send_cmd(cfg, 0, 0, 0x95);
+    unselect(cfg);
     if (resp == 0xFF) {
         return SD_TYPE_NOT_INITIALISATED;
     }
 
+    // CMD8 — check voltage, R7 response (R1 + 4 bytes)
+    select(cfg);
     resp = send_cmd(cfg, 8, 0x1AA, 0x87);
-    if (resp == 0xFF) {
-        return SD_TYPE_NOT_INITIALISATED;
-    }
-
-    /* CMD8 returns R7: 4 trailing bytes must be consumed regardless */
     uint8_t r7[4];
     for (int i = 0; i < 4; i++) {
         r7[i] = read(cfg);
     }
+    unselect(cfg);
     dp("CMD8 R7: "); dpxd(r7, 1, 4); dn();
 
+    if (resp == 0xFF) {
+        return SD_TYPE_NOT_INITIALISATED;
+    }
     if (resp & (1 << 2)) {
-        // illegal answer = SD V1.x
-        // some initialisation code for V1.x cards
         return SD_TYPE_MMC;
     }
 
-    send_ff(cfg, 4);
-
-    //read OCR
-    dpn("SD read OCR");
+    // CMD58 — read OCR, R3 response (R1 + 4 bytes)
+    select(cfg);
     resp = send_cmd(cfg, 58, 0, 0);
+    uint8_t ocr[4];
+    for (int i = 0; i < 4; i++) {
+        ocr[i] = read(cfg);
+    }
+    unselect(cfg);
+    dp("  OCR: "); dpxd(ocr, 1, 4); dn();
+
     if (resp == 0xFF) {
         return SD_TYPE_NOT_INITIALISATED;
     }
 
-    uint8_t type = read(cfg);
-    dp("  read sd type, send to sd FF, resp: "); dpx(type, 1); dn();
-
-    send_ff(cfg, 3);
-
+    // ACMD41 — send init, ждём пока карта выйдет из idle
     dpn("SD send init cmd");
     unsigned count = 0;
     while (count < 1000) {
+        select(cfg);
         send_cmd(cfg, 55, 0, 0);
-        send_ff(cfg, 1);
+        unselect(cfg);
+
+        select(cfg);
         resp = send_cmd(cfg, 41, 0x40000000, 0xFF);
         /* drain R1b busy signal and trailing junk until MISO is idle */
+
+        /*
+            Причина проблемы: после R1 от ACMD41 карта посылает R1b busy сигнал — байты 0x00 пока идёт внутренняя инициализация. Код не читал эти байты, из-за чего
+            следующий CMD55 получал 0x00 вместо корректного NCR, ACMD флаг не устанавливался, и CMD41 отклонялся как illegal.
+
+            Исправление в lib/hw/drivers/sd_card.c: после send_cmd(41, ...) добавлен дрейн R1b — читаем до тех пор, пока MISO не вернёт два подряд байта 0xFF:
+            unsigned idle = 0;
+            while (idle < 2) {
+                if (spi_exchange_8(cfg->spi_dev.spi, 0xFF) == 0xFF) {
+                    idle++;
+                } else {
+                    idle = 0;
+                }
+            }
+
+            Понял из данных — по хвосту 00 FF 80 00 после R1.
+
+            По спеке R1b описан для команд типа CMD12/CMD38, но не для ACMD41. Однако на практике некоторые карты посылают busy после ACMD41 — это вне спеки, но
+            встречается. Конкретно эта карта (MID=0x74, "USD") так делает.
+
+            Как именно дошло до этого:
+
+            1. Добавил чтение 4 байт после CMD41 с принтом — увидел 00 FF 80 00
+            2. 0x00 сразу после R1 — это и есть busy token (R1b формат)
+            3. Без чтения этих байт следующий CMD55 получал остатки на шине → ACMD флаг не устанавливался → паттерн alternating good/bad
+        */
         unsigned idle = 0;
         while (idle < 2) {
             if (read(cfg) == 0xFF) {
@@ -119,6 +166,8 @@ enum sd_type init_sd(sd_cfg_t * cfg)
                 idle = 0;
             }
         }
+        unselect(cfg);
+
         if (resp == 0x00) {
             dp("SD card initialized in "); dpd(count, 3); dp(" tries"); dn();
             break;
@@ -130,7 +179,16 @@ enum sd_type init_sd(sd_cfg_t * cfg)
         return SD_TYPE_NOT_INITIALISATED;
     }
 
-    if (type & (1 << 6)) {
+    // CMD58 после инициализации — CCS бит валиден только теперь
+    select(cfg);
+    resp = send_cmd(cfg, 58, 0, 0);
+    for (int i = 0; i < 4; i++) {
+        ocr[i] = read(cfg);
+    }
+    unselect(cfg);
+    dp("  OCR after init: "); dpxd(ocr, 1, 4); dn();
+
+    if (ocr[0] & (1 << 6)) {
         return SD_TYPE_SDHC;
     }
     return SD_TYPE_SDSC;
@@ -162,24 +220,31 @@ static uint16_t read_data(sd_cfg_t * cfg, uint8_t * buffer, unsigned len)
 
 void sd_read_cid(sd_cfg_t * cfg, struct sd_cid * cid)
 {
+    select(cfg);
     send_cmd(cfg, 10, 0, 0);
     read_data(cfg, (uint8_t*)cid, sizeof(struct sd_cid));
+    unselect(cfg);
 }
 
 void sd_read_csd(sd_cfg_t * cfg, struct sd_csd * csd)
 {
+    select(cfg);
     send_cmd(cfg, 9, 0, 0);
     read_data(cfg, (uint8_t*)csd, sizeof(struct sd_csd));
+    unselect(cfg);
 }
 
 void sd_read_sector(sd_cfg_t * cfg, uint32_t sector_addr, uint8_t * buf)
 {
+    select(cfg);
     send_cmd(cfg, 17, sector_addr, 0);
     read_data(cfg, buf, SD_SECTOR_SIZE);
+    unselect(cfg);
 }
 
 uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * buf)
 {
+    select(cfg);
     send_cmd(cfg, 24, sector_addr, 0);
 
     send_ff(cfg, 1);
@@ -220,6 +285,8 @@ uint8_t sd_write_sector(sd_cfg_t * cfg, uint32_t sector_addr, const uint8_t * bu
 
     // wait card busy
     while (read(cfg) == 0x00) {};
+
+    unselect(cfg);
 
     dpn("write data sector finished");
 
