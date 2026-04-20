@@ -1,6 +1,5 @@
 #pragma once
 #include "xy_type.h"
-#include "api_lcd_color.h"
 
 typedef struct {
     xy_t size;                  // разрешение эмулируемого экрана в пискелях самого экрана
@@ -10,4 +9,8 @@ typedef struct {
     unsigned bg_color;          // цвет фона экрана (рамки и зазоров)
 } emu_lcd_cfg_t;
 
+void emu_init(emu_lcd_cfg_t * cfg);
 void emu_lcd_clear(void);
+
+char emu_routine(void);
+void emu_lcd_px(int x, int y, int color);

@@ -13,6 +13,9 @@ INC += $(LIB)/emu/graphic/
 
 AI_DIR = ai_frames
 
+SRC += $(LIB)/emu/graphic/emu_lcd_color.c
+SRC += $(LIB)/emu/graphic/emu_graphic.c
+
 ifdef AI
 SRC += $(LIB)/emu/graphic/emu_lcd_bitmap.c
 DEF += AI_FRAMES_DIR=\"$(AI_DIR)\"

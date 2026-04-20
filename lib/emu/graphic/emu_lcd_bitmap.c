@@ -122,7 +122,7 @@ char emu_routine(void)
 
 /* ------------------------------------------------------------------ */
 
-void emu_graphic_init(emu_lcd_cfg_t * cfg)
+void emu_init(emu_lcd_cfg_t * cfg)
 {
     lcd_cfg = cfg;
     fb_w = cfg->size.w;
@@ -143,32 +143,8 @@ void emu_lcd_clear(void)
     fb_dirty = 1;
 }
 
-/* ------------------------------------------------------------------ */
-
-void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, lcd_color_t color)
+void emu_lcd_px(int x, int y, int color)
 {
-    for (unsigned dy = 0; dy < h; dy++) {
-        for (unsigned dx = 0; dx < w; dx++) {
-            fb_put_pixel(x + dx, y + dy, color);
-        }
-    }
-    fb_dirty = 1;
-}
-
-void lcd_image(unsigned x, unsigned y, unsigned w, unsigned h, unsigned scale, lcd_color_t * buf)
-{
-    if (scale == 0) {
-        scale = 1;
-    }
-    for (unsigned sy = 0; sy < h; sy++) {
-        for (unsigned sx = 0; sx < w; sx++) {
-            lcd_color_t color = *buf++;
-            for (unsigned py = 0; py < scale; py++) {
-                for (unsigned px = 0; px < scale; px++) {
-                    fb_put_pixel(x + sx * scale + px, y + sy * scale + py, color);
-                }
-            }
-        }
-    }
+    fb_put_pixel(x, y, color);
     fb_dirty = 1;
 }
