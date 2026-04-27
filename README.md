@@ -60,6 +60,37 @@
     make monitor  — открыть serial monitor
     make reset    — сбросить устройство
 
+### Linux-тесты
+
+Каждый тест — каталог с `Makefile`, в нём только `TEST_NAME`
+и подключение нужного mk. Имя исходника теста должно начинаться
+с `test_` и совпадать с `TEST_NAME` (например `test_rb.c`
+при `TEST_NAME = test_rb`).
+
+mk для каждого типа теста:
+
+- консольные: `$(LIB)/emu/test_console.mk`
+- графические цветные: `$(LIB)/emu/graphic/emu_graphic.mk`
+- графические моно: `$(LIB)/emu/graphic/emu_graphic_mono.mk`
+
+Пример:
+
+    LIB = ../../../lib
+    TEST_NAME = test_rb
+    INC += $(LIB)/common
+    include $(LIB)/emu/test_console.mk
+
+Никаких явных целей в `Makefile` теста писать не нужно —
+pattern rule `%_run: %_app` из общего mk соберёт и запустит.
+
+    make            — собрать и запустить
+    make AI=1       — графические тесты в AI bitmap режиме,
+                      кадры пишутся в `ai_frames/*.txt`
+
+Проверить что все консольные тесты собираются:
+
+    make -C tests/console build_check
+
 ### Для ИИ-агентов: чтение вывода платы
 
 `make monitor` требует TTY. Для чтения из скриптов использовать `serial_monitor/esp32_monitor.py`.
@@ -74,6 +105,10 @@
     python3 serial_monitor/esp32_monitor.py <port> --no-reset --timeout 5 &
     make reset -C <test_dir>
     wait
+
+### Для ИИ-агентов: git
+
+Не использовать git без явной просьбы пользователя.
 
 ## Архитектурные принципы
 
@@ -135,6 +170,14 @@ const usart_cfg_t debug_usart = {
 `lib/hw/drivers/` и `lib/graphic/` не зависят от конкретного МК.
 Платформозависимый код изолирован в `lib/hw/esp32/` и `lib/hw/uc_hw/`
 и реализует одни и те же абстрактные интерфейсы из `lib/hw/include/`.
+
+### Логирование через dp, не printf
+
+Весь вывод — через `dp`/`dpn`/`dpd`/`dpx` из `lib/common`.
+`printf` не используется ни в прошивке, ни в тестах: зависит от libc,
+раздувает бинарь, привязан к конкретному транспорту. `dp` абстрагирован
+от платформы — отправку байт реализует драйвер (UART, USB CDC, stdout
+в эмуляторе).
 
 ## Типовые приёмы
 
