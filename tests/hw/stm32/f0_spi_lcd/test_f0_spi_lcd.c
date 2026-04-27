@@ -1,3 +1,8 @@
+/*
+    тест экрана pcf8814 на плате lora_pager
+    STM32F051
+*/
+
 #include "periph_header.h"
 #include "periph_pclk.h"
 #include "periph_rcc.h"

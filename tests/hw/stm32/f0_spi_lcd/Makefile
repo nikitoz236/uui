@@ -34,6 +34,7 @@ INC += $(LIB)/hw/drivers
 INC += $(LIB)/hw/include
 
 SRC += $(LIB)/hw/drivers/lcd_spi.c
+SRC += $(LIB)/hw/drivers/bl_pwm.c
 SRC += $(LIB)/hw/drivers/lcd_pcf8814.c
 
 include $(LIB)/hw/system/uc_build.mk
