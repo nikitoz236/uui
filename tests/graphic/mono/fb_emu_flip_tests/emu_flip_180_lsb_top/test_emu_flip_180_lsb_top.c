@@ -7,7 +7,7 @@ LCD_FB_CREATE(96, 68);
 
 int main()
 {
-    dpn("test emu fb mono graphic - 180 deg rotate, lsb top\r\n");
+    dpn("test emu fb mono graphic - 180 deg rotate, lsb top");
 
     emu_fb_lcd_cfg_t cfg = {
         .scale = 6,
