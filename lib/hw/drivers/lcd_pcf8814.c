@@ -1,13 +1,13 @@
 #include "lcd_spi.h"
+#include "lcd_fb.h"
 #include "delay_blocking.h"
+
+extern const fb_desc_t __lcd_fb_desc;
 
 /*
 
 http://uglyduck.vajn.icu/PDF/lcd/Nokia1202/STE2007.pdf
 http://mylcd.sourceforge.net/files/pcf8814.pdf
-
-
-не реализован фрейм буффер, и функции отрисовки
 
 */
 
@@ -34,22 +34,6 @@ static inline void lcd_send_data(uint8_t data)
     spi_write_16(lcd_cfg->spi_dev.spi, data + (1 << 8));
 }
 
-static inline void lcd_select(void)
-{
-    spi_set_frame_len(lcd_cfg->spi_dev.spi, 9);
-    if (lcd_cfg->spi_dev.cs_pin) {
-        gpio_set_state(lcd_cfg->spi_dev.cs_pin, 0);
-    }
-}
-
-static inline void lcd_unselect(void)
-{
-    if (lcd_cfg->spi_dev.cs_pin) {
-        while (spi_is_busy(lcd_cfg->spi_dev.spi)) {};
-        gpio_set_state(lcd_cfg->spi_dev.cs_pin, 1);
-    }
-}
-
 void init_lcd(const lcd_cfg_t * cfg)
 {
     lcd_cfg = cfg;
@@ -60,6 +44,7 @@ void init_lcd(const lcd_cfg_t * cfg)
     delay_ms(3);
 
     lcd_select();
+    spi_set_frame_len(cfg->spi_dev.spi, 9);
 
     lcd_send_cmd(LCD_CMD_RESET);
 
@@ -84,6 +69,7 @@ void init_lcd(const lcd_cfg_t * cfg)
 void lcd_pwr(unsigned val)
 {
     lcd_select();
+    spi_set_frame_len(lcd_cfg->spi_dev.spi, 9);
     if (val) {
         // ~ 0.25 mA @ 3.3V
         lcd_send_cmd(0x2F);     // Power control set: Booster : ON Voltage regulator : ON Voltage follower : ON
@@ -93,5 +79,23 @@ void lcd_pwr(unsigned val)
         lcd_send_cmd(0x28);     // Power control set: Booster : OFF Voltage regulator : OFF Voltage follower : OFF
         lcd_send_cmd(LCD_CMD_DISPLAY_OFF);
     }
+    lcd_unselect();
+}
+
+void lcd_refresh(void)
+{
+    const fb_desc_t * d = &__lcd_fb_desc;
+
+    lcd_select();
+    spi_set_frame_len(lcd_cfg->spi_dev.spi, 9);
+
+    lcd_send_cmd(LCD_CMD_SET_COLUMN_UPPER(0));
+    lcd_send_cmd(LCD_CMD_SET_COLUMN_LOWER(0));
+    lcd_send_cmd(LCD_CMD_SET_PAGE(0));
+
+    for (lcd_fb_size_t i = 0; i < d->fb_len; i++) {
+        lcd_send_data(d->fb_ctx->fb[i]);
+    }
+
     lcd_unselect();
 }

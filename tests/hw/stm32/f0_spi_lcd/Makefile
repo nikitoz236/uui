@@ -11,6 +11,7 @@ OPT = -Os
 OPENOCD_TARGET ?= stm32f0x
 
 DEF += STM32F051
+DEF += LCD_TOP_LSB
 
 INC += .
 
@@ -32,9 +33,12 @@ INC += $(LIB)/common
 
 INC += $(LIB)/hw/drivers
 INC += $(LIB)/hw/include
+INC += $(LIB)/hw/api
+INC += $(LIB)/graphic/lcd_mono
 
 SRC += $(LIB)/hw/drivers/lcd_spi.c
 SRC += $(LIB)/hw/drivers/bl_pwm.c
 SRC += $(LIB)/hw/drivers/lcd_pcf8814.c
+SRC += $(LIB)/graphic/lcd_mono/lcd_fb.c
 
 include $(LIB)/hw/system/uc_build.mk

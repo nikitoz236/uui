@@ -13,7 +13,11 @@
 #include "bl_pwm.h"
 
 #include "lcd_spi.h"
+#include "lcd_fb.h"
+#include "api_lcd_color.h"
 #include "periph_spi.h"
+
+LCD_FB_CREATE(96, 65);
 
 const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
@@ -184,6 +188,11 @@ int main()
     init_lcd_hw(&lcd_cfg);
 
     init_lcd(&lcd_cfg);
+
+    lcd_clear();
+    lcd_rect(10, 10, 20, 30, 1);
+    lcd_rect(50, 35, 30, 20, 1);
+    lcd_refresh();
 
     lcd_bl(4);
 
