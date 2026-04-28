@@ -3,7 +3,7 @@
 
 #include "emu_graphic.h"
 
-#include "lcd_text_color.h"
+#include "text_print.h"
 
 int main()
 {
@@ -29,20 +29,20 @@ int main()
         .scale = 2
     };
 
-    color_scheme_t cs = {.bg = 0x1234, .fg = 0xA234};
+    text_color_t color = { .bg = 0x1234, .fg = 0xA234 };
 
     tptr_t tp = text_ptr_create((tf_t){ .fcfg = &fcfg, .pos = (xy_t){8, 9}, .lim = (xy_t){20, 8} } );
 
     text_ptr_set_char_pos(&tp, (xy_t){ 3, 4 });
-    lcd_color_tptr_print(&tp, "lol", cs, 0);
+    lcd_color_tptr_print(&tp, "lol", color, 0);
 
     text_ptr_next_str(&tp);
-    lcd_color_tptr_print(&tp, "kek", cs, 0);
+    lcd_color_tptr_print(&tp, "kek", color, 0);
 
     text_ptr_set_char_pos(&tp, (xy_t){ 6, 2 });
-    lcd_color_tptr_print(&tp, "cheburek", cs, 0);
+    lcd_color_tptr_print(&tp, "cheburek", color, 0);
 
-    lcd_color_tptr_print(&tp, "aga", cs, 0);
+    lcd_color_tptr_print(&tp, "aga", color, 0);
 
     emu_graphic_loop(0);
 
