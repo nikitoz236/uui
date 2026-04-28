@@ -51,4 +51,17 @@ void lcd_refresh(void)
             }
         }
     }
+
+    if (cfg->px_byte_debug) {
+        unsigned p_max = ((unsigned)d->h + 7) / 8;
+        for (unsigned p = 0; p + 1 < p_max; p++) {
+            unsigned y;
+            if (cfg->flip_180) {
+                y = (unsigned)d->h - 1 - (p + 1) * 8;
+            } else {
+                y = p * 8 + 7;
+            }
+            emu_lcd_byte_gap_h(y, cfg->px_byte_debug_color);
+        }
+    }
 }

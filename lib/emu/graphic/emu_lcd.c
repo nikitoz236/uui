@@ -82,3 +82,22 @@ void emu_lcd_px(int x, int y, int color)
     };
     emu_graphic_rect(&px, color);
 }
+
+void emu_lcd_byte_gap_h(unsigned y, unsigned color)
+{
+    unsigned px_size = emu_lcd_cfg->scale;
+    unsigned px_step = px_size + emu_lcd_cfg->px_gap;
+    unsigned screen_w = px_size * emu_lcd_cfg->size.w +
+                        emu_lcd_cfg->px_gap * (emu_lcd_cfg->size.w - 1);
+    form_t line = {
+        .s = {
+            .w = screen_w,
+            .h = emu_lcd_cfg->px_gap,
+        },
+        .p = {
+            .x = emu_lcd_form->p.x + emu_lcd_cfg->border,
+            .y = emu_lcd_form->p.y + emu_lcd_cfg->border + (y * px_step) + px_size,
+        }
+    };
+    emu_graphic_rect(&line, color);
+}

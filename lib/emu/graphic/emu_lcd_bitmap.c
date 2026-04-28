@@ -148,3 +148,9 @@ void emu_lcd_px(int x, int y, int color)
     fb_put_pixel(x, y, color);
     fb_dirty = 1;
 }
+
+void emu_lcd_byte_gap_h(unsigned y, unsigned color)
+{
+    (void)y;
+    (void)color;
+}

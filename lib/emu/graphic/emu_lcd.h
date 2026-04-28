@@ -14,3 +14,4 @@ void emu_lcd_clear(void);
 
 char emu_routine(void);
 void emu_lcd_px(int x, int y, int color);
+void emu_lcd_byte_gap_h(unsigned y, unsigned color);
