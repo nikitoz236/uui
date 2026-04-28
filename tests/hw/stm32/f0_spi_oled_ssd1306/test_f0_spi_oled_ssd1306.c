@@ -25,8 +25,9 @@
 
 #include "lcd_spi.h"
 #include "lcd_fb.h"
-
-LCD_FB_CREATE(128, 64);
+#include "api_lcd_color.h"
+#include "text_print.h"
+#include "delay_blocking.h"
 
 const rcc_cfg_t rcc_cfg = {
     .hse_val = 8000000,
@@ -105,6 +106,16 @@ const lcd_cfg_t lcd_cfg = {
     },
 };
 
+LCD_FB_CREATE(128, 64);
+
+extern const font_t font_5x5;
+
+static const lcd_font_cfg_t fcfg = {
+    .font = &font_5x5,
+    .gaps = { .x = 1, .y = 1 },
+    .scale = 1,
+};
+
 int main()
 {
     rcc_apply_cfg(&rcc_cfg);
@@ -117,7 +128,32 @@ int main()
     init_lcd_hw(&lcd_cfg);
     init_lcd(&lcd_cfg);
 
-    while (1) {};
+    lcd_clear();
+    tf_t tf = {
+        .fcfg = &fcfg,
+        .pos = { .x = 10, .y = 28 },
+        .lim = { .x = 13, .y = 1 },
+    };
+    tptr_t tptr = text_ptr_create(tf);
+    text_print(&tptr, "BRIGHTNESS: ", (text_color_t){ .inverted = 0 }, 0);
+    lcd_refresh();
+
+    unsigned lvl = 0;
+    while (1) {
+        char digit = '0' + lvl;
+        text_ptr_set_char_pos(&tptr, (xy_t){ .x = 12, .y = 0 });
+        text_print(&tptr, &digit, (text_color_t){ .inverted = 0 }, 1);
+
+        lcd_refresh();
+        lcd_bl(lvl);
+
+        delay_ms(1000);
+
+        lvl++;
+        if (lvl > 8) {
+            lvl = 0;
+        }
+    }
 
     return 0;
 }
