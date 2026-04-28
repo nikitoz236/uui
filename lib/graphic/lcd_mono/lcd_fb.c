@@ -81,6 +81,9 @@ void lcd_rect(unsigned x, unsigned y, unsigned w, unsigned h, lcd_color_t color)
 
 static void bitmask_slow(unsigned x, unsigned y, unsigned w, unsigned h, const uint8_t * data, unsigned scale, unsigned inverted)
 {
+    if (scale == 0) {
+        scale = 1;
+    }
     unsigned col_step = (h + 7) / 8;
     for (unsigned rx = 0; rx < w; rx++) {
         const uint8_t * col = &data[rx * col_step];
@@ -174,14 +177,10 @@ static void bitmask_fast(unsigned x, unsigned y, unsigned w, unsigned h, const u
     }
 }
 
-void lcd_image_bitmask(unsigned x, unsigned y, unsigned w, unsigned h, const uint8_t * data, unsigned scale, unsigned inverted)
+void lcd_image_bitmap(unsigned x, unsigned y, unsigned w, unsigned h, const uint8_t * data, unsigned scale, unsigned inverted)
 {
-    if (scale == 0) {
-        scale = 1;
-    }
-
     #if !defined LCD_FLIP_180
-        if (scale == 1) {
+        if (scale <= 1) {
             bitmask_fast(x, y, w, h, data, inverted);
             return;
         }

@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "forms.h"
+#include "xy_type.h"
 
 /*
     символ разбит на вертикальные столбики, включенные пиксели кодируются единицами в битах

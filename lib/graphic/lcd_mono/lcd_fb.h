@@ -58,4 +58,4 @@ void lcd_refresh(void);
 
     scale — масштаб, 0 трактуется как 1
 */
-void lcd_image_bitmask(unsigned x, unsigned y, unsigned w, unsigned h, const uint8_t * data, unsigned scale, unsigned inverted);
+void lcd_image_bitmap(unsigned x, unsigned y, unsigned w, unsigned h, const uint8_t * data, unsigned scale, unsigned inverted);
