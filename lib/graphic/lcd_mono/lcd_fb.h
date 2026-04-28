@@ -44,3 +44,18 @@ typedef struct {
 
 void lcd_clear(void);
 void lcd_refresh(void);
+
+/*
+    рисует битовую картинку в fb
+
+    data — column-major, ceil(h / 8) байт на столбец
+        в байте бит 0 = верхний пиксель столбца
+        последний байт может быть неполным — лишние биты в нём игнорируются
+        соседние столбцы не делят байт, граница байта между столбиками всегда
+
+    inverted — 0: бит 1 в data → пиксель fb 1, бит 0 → 0
+               1: бит 1 в data → пиксель fb 0, бит 0 → 1
+
+    scale — масштаб, 0 трактуется как 1
+*/
+void lcd_image_bitmask(unsigned x, unsigned y, unsigned w, unsigned h, const uint8_t * data, unsigned scale, unsigned inverted);
