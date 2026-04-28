@@ -1,5 +1,5 @@
 #include "emu_lcd.h"
-#include "forms.h"
+#include "form_type.h"
 #include "gfx.h"
 
 static form_t * emu_lcd_form;

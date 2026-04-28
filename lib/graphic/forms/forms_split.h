@@ -1,5 +1,5 @@
 #pragma once
-#include "forms.h"
+#include "form_type.h"
 #include "forms_edge.h"
 
 // уменьшает форму по одному измерению d на offset пикселей со стороны cut_edge

@@ -1,3 +1,5 @@
+// DEPRICATED
+
 #include "lcd_text_color.h"
 #include "api_lcd_color.h"
 

@@ -1,4 +1,6 @@
-#include "text_field.h"
+// DEPRICATED
+
+#include "text_field_config.h"
 
 // надо чтобы возвращаемое значение показывало получилось ли втиснуться в координаты
 unsigned tf_ctx_calc(tf_ctx_t * ctx, form_t * f, const tf_cfg_t * cfg)

@@ -1,3 +1,5 @@
+// DEPRICATED
+
 #include "str_val_buf.h"
 #include "text_label_color.h"
 #include "lcd_text_color.h"

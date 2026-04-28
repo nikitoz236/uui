@@ -1,6 +1,8 @@
+// DEPRICATED
+
 #pragma once
 #include "forms_edge.h"
-#include "forms.h"
+#include "form_type.h"
 
 typedef struct {
     form_edge_t edge : 1;
