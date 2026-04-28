@@ -1,8 +1,7 @@
 #include "text_print.h"
 #include "print_char.h"
 
-
-unsigned text_ptr_process_char(tptr_t * tptr, char c)
+static unsigned text_ptr_process_char(tptr_t * tptr, char c)
 {
     if (c == '\n') {
         text_ptr_next_str(tptr);
@@ -16,7 +15,7 @@ unsigned text_ptr_process_char(tptr_t * tptr, char c)
     return 0;
 }
 
-void lcd_color_tptr_print(tptr_t * tptr, const char * str, text_color_t color, unsigned len)
+void text_print(tptr_t * tptr, const char * str, text_color_t color, unsigned len)
 {
     while (1) {
         char c = 0;

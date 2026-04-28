@@ -45,16 +45,16 @@ int main(void)
         .lim = { .x = 14, .y = 10 },
     });
 
-    lcd_color_tptr_print(&tp, "Hello", normal, 0);
+    text_print(&tp, "Hello", normal, 0);
     text_ptr_next_str(&tp);
-    lcd_color_tptr_print(&tp, "world!", normal, 0);
+    text_print(&tp, "world!", normal, 0);
 
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 3 });
-    lcd_color_tptr_print(&tp, "Line\nbreak", normal, 0);
+    text_print(&tp, "Line\nbreak", normal, 0);
 
     // len больше длины строки — хвост дополняется пробелами
     text_ptr_set_char_pos(&tp, (xy_t){ .x = 0, .y = 6 });
-    lcd_color_tptr_print(&tp, "Pad", normal, 7);
+    text_print(&tp, "Pad", normal, 7);
 
     // инвертированный tptr справа (на тёмном квадрате)
     tptr_t tp_inv = text_ptr_create((tf_t){
@@ -63,15 +63,15 @@ int main(void)
         .lim = { .x = 12, .y = 10 },
     });
 
-    lcd_color_tptr_print(&tp_inv, "Hello", inv, 0);
+    text_print(&tp_inv, "Hello", inv, 0);
     text_ptr_next_str(&tp_inv);
-    lcd_color_tptr_print(&tp_inv, "world!", inv, 0);
+    text_print(&tp_inv, "world!", inv, 0);
 
     text_ptr_set_char_pos(&tp_inv, (xy_t){ .x = 0, .y = 3 });
-    lcd_color_tptr_print(&tp_inv, "Line\nbreak", inv, 0);
+    text_print(&tp_inv, "Line\nbreak", inv, 0);
 
     text_ptr_set_char_pos(&tp_inv, (xy_t){ .x = 0, .y = 6 });
-    lcd_color_tptr_print(&tp_inv, "Pad", inv, 7);
+    text_print(&tp_inv, "Pad", inv, 7);
 
     lcd_refresh();
 
