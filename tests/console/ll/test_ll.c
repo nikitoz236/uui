@@ -31,8 +31,8 @@ ll_item_t * list = 0;
 
 void print_ctx(char * msg)
 {
-    dn(); 
-    dpn(msg); 
+    dn();
+    dpn(msg);
     dp("  MEM: head ptr "); dpx((unsigned)list, 4); dn();
     for (unsigned i = 0; i < 4; i++) {
         dp("      "); dpx((unsigned)&l[i], 4); dp(" : "); dpxd(&l[i], 4, sizeof(l[0]) / 4); dn();
