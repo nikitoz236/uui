@@ -19,6 +19,11 @@ SRC += $(TARGET).c
 
 INC += $(LIB)/specific
 SRC += $(LIB)/specific/kbd.c
+SRC += $(LIB)/specific/btn_press_processor.c
+
+SRC += $(LIB)/common/tasks.c
+SRC += $(LIB)/common/eq.c
+SRC += $(LIB)/common/ll.c
 
 INC += $(LIB)/hw/uc_hw
 SRC += $(LIB)/hw/uc_hw/stm_usart.c

@@ -47,6 +47,8 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 
 
 #include "kbd.h"
+#include "btn_press_processor.h"
+#include "eq.h"
 
 uint8_t kbd_prev_state[1] = {};
 
@@ -70,9 +72,21 @@ kbd_cfg_t kbd = {
 
 mstimer_t cyc_period = { .timeout = 100, .start = 0 };
 
+void on_press_event(unsigned num, press_type_t type)
+{
+    const char * names[] = {
+        "ON", "OFF", "SHORT", "LONG", "DOUBLE",
+        "SHORT_LONG", "LONG_REPEAT", "SHORT_LONG_REPEAT",
+    };
+    dpd(get_uptime_ms(), 8); dp("  Key "); dpd(num, 2); dp(" "); dp(names[type]); dn();
+}
+
+static const btn_press_processor_cfg_t bpp =
+    BTN_PRESS_PROCESSOR_INIT_FULL(5, on_press_event, 1000, 300, 100);
+
 void kbd_handler(unsigned num, unsigned state)
 {
-    dp("Key "); dpd(num, 2); dp(" = "); dpd(state, 1); dn();
+    btn_press_processor_edge(num, state);
 }
 
 int main(void)
@@ -90,6 +104,7 @@ int main(void)
     init_systick();
     usart_set_cfg(&debug_usart);
     init_kbd(&kbd);
+    init_btn_press_processor(&bpp);
 
     __enable_irq();
 
@@ -99,6 +114,8 @@ int main(void)
         if (mstimer_do_period(&cyc_period)) {
             kbd_scan(kbd_handler);
         }
+        task_process();
+        while (eq_process()) {};
     };
 
     return 0;
