@@ -2,6 +2,7 @@
 #include "periph_rcc.h"
 #include "periph_gpio.h"
 #include "periph_pclk.h"
+#include "exti.h"
 #include "stm_usart.h"
 #include "systick.h"
 #include "mstimer.h"
@@ -46,31 +47,59 @@ void __debug_usart_tx_data(const char * s, unsigned len)
 }
 
 
-#include "kbd.h"
+#include "btn_debounce.h"
 #include "btn_press_processor.h"
 #include "eq.h"
 
-uint8_t kbd_prev_state[1] = {};
+#define BTN_NUM 5
 
-kbd_cfg_t kbd = {
-    .cols = &(const gpio_list_t){
-        .count = 5,
-        .cfg = {
-            .mode = GPIO_MODE_INPUT,
-            .pull = GPIO_PULL_NONE,
-        },
-        .pin_list = (gpio_pin_t []){
-            { .port = GPIO_PORT_B, .pin = 3 },      // LU
-            { .port = GPIO_PORT_A, .pin = 15 },     // LD
-            { .port = GPIO_PORT_B, .pin = 4 },      // RU
-            { .port = GPIO_PORT_B, .pin = 6 },      // RM
-            { .port = GPIO_PORT_B, .pin = 7 },      // RD
-        }
+const gpio_list_t btn_inputs = {
+    .count = BTN_NUM,
+    .cfg = {
+        .mode = GPIO_MODE_INPUT,
+        .pull = GPIO_PULL_NONE,
     },
-    .prev_state = kbd_prev_state,
+    .pin_list = (gpio_pin_t []){
+        { .port = GPIO_PORT_B, .pin = 3 },      // LU
+        { .port = GPIO_PORT_A, .pin = 15 },     // LD
+        { .port = GPIO_PORT_B, .pin = 4 },      // RU
+        { .port = GPIO_PORT_B, .pin = 6 },      // RM
+        { .port = GPIO_PORT_B, .pin = 7 },      // RD
+    },
 };
 
-mstimer_t cyc_period = { .timeout = 100, .start = 0 };
+static unsigned edge_counter[BTN_NUM] = {};
+
+void on_exti_edge(unsigned idx, unsigned state)
+{
+    edge_counter[idx]++;
+    btn_debounce_edge(idx, state);
+}
+
+// edges по тем же индексам что и pin_list в btn_inputs:
+//   0 LU, 1 LD, 2 RU, 3 RM, 4 RD
+static exti_group_t btn_exti_group = {
+    .pins = &btn_inputs,
+    .edges = (const exti_edge_t []){
+        { .rise = 1, .fall = 1 },   // LU
+        { .rise = 1, .fall = 1 },   // LD
+        { .rise = 1, .fall = 1 },   // RU
+        { .rise = 1, .fall = 1 },   // RM
+        { .rise = 1, .fall = 1 },   // RD
+    },
+    .on_edge_idx = on_exti_edge,
+};
+
+void on_debounced(unsigned ch, unsigned state)
+{
+    dp("      debounce ch="); dpd(ch, 1); dp(" state="); dpd(state, 1);
+    dp(" cnt="); dpd(edge_counter[ch], 3); dn();
+    edge_counter[ch] = 0;
+    btn_press_processor_edge(ch, state);
+}
+
+static const btn_debounce_cfg_t bdb =
+    BTN_DEBOUNCE_INIT(BTN_NUM, on_debounced, 30);
 
 void on_press_event(unsigned num, press_type_t type)
 {
@@ -82,12 +111,7 @@ void on_press_event(unsigned num, press_type_t type)
 }
 
 static const btn_press_processor_cfg_t bpp =
-    BTN_PRESS_PROCESSOR_INIT_FULL(5, on_press_event, 1000, 300, 100);
-
-void kbd_handler(unsigned num, unsigned state)
-{
-    btn_press_processor_edge(num, state);
-}
+    BTN_PRESS_PROCESSOR_INIT_FULL(BTN_NUM, on_press_event, 1000, 300, 200);
 
 int main(void)
 {
@@ -103,7 +127,9 @@ int main(void)
 
     init_systick();
     usart_set_cfg(&debug_usart);
-    init_kbd(&kbd);
+    init_gpio_list(&btn_inputs);
+    exti_add_group(&btn_exti_group);
+    init_btn_debounce(&bdb);
     init_btn_press_processor(&bpp);
 
     __enable_irq();
@@ -111,9 +137,6 @@ int main(void)
     dpn("Hey bitch ! this is keyboard test!");
 
     while (1) {
-        if (mstimer_do_period(&cyc_period)) {
-            kbd_scan(kbd_handler);
-        }
         task_process();
         while (eq_process()) {};
     };
