@@ -14,6 +14,11 @@ int main()
     dp("hex val: "); dpx(0xABCD, 2); dn();
     dp("hex dump: "); dpxd(&main, 1, 16); dn();
 
+    dp("dpds positive: "); dpds(123, 6); dpn("<");
+    dp("dpds negative: "); dpds(-456, 6); dpn("<");
+    dp("dpds zero:     "); dpds(0, 6); dpn("<");
+    dp("dpds twice:    "); dpds(7, 4); dp("|"); dpds(8, 4); dpn("<");
+
     dpl(0, 20); dpn("<");
 
     second_module_dp();

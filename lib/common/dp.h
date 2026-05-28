@@ -218,6 +218,8 @@ static inline void dpds(int d, unsigned w)
     if (d < 0) {
         str[0] = '-';
         d = 0 - d;
+    } else {
+        str[0] = ' ';
     }
     dec_to_str_right_aligned(d, &str[1], w - 1, 0);
     __debug_usart_tx_data(str, w);
